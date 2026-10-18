@@ -18,9 +18,21 @@ marca o `[x]` **no mesmo PR**. Escopo e trilhas: "Fase 2" em [`plano.md`](plano.
       `getAllowedPackages()`; `getPending` e `markProcessed` são assíncronos (leem o banco).
 - [x] Fake em memória do módulo: `createFakeNotificationCapture()` em
       `modules/notification-capture/src/fake.ts` (`post()` simula um banco notificando).
-- [ ] Tipo `Capture` em `src/domain/types.ts` e tabela `captures` (migração).
-- [ ] Contrato `CapturesService` em `src/domain/contracts.ts` e fake.
-- [ ] Aba Pendentes (com selo) e rotas vazias de permissão e diagnóstico.
+- [x] Tipos `Capture`, `ParsedNotification` e `CaptureOriginRule` em `src/domain/types.ts`;
+      tabelas `captures` e `capture_origin_rules` (migração `0001_captures`, **revisão
+      humana obrigatória**).
+- [x] Contratos em `src/domain/contracts.ts`: `NotificationParser` (trilha C) e
+      `CapturesService` (trilha D). Regras puras em `src/domain/captures/rules.ts` (escolher
+      o parser, montar a sugestão, completar a confirmação, aprender a origem).
+- [x] Fake `createFakeCapturesService` (cria os lançamentos pelos serviços de lançamentos e
+      cartões) e suíte de contrato `captures.contract.test.ts`. O app usa o fake sobre os
+      serviços reais até a trilha D entregar o real: capturas em memória, lançamentos no SQLite.
+- [x] `NewTransaction` e `NewCardPurchase` aceitam `source` (padrão `manual`).
+- [x] Aba Pendentes com selo (`tabBarBadge` na `TabBar`) e rotas vazias
+      `/captura/permissao` e `/captura/diagnostico`.
+- [ ] Decidir a barra com 5 abas: o botão + saiu do centro (3 à esquerda, 2 à direita) e
+      "Lançamentos" encolhe. Opções: Pendentes no lugar de Cartões dentro de Início, ou
+      ícones sem rótulo na faixa compacta.
 - [ ] Cada membro junta notificações reais dos próprios bancos (anonimizar antes do
       commit: nomes, finais de cartão e estabelecimentos).
 
@@ -32,6 +44,16 @@ marca o `[x]` **no mesmo PR**. Escopo e trilhas: "Fase 2" em [`plano.md`](plano.
 | B · Permissão e saúde  | `src/features/capture-setup/`                             |
 | C · Parsers            | `src/domain/captures/parsers/` e fixtures                 |
 | D · Caixa de Pendentes | `src/domain/captures/` (serviço), `src/features/pending/` |
+
+Decisões do kickoff:
+
+- Captura não é lançamento: fica em `captures` até o usuário confirmar. O status `pending`
+  de `transactions` continua sem uso na Fase 2.
+- Captura confirmada vira lançamento com `source: 'notification'` e guarda o
+  `transactionId`; a origem confirmada vira regra (`capture_origin_rules`) para o mesmo app
+  e final de cartão.
+- Notificação não reconhecida entra com `parser: null` ("não interpretada") e nunca é
+  descartada sozinha.
 
 ### A · Módulo nativo
 

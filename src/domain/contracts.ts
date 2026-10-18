@@ -9,9 +9,13 @@
  * Todas as funções são assíncronas (o mesmo código roda com expo-sqlite e nos testes).
  * Escritas avisam as telas pela notificação de mudança (`notifyDataChanged`).
  */
+import type { RawNotification } from '../../modules/notification-capture/src/NotificationCapture.types';
+
 import type {
   Account,
   AccountWithBalance,
+  Capture,
+  CaptureKind,
   Category,
   CategoryKind,
   Cents,
@@ -24,6 +28,7 @@ import type {
   NewCardPurchase,
   NewTransaction,
   NewTransfer,
+  ParsedNotification,
   Transaction,
   TxFilters,
   YearMonth,
@@ -195,9 +200,66 @@ export interface CategoriesService {
   countUsage(id: Id): Promise<number>;
 }
 
+// ─── Fase 2 · Trilha C · Parsers ─────────────────────────────────────────────
+
+/**
+ * Interpreta as notificações de um ou mais apps. Função pura: sem banco, sem relógio (a
+ * data de reserva vem de `postedAtMs`). Devolve `null` quando não reconhece o texto.
+ */
+export type NotificationParser = {
+  /** Gravado em `Capture.parser` (ex.: `nubank`, `generic`). */
+  id: string;
+  /** Pacotes que ele entende; vazio = parser genérico de reserva, tentado por último. */
+  packages: readonly string[];
+  parse(notification: RawNotification): ParsedNotification | null;
+};
+
+// ─── Fase 2 · Trilha D · Pendentes ───────────────────────────────────────────
+
+/** O que o usuário confirma; o que faltar vem da sugestão da captura. */
+export type CaptureConfirmation = {
+  kind: CaptureKind;
+  amountCents: Cents;
+  date: ISODate;
+  description: string;
+  categoryId: Id | null;
+  /** Para `expense` e `income`. */
+  accountId?: Id;
+  /** Para `card_purchase`. */
+  cardId?: Id;
+  /** Parcelas da compra no cartão (padrão 1). */
+  installments?: number;
+};
+
+export interface CapturesService {
+  /**
+   * Lê as pendentes do módulo nativo, interpreta com os parsers, grava em `captures` e
+   * marca como processadas no módulo. Idempotente: a mesma notificação não gera duas
+   * capturas. Devolve quantas capturas novas entraram.
+   */
+  ingest(): Promise<number>;
+  /** Pendentes, da mais recente para a mais antiga. */
+  listPending(): Promise<Capture[]>;
+  /** Selo da aba Pendentes. */
+  countPending(): Promise<number>;
+  getCapture(id: Id): Promise<Capture | undefined>;
+  /**
+   * Cria o lançamento (`source: 'notification'`) e marca a captura como confirmada. Sem
+   * `input`, usa a sugestão; se faltar valor, tipo ou origem, lança `capture_incomplete`.
+   * Aprende a origem para as próximas notificações do mesmo app e final de cartão.
+   */
+  confirmCapture(id: Id, input?: Partial<CaptureConfirmation>): Promise<Transaction[]>;
+  /** Confirma as completas e devolve as que precisaram ficar (incompletas). */
+  confirmMany(ids: Id[]): Promise<{ confirmed: Id[]; skipped: Id[] }>;
+  discardCapture(id: Id): Promise<void>;
+  /** Desfaz `discardCapture` (volta a pendente). */
+  restoreCapture(id: Id): Promise<void>;
+}
+
 export type Services = {
   accounts: AccountsService;
   transactions: TransactionsService;
   cards: CardsService;
   categories: CategoriesService;
+  captures: CapturesService;
 };

@@ -34,12 +34,12 @@ export function createFakeTransactionsService(store: FakeStore): TransactionsSer
   };
 
   return {
-    async createTransaction({ status = 'posted', notes = null, ...input }) {
+    async createTransaction({ status = 'posted', notes = null, source = 'manual', ...input }) {
       assertAmount(input.amountCents);
       if (!alive(store.accounts).some((a) => a.id === input.accountId)) {
         throw new DomainError('not_found');
       }
-      const tx: Transaction = { ...blankTransaction(), ...input, status, notes };
+      const tx: Transaction = { ...blankTransaction(), ...input, status, notes, source };
       store.transactions.push(tx);
       notifyDataChanged();
       return tx;

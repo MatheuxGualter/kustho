@@ -7,10 +7,20 @@
  * `src/db/__tests__/schema-contract.test.ts`.
  */
 import { sql } from 'drizzle-orm';
-import { check, index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
+import {
+  check,
+  index,
+  integer,
+  real,
+  sqliteTable,
+  text,
+  uniqueIndex,
+} from 'drizzle-orm/sqlite-core';
 
 import {
   accountTypes,
+  captureKinds,
+  captureStatuses,
   categoryKinds,
   invoiceStatuses,
   transactionKinds,
@@ -119,5 +129,64 @@ export const transactions = sqliteTable(
     ),
     // Toda transação pertence a uma conta ou a um cartão.
     check('transactions_owner', sql`${t.accountId} IS NOT NULL OR ${t.cardId} IS NOT NULL`),
+  ],
+);
+
+// ─── Fase 2 ──────────────────────────────────────────────────────────────────
+
+export const captures = sqliteTable(
+  'captures',
+  {
+    ...entity,
+    rawId: text('raw_id').notNull(),
+    packageName: text('package_name').notNull(),
+    title: text('title'),
+    text: text('text'),
+    postedAt: text('posted_at').notNull(),
+    parser: text('parser'),
+    amountCents: integer('amount_cents'),
+    kind: text('kind', { enum: captureKinds }),
+    merchant: text('merchant'),
+    date: text('date'),
+    cardLastDigits: text('card_last_digits'),
+    suggestedAccountId: text('suggested_account_id').references(() => accounts.id),
+    suggestedCardId: text('suggested_card_id').references(() => creditCards.id),
+    confidence: real('confidence').notNull().default(0),
+    status: text('status', { enum: captureStatuses }).notNull().default('pending'),
+    transactionId: text('transaction_id').references(() => transactions.id),
+  },
+  (t) => [
+    uniqueIndex('captures_raw_id_uq').on(t.rawId),
+    index('captures_status_idx').on(t.status),
+    check('captures_amount_positive', sql`${t.amountCents} IS NULL OR ${t.amountCents} > 0`),
+    check('captures_confidence', sql`${t.confidence} BETWEEN 0 AND 1`),
+    check(
+      'captures_single_origin',
+      sql`${t.suggestedAccountId} IS NULL OR ${t.suggestedCardId} IS NULL`,
+    ),
+    // Confirmada sempre aponta para o lançamento criado.
+    check(
+      'captures_confirmed_tx',
+      sql`(${t.status} = 'confirmed') = (${t.transactionId} IS NOT NULL)`,
+    ),
+  ],
+);
+
+export const captureOriginRules = sqliteTable(
+  'capture_origin_rules',
+  {
+    ...entity,
+    packageName: text('package_name').notNull(),
+    cardLastDigits: text('card_last_digits'),
+    accountId: text('account_id').references(() => accounts.id),
+    cardId: text('card_id').references(() => creditCards.id),
+  },
+  (t) => [
+    index('capture_origin_rules_package_idx').on(t.packageName),
+    // Exatamente uma origem: conta ou cartão.
+    check(
+      'capture_origin_rules_single_origin',
+      sql`(${t.accountId} IS NULL) <> (${t.cardId} IS NULL)`,
+    ),
   ],
 );

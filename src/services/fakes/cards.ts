@@ -111,6 +111,7 @@ export function createFakeCardsService(store: FakeStore): CardsService {
       description,
       categoryId,
       notes = null,
+      source = 'manual',
     }) {
       const card = requireCard(cardId);
       const groupId = installments > 1 ? newId() : null;
@@ -123,6 +124,7 @@ export function createFakeCardsService(store: FakeStore): CardsService {
           description,
           categoryId,
           notes,
+          source,
           cardId,
           invoiceId: invoiceFor(cardId, row.cycle).id,
           installmentGroupId: groupId,

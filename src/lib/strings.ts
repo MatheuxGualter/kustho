@@ -33,10 +33,26 @@ export const strings = {
     transactions: 'Lançamentos',
     cards: 'Cartões',
     more: 'Mais',
+    pending: 'Pendentes',
     newTransaction: 'Novo lançamento',
+    withBadge: (label: string, badge: string | number) => `${label}, ${badge} novas`,
   },
   screens: {
     home: { title: 'Início', placeholder: 'O resumo do mês aparece aqui.' },
+    captureSetup: {
+      title: 'Leitura de notificações',
+      placeholder:
+        'O que é lido e por quê, liberar o acesso (com "Permitir configurações restritas") e a bateria.',
+    },
+    captureDiagnostics: {
+      title: 'Diagnóstico da captura',
+      placeholder: 'Estado do serviço e notificações recentes, com exportação anonimizada.',
+    },
+    pending: {
+      title: 'Pendentes',
+      placeholder:
+        'Notificações dos bancos para confirmar, editar ou descartar. Nada entra no saldo sem um toque seu.',
+    },
     transactions: {
       title: 'Lançamentos',
       placeholder: 'A lista do mês, agrupada por dia, aparece aqui.',
@@ -443,6 +459,7 @@ export const strings = {
       same_account_transfer: 'Escolha contas diferentes para origem e destino.',
       invalid_amount: 'Informe um valor maior que zero.',
       not_found: 'Item não encontrado. Ele pode ter sido excluído.',
+      capture_incomplete: 'Falta o valor, o tipo ou a origem. Edite antes de confirmar.',
     },
   },
 } as const;

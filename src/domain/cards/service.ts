@@ -117,6 +117,7 @@ export function createCardsService(db: AppDatabase): CardsService {
       description,
       categoryId,
       notes = null,
+      source = 'manual',
     }) {
       const card = await requireCard(cardId);
       const rows = buildCardPurchase(card, { amountCents, installments, date });
@@ -134,6 +135,7 @@ export function createCardsService(db: AppDatabase): CardsService {
           description,
           categoryId,
           notes,
+          source,
           cardId,
           invoiceId: invoices[i].id,
           installmentGroupId: groupId,

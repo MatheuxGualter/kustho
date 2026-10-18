@@ -150,6 +150,8 @@ export type NewTransaction = {
   accountId: Id;
   status?: Extract<TransactionStatus, 'posted' | 'scheduled'>;
   notes?: string | null;
+  /** Padrão `manual`; `notification` quando vem de uma captura confirmada (Fase 2). */
+  source?: TransactionSource;
 };
 
 export type NewCardPurchase = {
@@ -161,6 +163,8 @@ export type NewCardPurchase = {
   description: string;
   categoryId: Id | null;
   notes?: string | null;
+  /** Padrão `manual`; `notification` quando vem de uma captura confirmada (Fase 2). */
+  source?: TransactionSource;
 };
 
 export type NewTransfer = {
@@ -185,4 +189,74 @@ export type DayGroup = {
   transactions: Transaction[];
   /** Receitas − despesas do dia (transferências não entram). */
   netCents: Cents;
+};
+
+// ─── Capturas (Fase 2) ───────────────────────────────────────────────────────
+
+/** Tipo de lançamento que uma notificação sugere. */
+export const captureKinds = [
+  'expense',
+  'income',
+  'card_purchase',
+] as const satisfies readonly TransactionKind[];
+export type CaptureKind = (typeof captureKinds)[number];
+
+/** Pendente na caixa, confirmada (virou lançamento) ou descartada. */
+export const captureStatuses = ['pending', 'confirmed', 'discarded'] as const;
+export type CaptureStatus = (typeof captureStatuses)[number];
+
+/** O que um parser (trilha C) extrai do texto de uma notificação. */
+export type ParsedNotification = {
+  amountCents: Cents;
+  kind: CaptureKind;
+  /** Estabelecimento ou pessoa, como veio no texto (vira a descrição sugerida). */
+  merchant: string | null;
+  /** Data da transação; se o texto não traz, a data local em que o banco notificou. */
+  date: ISODate;
+  /** Últimos 4 dígitos do cartão, quando o texto traz. */
+  cardLastDigits: string | null;
+  /** 0 a 1: quão certo o parser está de valor e tipo. */
+  confidence: number;
+};
+
+/**
+ * Sugestão extraída de uma notificação. Nada vira lançamento sem o usuário confirmar.
+ * Notificação que nenhum parser reconheceu fica com `parser: null` e os campos da
+ * interpretação vazios ("não interpretada"); nunca é descartada sozinha.
+ */
+export type Capture = Entity & {
+  /** `RawNotification.id` do módulo nativo; cada notificação gera no máximo uma captura. */
+  rawId: string;
+  packageName: string;
+  title: string | null;
+  text: string | null;
+  /** Quando o banco notificou. */
+  postedAt: Timestamp;
+  /** Parser que reconheceu o texto (ex.: `nubank`, `generic`); `null` = não interpretada. */
+  parser: string | null;
+  amountCents: Cents | null;
+  kind: CaptureKind | null;
+  merchant: string | null;
+  date: ISODate | null;
+  cardLastDigits: string | null;
+  /** Origem sugerida: uma conta ou um cartão (pelas regras aprendidas), nunca os dois. */
+  suggestedAccountId: Id | null;
+  suggestedCardId: Id | null;
+  /** 0 a 1; 0 quando não interpretada. */
+  confidence: number;
+  status: CaptureStatus;
+  /** Lançamento criado ao confirmar (o primeiro, se parcelado). */
+  transactionId: Id | null;
+};
+
+/**
+ * Regra aprendida ao confirmar: notificações deste app (e deste final de cartão, se houver)
+ * vão para esta conta ou cartão.
+ */
+export type CaptureOriginRule = Entity & {
+  packageName: string;
+  /** `null` vale para qualquer notificação do app. */
+  cardLastDigits: string | null;
+  accountId: Id | null;
+  cardId: Id | null;
 };
