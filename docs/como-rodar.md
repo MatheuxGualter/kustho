@@ -177,8 +177,16 @@ Abra o Kustho no celular; ele conecta sozinho. No terminal: `a` abre no Android,
 recarrega, `j` abre o depurador.
 
 **Quando recompilar (`pnpm android` de novo):** só quando entrar uma dependência nativa
-nova ou mudar o `app.json`. O PR avisa quando for o caso. Mudanças só de código
-TypeScript não precisam.
+nova ou mudar o `app.json` ou os ícones/splash em `assets/images/`. O PR avisa quando for o
+caso. Mudanças só de código TypeScript não precisam.
+
+A pasta `android/` é gerada uma vez e o `pnpm android` não a refaz sozinho: mudanças de
+ícone, splash, nome, permissões ou plugins no `app.json` só entram regerando a pasta antes:
+
+```bash
+npx expo prebuild --clean --platform android   # apaga e gera android/ de novo
+pnpm android
+```
 
 ### 3.4 Testar uma branch
 
