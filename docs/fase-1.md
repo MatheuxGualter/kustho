@@ -38,7 +38,7 @@ await accounts.createTransfer({ ... }); // todas as consultas abertas recarregam
 1. Implemente `createXxxService(db: AppDatabase): XxxService` em `src/domain/<domínio>/service.ts`.
 2. Regras em funções puras ao lado (`balance.ts`, `installments.ts`…), com testes escritos
    **antes**. Testes que tocam o banco usam `createTestDb()`.
-3. Troque a linha da sua trilha em `createAppServices()` (`src/services/index.tsx`).
+3. Registre o serviço em `src/services/app.ts`.
 4. Rode os testes de fumaça dos fakes contra o real, se quiser: eles usam só o contrato.
 
 ## Trilhas
@@ -70,7 +70,7 @@ await accounts.createTransfer({ ... }); // todas as consultas abertas recarregam
       com "Desfazer".
 - [x] Previstos vencidos: aviso no topo da lista para confirmar.
 - [x] Editar e excluir lançamento.
-- [ ] Trocar o fake pelo real no registro (na integração).
+- [x] Trocar o fake pelo real no registro (integração).
 - [ ] Medir os 10 lançamentos cronometrados (meta < 5 s) no teste de uso.
 
 ### C · Cartões e faturas
@@ -86,7 +86,7 @@ await accounts.createTransfer({ ... }); // todas as consultas abertas recarregam
 - [x] `HomeCardsSection` na Início.
 - [x] Campo de parcelas no novo lançamento (entregue junto com a B).
 - [ ] Estorno parcial pela interface (o serviço já aceita; a tela estorna o valor total).
-- [ ] Trocar o fake pelo real no registro (na integração).
+- [x] Trocar o fake pelo real no registro (integração).
 
 ### D · Categorias e visão geral
 
@@ -118,7 +118,7 @@ await accounts.createTransfer({ ... }); // todas as consultas abertas recarregam
 
 ## Integração
 
-- Trocar todos os fakes pelos serviços reais.
+- [x] Trocar todos os fakes pelos serviços reais (`src/services/app.ts`).
 - Testes ponta a ponta com Maestro: lançar despesa; compra em 3x aparece em 3 faturas;
   pagar fatura reduz o saldo.
 - **Teste de uso:** cada membro lança os próprios gastos reais por um período combinado.
