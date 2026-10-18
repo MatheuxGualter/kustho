@@ -197,11 +197,28 @@ pnpm install
 pnpm start --clear      # --clear limpa o cache do Metro na troca de branch
 ```
 
+Se a branch mexe no `app.json`, em ícones ou em dependências nativas (o PR avisa), rode
+antes `npx expo prebuild --clean --platform android` e `pnpm android`.
+
 ### 3.5 Dados de exemplo
 
 No app: **Mais → Catálogo de componentes → Popular dados de exemplo** (3 contas,
 2 cartões e 3 meses de lançamentos). O mesmo catálogo mostra todos os componentes, para
 conferir os temas claro e escuro e a fonte grande.
+
+### 3.6 Ícone do app e splash
+
+Ficam em `assets/images/` e são configurados no `app.json`. Para trocar, gere os PNGs
+nestes formatos (mesmos nomes) e regere o nativo (`prebuild --clean`, passo 3.3):
+
+| Arquivo                       | Tamanho   | Conteúdo                                                              |
+| ----------------------------- | --------- | --------------------------------------------------------------------- |
+| `icon.png`                    | 1024×1024 | Fundo verde opaco, sem transparência e sem cantos arredondados        |
+| `android-icon-foreground.png` | 1024×1024 | Só o desenho, fundo transparente, dentro do círculo central de ~60%   |
+| `android-icon-background.png` | 1024×1024 | Verde `#0F766E` sólido                                                |
+| `android-icon-monochrome.png` | 1024×1024 | Mesmo desenho e posição do foreground, uma cor só, fundo transparente |
+| `splash-icon.png`             | 1024×1024 | Aparece com 120 dp no centro, sobre fundo claro e escuro              |
+| `favicon.png`                 | 48×48     | Só para a web                                                         |
 
 ---
 
@@ -211,7 +228,7 @@ conferir os temas claro e escuro e a fonte grande.
 pnpm typecheck && pnpm lint && pnpm test
 ```
 
-Fluxo de branches e PRs: ver "Trabalho em trilhas" no [`CLAUDE.md`](../CLAUDE.md).
+Fluxo de branches, PRs e trabalho com o Claude Code: [`trabalhando-com-claude.md`](trabalhando-com-claude.md).
 
 ---
 

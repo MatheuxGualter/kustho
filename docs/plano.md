@@ -2,6 +2,9 @@
 
 Oct 17, 2026 · @Matheux
 
+> Este é o plano (visão, regras e fases). O andamento da fase atual fica em
+> [`fase-1.md`](fase-1.md); o índice da documentação, em [`README.md`](README.md).
+
 ## Visão do produto
 
 O Kustho é um gerenciador financeiro Android-first que nasce como um controle manual completo (contas, cartões, entradas e saídas) e evolui para captura automática por notificações. O Open Finance só entra depois que um spike provar que vale o investimento.
@@ -244,9 +247,9 @@ A Fase 0 termina quando o app abre num Android físico, alterna tema claro e esc
 
 **Kickoff (todos juntos)**
 
-- [ ] Criar o projeto com `create-expo-app` (TypeScript + Expo Router), a estrutura de pastas e o repositório no GitHub
-- [ ] Escrever o `AGENTS.md` com as convenções deste plano
-- [ ] Combinar os nomes dos tokens (`ui/tokens.ts` com valores provisórios) e os tipos de domínio da Fase 1 (`src/domain/types.ts`)
+- [x] Criar o projeto com `create-expo-app` (TypeScript + Expo Router), a estrutura de pastas e o repositório no GitHub
+- [x] Escrever o `AGENTS.md` com as convenções deste plano
+- [x] Combinar os nomes dos tokens (`ui/tokens.ts` com valores provisórios) e os tipos de domínio da Fase 1 (`src/domain/types.ts`)
 
 **Trilhas**
 
@@ -267,7 +270,7 @@ A Fase 1 termina quando o saldo de cada conta e a fatura de cada cartão no app 
 
 **Kickoff de contratos**
 
-- [ ] Assinaturas dos serviços de domínio, por exemplo:
+- [x] Assinaturas dos serviços de domínio, por exemplo:
 
 ```ts
 // contas
@@ -282,8 +285,8 @@ createCardPurchase(input: NewCardPurchase): Transaction[]       // N parcelas
 payInvoice(invoiceId: string, accountId: string, amountCents: number): Transaction
 ```
 
-- [ ] Abas e rotas criadas (Início, Lançamentos, Cartões, Mais) com telas vazias, para ninguém disputar o arquivo de navegação
-- [ ] Um fake em memória de cada serviço, para as telas funcionarem antes da implementação real
+- [x] Abas e rotas criadas (Início, Lançamentos, Cartões, Mais) com telas vazias, para ninguém disputar o arquivo de navegação
+- [x] Um fake em memória de cada serviço, para as telas funcionarem antes da implementação real
 
 **Trilhas**
 
@@ -296,8 +299,8 @@ payInvoice(invoiceId: string, accountId: string, amountCents: number): Transacti
 
 **Checklist de polimento** (cada trilha aplica nas suas telas)
 
-- [ ] Estados vazios e skeletons; nenhuma tela em branco
-- [ ] Vibração leve nas ações principais; desfazer em toda exclusão
+- [x] Estados vazios e skeletons; nenhuma tela em branco
+- [x] Vibração leve nas ações principais; desfazer em toda exclusão
 - [ ] Lista + detalhe na faixa expandida (tablet e dobrável)
 - [ ] Fonte em 130%, rótulos de acessibilidade e contraste AA
 
@@ -485,12 +488,12 @@ O maior risco técnico é a captura de notificações falhar em silêncio; o mai
 **Próximos passos**
 
 - [ ] Fechar a paleta completa a partir do verde-petróleo e validar contraste AA nos dois temas (trilha B da Fase 0)
-- [ ] Dividir as trilhas A a D entre os quatro membros e fazer o kickoff da Fase 0
-- [ ] Primeira sessão juntos: `schema.ts` do Drizzle e `lib/money.ts` com testes
+- [ ] Definir os donos das trilhas A a D (ver `fase-1.md`)
+- [x] Primeira sessão juntos: `schema.ts` do Drizzle e `lib/money.ts` com testes
 
 **Artefatos para preparar antes de codar com o Claude Code**
 
-- [ ] `CLAUDE.md` (e cópia `AGENTS.md`) com stack, convenções, pastas por trilha, regras de negócio e definição de pronto
-- [ ] `src/domain/types.ts` inicial com os tipos de `Account`, `CreditCard`, `Invoice`, `Category` e `Transaction`
+- [x] `CLAUDE.md` (e cópia `AGENTS.md`) com stack, convenções, pastas por trilha, regras de negócio e definição de pronto
+- [x] `src/domain/types.ts` inicial com os tipos de `Account`, `CreditCard`, `Invoice`, `Category` e `Transaction`
 - [ ] Telas de referência (Início, Lançamentos, Cartões, Fatura e sheet de novo lançamento) nos temas claro e escuro, para guiar o acabamento visual
-- [ ] Este plano exportado em Markdown dentro do repositório (`docs/plano.md`), para o Claude Code consultar
+- [x] Este plano exportado em Markdown dentro do repositório (`docs/plano.md`), para o Claude Code consultar

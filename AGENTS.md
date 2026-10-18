@@ -4,6 +4,10 @@ Gerenciador financeiro Android-first, offline-first. Começa como controle manua
 (contas, cartões, faturas, entradas e saídas) e evolui para captura de notificações dos
 bancos. O plano completo está em [`docs/plano.md`](docs/plano.md); consulte-o antes de
 decidir regra de negócio, escopo ou visual.
+O que já está pronto e o que falta na fase atual: [`docs/fase-1.md`](docs/fase-1.md).
+Fluxo de trabalho, passagem de bastão e armadilhas conhecidas:
+[`docs/trabalhando-com-claude.md`](docs/trabalhando-com-claude.md). Ao terminar uma tarefa,
+marque o item em `fase-1.md` e registre armadilhas novas lá.
 
 > `AGENTS.md` é uma cópia exata deste arquivo (o CI confere). Edite os dois juntos.
 
