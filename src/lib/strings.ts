@@ -32,6 +32,7 @@ export const strings = {
     home: 'Início',
     transactions: 'Lançamentos',
     cards: 'Cartões',
+    accounts: 'Contas',
     more: 'Mais',
     pending: 'Pendentes',
     newTransaction: 'Novo lançamento',

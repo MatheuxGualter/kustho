@@ -127,9 +127,12 @@ pendência de outra trilha.
 - [x] Todos os fakes trocados pelos serviços reais (`src/services/app.ts`).
 - [x] Fluxos Maestro escritos (`.maestro/`): lançar despesa; compra em 3x aparece em 3
       faturas; pagar fatura reduz o saldo. Começam de `kustho://dev/seed`.
-- [ ] Rodar os fluxos do Maestro num aparelho e ajustar o que falhar (ainda não rodados).
-- [ ] **Teste de uso:** cada membro lança os próprios gastos reais por um período combinado.
-      Cronometrem 10 lançamentos (meta: menos de 5 s cada) e registrem os atritos.
+- [ ] Rodar os fluxos do Maestro num aparelho. 1ª rodada (out/2026): os 4 falharam no
+      preparo (o link chegava antes do app carregar); `_preparar.yaml` agora espera a Início.
+      Rodar de novo.
+- [x] **Teste de uso** (versão curta, out/2026): gastos reais lançados no aparelho;
+      funcionou. Atritos encontrados e corrigidos: estorno acumulado (#25) e acentos no
+      CSV (#25).
 - [ ] Revisar os logos dos bancos antes de qualquer publicação na Play Store.
 
 ## Histórico de entregas

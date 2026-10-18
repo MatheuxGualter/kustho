@@ -1,11 +1,20 @@
 # Subfluxo: abre o app com os dados de exemplo (3 contas, 2 cartões, 3 meses).
+# Precisa do Metro rodando (`pnpm start`) e do bloqueio do app desligado.
 appId: app.kustho
 ---
 - launchApp
+# O app de desenvolvimento baixa o JS do Metro ao abrir: espera a Início antes do link,
+# senão o link chega antes do app e se perde.
+- extendedWaitUntil:
+    visible: 'Início'
+    timeout: 120000
+- assertNotVisible: 'Kustho bloqueado'
 - openLink: kustho://dev/seed
 - extendedWaitUntil:
     visible: 'Dados de exemplo prontos'
-    timeout: 30000
+    timeout: 60000
 - tapOn:
     id: seed-home
-- assertVisible: 'Início'
+- extendedWaitUntil:
+    visible: 'Início'
+    timeout: 10000

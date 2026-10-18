@@ -18,7 +18,6 @@ name: Pagar fatura reduz o saldo
 # O pagamento aparece como saída da conta Nubank.
 - tapOn: 'Lançamentos'
 - assertVisible: '.*Pagamento.*'
-- tapOn: 'Mais'
 - tapOn: 'Contas'
 - tapOn: 'Nubank'
 - assertVisible: '.*Pagamento.*'
