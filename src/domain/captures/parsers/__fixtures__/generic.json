@@ -1,0 +1,217 @@
+{
+  "_sobre": "Fixtures SINTÉTICAS do parser genérico (textos no estilo dos bancos, sem dado real). Notificações reais entram em <banco>.json, anonimizadas: nomes, finais de cartão e estabelecimentos trocados. expected null = não deve virar sugestão.",
+  "cases": [
+    {
+      "name": "compra no crédito aprovada com final do cartão",
+      "notification": {
+        "packageName": "com.exemplo.banco",
+        "title": "Compra aprovada",
+        "text": "Compra de R$ 45,90 APROVADA em PADARIA EXEMPLO para o cartão final 0000."
+      },
+      "expected": {
+        "parser": "generic",
+        "amountCents": 4590,
+        "kind": "card_purchase",
+        "merchant": "PADARIA EXEMPLO",
+        "cardLastDigits": "0000"
+      }
+    },
+    {
+      "name": "compra no crédito com milhar",
+      "notification": {
+        "packageName": "com.exemplo.banco",
+        "title": "Compra no crédito",
+        "text": "Compra no crédito de R$ 1.234,56 em LOJA DE MÓVEIS LTDA. Cartão final 1234."
+      },
+      "expected": {
+        "parser": "generic",
+        "amountCents": 123456,
+        "kind": "card_purchase",
+        "merchant": "LOJA DE MÓVEIS LTDA",
+        "cardLastDigits": "1234"
+      }
+    },
+    {
+      "name": "compra no débito vira despesa em conta",
+      "notification": {
+        "packageName": "com.exemplo.banco",
+        "title": "Compra no débito",
+        "text": "Compra no débito de R$ 23,50 em MERCADO EXEMPLO."
+      },
+      "expected": {
+        "parser": "generic",
+        "amountCents": 2350,
+        "kind": "expense",
+        "merchant": "MERCADO EXEMPLO",
+        "cardLastDigits": null
+      }
+    },
+    {
+      "name": "horário depois do estabelecimento",
+      "notification": {
+        "packageName": "com.exemplo.banco",
+        "title": "Compra aprovada",
+        "text": "Compra de R$ 12,00 em UBER EXEMPLO às 14:32 no cartão final 4321"
+      },
+      "expected": {
+        "parser": "generic",
+        "amountCents": 1200,
+        "kind": "card_purchase",
+        "merchant": "UBER EXEMPLO",
+        "cardLastDigits": "4321"
+      }
+    },
+    {
+      "name": "pix recebido",
+      "notification": {
+        "packageName": "com.exemplo.banco",
+        "title": "Pix recebido",
+        "text": "Você recebeu um Pix de R$ 150,00 de FULANO DE TAL."
+      },
+      "expected": {
+        "parser": "generic",
+        "amountCents": 15000,
+        "kind": "income",
+        "merchant": "FULANO DE TAL"
+      }
+    },
+    {
+      "name": "transferência recebida sem acento",
+      "notification": {
+        "packageName": "com.exemplo.banco",
+        "title": "Transferencia recebida",
+        "text": "Voce recebeu uma transferencia de R$ 2.000,00 de EMPRESA EXEMPLO SA"
+      },
+      "expected": {
+        "parser": "generic",
+        "amountCents": 200000,
+        "kind": "income",
+        "merchant": "EMPRESA EXEMPLO SA"
+      }
+    },
+    {
+      "name": "entrada sem nome legível",
+      "notification": {
+        "packageName": "com.exemplo.banco",
+        "title": "Depósito recebido",
+        "text": "Depósito de R$ 500,00 recebido na sua conta."
+      },
+      "expected": {
+        "parser": "generic",
+        "amountCents": 50000,
+        "kind": "income",
+        "merchant": null
+      }
+    },
+    {
+      "name": "pix enviado",
+      "notification": {
+        "packageName": "com.exemplo.banco",
+        "title": "Pix enviado",
+        "text": "Pix de R$ 80,00 enviado para CICLANA DA SILVA."
+      },
+      "expected": {
+        "parser": "generic",
+        "amountCents": 8000,
+        "kind": "expense",
+        "merchant": "CICLANA DA SILVA"
+      }
+    },
+    {
+      "name": "você pagou um boleto",
+      "notification": {
+        "packageName": "com.exemplo.banco",
+        "title": "Pagamento realizado",
+        "text": "Você pagou R$ 99,90 para OPERADORA EXEMPLO."
+      },
+      "expected": {
+        "parser": "generic",
+        "amountCents": 9990,
+        "kind": "expense",
+        "merchant": "OPERADORA EXEMPLO"
+      }
+    },
+    {
+      "name": "texto só no título, sem estabelecimento",
+      "notification": {
+        "packageName": "com.exemplo.banco",
+        "title": "Pix recebido: R$ 10,00",
+        "text": null
+      },
+      "expected": {
+        "parser": "generic",
+        "amountCents": 1000,
+        "kind": "income",
+        "merchant": null
+      }
+    },
+    {
+      "name": "valor com R$ colado",
+      "notification": {
+        "packageName": "com.exemplo.banco",
+        "title": "Compra aprovada",
+        "text": "Compra aprovada: R$5,00 em CAFE EXEMPLO"
+      },
+      "expected": {
+        "parser": "generic",
+        "amountCents": 500,
+        "kind": "card_purchase",
+        "merchant": "CAFE EXEMPLO"
+      }
+    },
+    {
+      "name": "compra recusada não é transação",
+      "notification": {
+        "packageName": "com.exemplo.banco",
+        "title": "Compra não aprovada",
+        "text": "Compra de R$ 300,00 em LOJA EXEMPLO foi recusada por falta de limite."
+      },
+      "expected": null
+    },
+    {
+      "name": "fatura fechada não é transação",
+      "notification": {
+        "packageName": "com.exemplo.banco",
+        "title": "Sua fatura fechou",
+        "text": "A fatura de R$ 1.230,20 vence em 05/11."
+      },
+      "expected": null
+    },
+    {
+      "name": "pix agendado ainda não aconteceu",
+      "notification": {
+        "packageName": "com.exemplo.banco",
+        "title": "Pix agendado",
+        "text": "Pix de R$ 50,00 agendado para 20/10 para FULANO."
+      },
+      "expected": null
+    },
+    {
+      "name": "aviso sem valor",
+      "notification": {
+        "packageName": "com.exemplo.banco",
+        "title": "Banco Exemplo",
+        "text": "Você tem uma nova atividade na sua conta."
+      },
+      "expected": null
+    },
+    {
+      "name": "código de segurança",
+      "notification": {
+        "packageName": "com.exemplo.banco",
+        "title": "Código de verificação",
+        "text": "Seu código é 123456. Não compartilhe."
+      },
+      "expected": null
+    },
+    {
+      "name": "valor sem tipo reconhecível",
+      "notification": {
+        "packageName": "com.exemplo.banco",
+        "title": "Banco Exemplo",
+        "text": "Movimentação de R$ 12,00 na sua conta."
+      },
+      "expected": null
+    }
+  ]
+}

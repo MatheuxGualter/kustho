@@ -75,3 +75,31 @@ Para testar no aparelho: `pnpm android`, liberar o acesso a notificações do Ku
 (ou `adb shell cmd notification allow_listener app.kustho/app.kustho.notificationcapture.BankListener`)
 e rodar `scripts/simulate-notification.sh --exemplos`. Para ler o que foi gravado:
 `adb exec-out run-as app.kustho cat databases/kustho_notification_capture.db > cap.db`.
+
+### C · Parsers
+
+- [x] Parser genérico de reserva (`src/domain/captures/parsers/generic.ts`): valor com R$,
+      tipo por palavras-chave (entrada, débito, cartão, saída), estabelecimento ou pessoa,
+      final do cartão. Recusa compra negada, fatura, limite, código, agendamento e estorno
+      (estorno fica para a Fase 3). Data = data local da notificação. Confiança 0,6 a 0,8.
+- [x] Fixtures rodadas por `parsers/__tests__/fixtures.test.ts` (17 casos **sintéticos** em
+      `__fixtures__/generic.json`).
+- [ ] Pelo menos 30 notificações **reais** de 3 ou mais bancos, anonimizadas, em
+      `__fixtures__/<banco>.json`.
+- [ ] Parsers por banco (`parsers/<banco>.ts`, registrados em `parsers/index.ts`) quando
+      as fixtures reais mostrarem formatos que o genérico erra.
+
+### D · Caixa de Pendentes
+
+- [x] Serviço real `createCapturesService(db, …)` (`src/domain/captures/service.ts`) com
+      repositório próprio; a suíte de contrato roda no fake e no real (inclui duas leituras
+      ao mesmo tempo sem duplicar).
+- [x] Aba Pendentes: sugestões com valor, tipo, origem e o texto original; confirmar em 1
+      toque, "Confirmar N prontas", descartar com "Desfazer". Não interpretada pede
+      "Completar".
+- [x] Completar/editar (`/pendente/[id]`): tipo, valor, descrição, conta ou cartão, data,
+      categoria e parcelas, com a notificação original no topo.
+- [x] Aprende a origem (app + final do cartão → conta ou cartão) a cada confirmação.
+- [x] `CaptureIngestor` no layout raiz: lê o módulo ao abrir o app e ao voltar ao primeiro
+      plano; a aba também lê ao abrir.
+- [ ] Lista + detalhe na faixa expandida; conferência com fonte em 130%.
