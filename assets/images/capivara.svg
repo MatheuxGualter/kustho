@@ -1,33 +1,37 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="15 30 375 240">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="18 78 412 288">
   <defs>
-    <rect id="back" x="190" y="76" width="84" height="56" rx="9" transform="rotate(-16 232 104)"/>
-    <rect id="front" x="240" y="78" width="84" height="56" rx="9" transform="rotate(8 282 106)"/>
-    <clipPath id="above"><path d="M0 0 H400 V140 H344 C292 162 220 162 166 140 H0 Z"/></clipPath>
-    <mask id="hideBody" maskUnits="userSpaceOnUse" x="0" y="0" width="400" height="300">
-      <rect width="400" height="300" fill="#FFFFFF"/>
-      <g clip-path="url(#above)" fill="#000000" stroke="#000000" stroke-width="11"><use href="#back"/><use href="#front"/></g>
+    <rect id="back" x="244" y="134" width="86" height="56" rx="10" transform="rotate(-14 287 162)"/>
+    <rect id="front" x="296" y="134" width="86" height="56" rx="10" transform="rotate(8 339 162)"/>
+    <clipPath id="above"><path d="M0 0 H440 V196 H384 C332 218 262 218 208 196 H0 Z"/></clipPath>
+    <mask id="hideBody" maskUnits="userSpaceOnUse" x="0" y="0" width="440" height="400">
+      <rect width="440" height="400" fill="#FFFFFF"/>
+      <g clip-path="url(#above)" fill="#000000" stroke="#000000" stroke-width="12"><use href="#back"/><use href="#front"/></g>
     </mask>
-    <mask id="hideBack" maskUnits="userSpaceOnUse" x="0" y="0" width="400" height="300">
-      <rect width="400" height="300" fill="#FFFFFF"/>
-      <use href="#front" fill="#000000" stroke="#000000" stroke-width="11"/>
+    <mask id="hideBack" maskUnits="userSpaceOnUse" x="0" y="0" width="440" height="400">
+      <rect width="440" height="400" fill="#FFFFFF"/>
+      <use href="#front" fill="#000000" stroke="#000000" stroke-width="12"/>
     </mask>
   </defs>
-  <g fill="none" stroke="#FFFFFF" stroke-width="11" stroke-linecap="round" stroke-linejoin="round">
+  <g fill="none" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
     <g mask="url(#hideBody)">
-      <path d="M70 170 C45 168 30 150 32 130 C34 108 50 92 75 82 C100 72 130 70 152 78 C176 86 190 98 206 100 C262 92 332 100 360 140 C380 168 378 205 360 222 L354 240 Q351 250 340 250 L310 250 Q300 250 302 241 L306 222 C264 230 200 230 164 222 L160 244 Q158 252 147 252 L121 252 Q111 252 113 243 L116 226 C108 205 95 180 70 170 Z"/>
+      <path d="M34 168 C36 140 70 118 105 108 C125 102 150 104 170 116 C186 126 196 142 220 146 C266 136 334 140 372 166 C410 190 420 245 400 285 C392 300 378 308 365 312 L372 330 C376 340 368 346 358 346 L322 346 C314 346 312 338 318 333 L330 322 C290 330 240 330 205 322 L200 346 C198 354 190 356 182 356 L152 356 C144 356 142 348 148 344 L160 336 C158 316 150 300 140 288 C120 262 100 240 82 228 C66 224 48 214 40 200 C32 190 30 178 34 168 Z"/>
+      <path d="M330 322 C318 296 330 268 362 262"/>
     </g>
-    <path d="M128 76 C124 56 152 54 154 74"/>
-    <path d="M47 147 Q56 155 67 150"/>
+    <path d="M118 106 C114 88 138 84 146 102"/>
+    <path d="M152 112 C150 92 178 88 182 112"/>
+    <path d="M48 204 Q60 212 72 207"/>
     <g clip-path="url(#above)">
       <use href="#back" mask="url(#hideBack)"/>
-      <g transform="rotate(8 282 106)">
-        <rect x="240" y="78" width="84" height="56" rx="9"/>
-        <path d="M240 98 L324 98"/>
+      <g transform="rotate(8 339 162)">
+        <rect x="296" y="134" width="86" height="56" rx="10"/>
+        <path d="M296 154 L382 154"/>
       </g>
     </g>
-    <path d="M166 140 C220 162 292 162 344 140"/>
-    <path d="M182 160 C228 178 284 178 330 160" stroke-width="5" stroke-dasharray="1 12"/>
+    <path d="M208 196 C262 218 332 218 384 196"/>
+    <path d="M226 216 C272 236 324 236 368 216" stroke-width="5" stroke-dasharray="1 13"/>
   </g>
-  <circle cx="92" cy="108" r="7.5" fill="#FFFFFF"/>
-  <circle cx="44" cy="122" r="4.5" fill="#FFFFFF"/>
+  <g fill="#FFFFFF">
+    <ellipse cx="106" cy="144" rx="9" ry="6" transform="rotate(-15 106 144)"/>
+    <circle cx="45" cy="176" r="5"/>
+  </g>
 </svg>
