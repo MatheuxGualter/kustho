@@ -1,4 +1,4 @@
-import { and, asc, between, desc, eq, isNull } from 'drizzle-orm';
+import { and, asc, between, desc, eq, inArray, isNull } from 'drizzle-orm';
 
 import type { ISODate, Transaction } from '@/domain/types';
 import { nowTimestamp } from '@/lib/id';
@@ -77,4 +77,18 @@ export async function setTransactionDeleted(db: AppDatabase, id: string, deleted
     .update(transactions)
     .set({ deletedAt: deleted ? now : null, updatedAt: now })
     .where(eq(transactions.id, id));
+}
+
+/** Exclusão lógica (ou desfazer) de vários lançamentos de uma vez. */
+export async function setTransactionsDeleted(
+  db: AppDatabase,
+  ids: readonly string[],
+  deleted: boolean,
+) {
+  if (ids.length === 0) return;
+  const now = nowTimestamp();
+  await db
+    .update(transactions)
+    .set({ deletedAt: deleted ? now : null, updatedAt: now })
+    .where(inArray(transactions.id, [...ids]));
 }

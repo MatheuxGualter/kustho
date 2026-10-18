@@ -58,12 +58,20 @@ await accounts.createTransfer({ ... }); // todas as consultas abertas recarregam
 
 ### B · Lançamentos
 
-- Sheet de novo lançamento com `AmountKeypad`: valor, descrição e origem visíveis de cara;
-  o resto em "mais opções". Meta: lançar em menos de 5 s.
-- A origem pode ser conta ou cartão: com cartão, o sheet usa
-  `CardsService.createCardPurchase` (campos de parcelas entregues pela C).
-- Lista do mês agrupada por dia (FlashList), filtros e busca, editar, excluir com desfazer.
-- Lançamentos previstos: perguntar se foram efetivados quando a data chega.
+- [x] Regras puras: agrupar por dia, resumo do mês, filtros, o que é excluído junto
+      (`src/domain/transactions/rules.ts`).
+- [x] Serviço real `createTransactionsService(db)` com suíte de contrato (fake e real).
+      Editar uma perna da transferência ajusta a outra.
+- [x] Novo lançamento: tipo, valor no `AmountKeypad`, descrição e origem visíveis de cara
+      (lembra a última origem); categoria, data, parcelas (cartão) e observações em "Mais
+      opções". Data futura vira previsto.
+- [x] Aba Lançamentos: `MonthSwitcher` (setas, deslize, toque volta ao mês atual), busca
+      sem acentos, filtro por tipo, lista por dia (FlashList), deslizar para editar ou excluir
+      com "Desfazer".
+- [x] Previstos vencidos: aviso no topo da lista para confirmar.
+- [x] Editar e excluir lançamento.
+- [ ] Trocar o fake pelo real no registro (na integração).
+- [ ] Medir os 10 lançamentos cronometrados (meta < 5 s) no teste de uso.
 
 ### C · Cartões e faturas
 

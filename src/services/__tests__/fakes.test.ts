@@ -12,34 +12,6 @@ const setup = () => {
   return { store, services: createFakeServices(store) };
 };
 
-describe('fake de lançamentos', () => {
-  it('agrupa o mês por dia, do mais recente ao mais antigo', async () => {
-    const { services } = setup();
-    const groups = await services.transactions.listMonthTransactions('2026-09');
-    expect(groups.length).toBeGreaterThan(0);
-    const dates = groups.map((g) => g.date);
-    expect([...dates].sort().reverse()).toEqual(dates);
-  });
-
-  it('excluir uma parcela leva o grupo junto e desfazer restaura', async () => {
-    const { services, store } = setup();
-    const installment = store.transactions.find((t) => t.installmentGroupId)!;
-    const ids = await services.transactions.deleteTransaction(installment.id);
-    expect(ids.length).toBe(installment.installmentTotal);
-    expect(await services.transactions.getTransaction(installment.id)).toBeUndefined();
-    await services.transactions.restoreTransactions(ids);
-    expect(await services.transactions.getTransaction(installment.id)).toBeDefined();
-  });
-
-  it('resumo do mês separa receitas e despesas', async () => {
-    const { services } = setup();
-    const summary = await services.transactions.getMonthSummary('2026-09');
-    expect(summary.incomeCents).toBeGreaterThan(0);
-    expect(summary.expenseCents).toBeGreaterThan(0);
-    expect(summary.netCents).toBe(summary.incomeCents - summary.expenseCents);
-  });
-});
-
 describe('fake de cartões', () => {
   it('compra em 3x gera 3 parcelas em faturas seguidas', async () => {
     const { services } = setup();

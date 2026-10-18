@@ -8,6 +8,9 @@ type PreferencesState = {
   theme: ThemePreference;
   /** Modo "ocultar valores": `MoneyText` mostra máscara no lugar dos números. */
   hideValues: boolean;
+  /** Última origem usada no novo lançamento (`account:<id>` ou `card:<id>`). */
+  lastOrigin: string | null;
+  setLastOrigin: (origin: string) => void;
   setTheme: (theme: ThemePreference) => void;
   toggleHideValues: () => void;
 };
@@ -18,13 +21,15 @@ export const usePreferences = create<PreferencesState>()(
     (set) => ({
       theme: 'system',
       hideValues: false,
+      lastOrigin: null,
+      setLastOrigin: (lastOrigin) => set({ lastOrigin }),
       setTheme: (theme) => set({ theme }),
       toggleHideValues: () => set((s) => ({ hideValues: !s.hideValues })),
     }),
     {
       name: 'kustho.preferences',
       storage: createJSONStorage(() => Storage),
-      partialize: ({ theme, hideValues }) => ({ theme, hideValues }),
+      partialize: ({ theme, hideValues, lastOrigin }) => ({ theme, hideValues, lastOrigin }),
     },
   ),
 );

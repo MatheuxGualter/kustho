@@ -91,7 +91,7 @@ Import com alias `@/` → `src/`.
   sempre `await`. Mocks de módulos nativos ficam em `src/test/setup.ui.ts`.
 - **Componentes base** em `src/ui/components/` (veja todos no catálogo `dev/ui`):
   `AppText`, `MoneyText` (todo valor), `Button`, `TextField`, `MoneyField`, `DateField`,
-  `SegmentedControl`, `ChipSelect`, `ColorPicker`, `Card`, `InstitutionAvatar`,
+  `SegmentedControl`, `ChipSelect`, `ColorPicker`, `MonthSwitcher`, `Card`, `InstitutionAvatar`,
   `CategoryIcon`, `TransactionRow`, `AmountKeypad`, `EmptyState`, `Skeleton`, `Screen` e
   `showToast(msg, onUndo?)` (aviso com "Desfazer"). Use-os antes de criar outro.
 - **Erros de regra**: serviços lançam `DomainError` (`src/domain/errors.ts`); a tela mostra
