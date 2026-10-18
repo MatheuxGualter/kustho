@@ -76,7 +76,7 @@ O Kotlin só lê e guarda notificações; toda interpretação acontece em TypeS
 - Datas de lançamento: string local `YYYY-MM-DD` no fuso do aparelho; nunca converter para UTC antes de calcular fatura ou agrupar por dia.
 - Moeda única: BRL. Idioma único: pt-BR, com textos da interface centralizados em `src/lib/strings.ts`.
 - Ícones: `lucide-react-native`. Fonte: Inter via `@expo-google-fonts/inter`. Vibração: `expo-haptics`.
-- Instituições aparecem com cor e iniciais escolhidas pelo usuário, sem logos de bancos (marcas de terceiros).
+- Instituições: os 20 bancos mais usados aparecem com o logo oficial num círculo padronizado (catálogo em `src/ui/banks/`); as demais, com cor e iniciais escolhidas pelo usuário. *Decisão revista em out/2026: antes eram só iniciais.*
 - Gerenciador de pacotes único para o grupo (sugestão: `pnpm`) e versão do Node fixada em `.nvmrc`.
 - Expo: a versão estável mais recente no dia do `create-expo-app`, fixada e atualizada só em conjunto.
 
@@ -472,6 +472,7 @@ O maior risco técnico é a captura de notificações falhar em silêncio; o mai
 | Política do Google Play para acesso a notificações | Publicação recusada | Não afeta o MVP (APK); se o app for para a loja no futuro, justificar como função central e publicar política de privacidade |
 | Custo do Open Finance | Fase 5 inviável | Spike curto e descartável; Meu Pluggy para uso pessoal |
 | Escopo cresce | Nada fica pronto | Cada fase fecha com app usável; ideias novas vão para um backlog separado |
+| Logos de bancos são marcas de terceiros | Recusa na Play Store ou pedido de remoção | Uso só para identificar a instituição do próprio usuário; revisar (ou trocar por iniciais) antes de publicar na loja |
 | Dados financeiros guardados no aparelho | Exposição se o celular for acessado ou o backup vazar | Bloqueio por biometria ou PIN; avaliar criptografia do SQLite (SQLCipher); decidir se o banco entra no backup automático do Android; fixtures sempre anonimizadas |
 
 **Decisões em aberto**

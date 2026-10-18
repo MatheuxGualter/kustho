@@ -242,6 +242,11 @@ export const strings = {
     skip: 'Agora não',
     step: (n: number, total: number) => `Passo ${n} de ${total}`,
   },
+  banks: {
+    label: 'Banco',
+    other: 'Outro',
+    otherHint: 'Instituição fora da lista: escolha a cor e as iniciais do ícone.',
+  },
   cards: {
     newCard: 'Novo cartão',
     empty: 'Nenhum cartão ainda',
@@ -384,6 +389,7 @@ export const strings = {
     typography: 'Tipografia',
     spacing: 'Espaçamento',
     accents: 'Cores de conta e cartão',
+    banks: 'Logos dos bancos',
     sample: 'Kustho organiza suas finanças',
     money: 'Valores',
     buttons: 'Botões',

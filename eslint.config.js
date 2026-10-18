@@ -7,12 +7,20 @@ module.exports = defineConfig([
   expoConfig,
   prettierRecommended,
   {
-    ignores: ['dist/*', 'android/*', 'ios/*', 'src/db/migrations/*', 'expo-env.d.ts'],
+    ignores: [
+      'dist/*',
+      'android/*',
+      'ios/*',
+      'src/db/migrations/*',
+      'expo-env.d.ts',
+      'src/ui/banks/logos.generated.ts',
+    ],
   },
   {
     // Cores só a partir de src/ui/tokens.ts.
     files: ['src/**/*.{ts,tsx}'],
-    ignores: ['src/ui/tokens.ts', 'src/**/__tests__/**'],
+    // Exceções: os tokens e as cores oficiais das marcas dos bancos (dados, não tema).
+    ignores: ['src/ui/tokens.ts', 'src/ui/banks/**', 'src/**/__tests__/**'],
     rules: {
       'no-restricted-syntax': [
         'error',

@@ -83,7 +83,11 @@ export function AccountDetailScreen() {
         ) : (
           <Card>
             <View className="flex-row items-center gap-3">
-              <InstitutionAvatar color={data.account.color} initials={data.account.icon} />
+              <InstitutionAvatar
+                institution={data.account.institution}
+                color={data.account.color}
+                icon={data.account.icon}
+              />
               <View className="flex-1">
                 <AppText variant="caption" tone="muted">
                   {strings.accounts.detail.balance}

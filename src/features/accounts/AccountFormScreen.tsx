@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 
 import { errorMessage } from '@/features/shared/errorMessage';
@@ -17,6 +17,8 @@ import { SegmentedControl } from '@/ui/components/SegmentedControl';
 import { SkeletonRows } from '@/ui/components/Skeleton';
 import { TextField } from '@/ui/components/TextField';
 import { showToast } from '@/ui/components/Toast';
+import { bankIcon, resolveBank } from '@/ui/banks/banks';
+import { BankPicker } from '@/ui/banks/BankPicker';
 import { accentPalette } from '@/ui/tokens';
 
 const required = strings.fields.required;
@@ -25,7 +27,8 @@ const schema = z.object({
   name: z.string().trim().min(1, required),
   type: z.enum(accountTypes),
   institution: z.string().trim().min(1, required),
-  icon: z.string().trim().min(1, required).max(2),
+  /** `bank:<id>` para banco do catálogo ou até 2 iniciais. */
+  icon: z.string().trim().min(1, required),
   color: z.string(),
   initialBalanceCents: z.number({ error: strings.fields.invalidAmount }).int(),
 });
@@ -50,6 +53,11 @@ export function AccountFormScreen() {
   const [loaded, setLoaded] = useState(!id);
   const form = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: defaults });
   const { control, handleSubmit, setValue, getValues, formState } = form;
+  const [institution, icon, color] = useWatch({ control, name: ['institution', 'icon', 'color'] });
+  const bank = resolveBank(institution, icon);
+  // "Outro" escolhido, ou instituição digitada que não é do catálogo (ex.: ao editar).
+  const [other, setOther] = useState(false);
+  const otherBank = other || (!bank && institution.trim() !== '');
 
   useEffect(() => {
     if (!id) return;
@@ -79,6 +87,25 @@ export function AccountFormScreen() {
           <SkeletonRows />
         ) : (
           <>
+            <BankPicker
+              value={bank?.id ?? (otherBank ? 'other' : null)}
+              onChange={(picked) => {
+                if (picked) {
+                  setOther(false);
+                  setValue('institution', picked.name, { shouldValidate: true });
+                  setValue('icon', bankIcon(picked.id), { shouldValidate: true });
+                  if (!getValues('name').trim()) {
+                    setValue('name', picked.name, { shouldValidate: true });
+                  }
+                } else {
+                  setOther(true);
+                  if (bank) {
+                    setValue('institution', '');
+                    setValue('icon', '');
+                  }
+                }
+              }}
+            />
             <Controller
               control={control}
               name="name"
@@ -90,7 +117,6 @@ export function AccountFormScreen() {
                   onChangeText={field.onChange}
                   onBlur={field.onBlur}
                   error={fieldState.error?.message}
-                  autoFocus={!id}
                 />
               )}
             />
@@ -106,41 +132,51 @@ export function AccountFormScreen() {
                 />
               )}
             />
-            <Controller
-              control={control}
-              name="institution"
-              render={({ field, fieldState }) => (
-                <TextField
-                  label={strings.accounts.form.institution}
-                  placeholder={strings.accounts.form.institutionPlaceholder}
-                  value={field.value}
-                  onChangeText={(text) => {
-                    field.onChange(text);
-                    if (!formState.dirtyFields.icon) setValue('icon', suggestInitials(text));
-                  }}
-                  onBlur={field.onBlur}
-                  error={fieldState.error?.message}
+            {otherBank ? (
+              <>
+                <Controller
+                  control={control}
+                  name="institution"
+                  render={({ field, fieldState }) => (
+                    <TextField
+                      label={strings.accounts.form.institution}
+                      placeholder={strings.accounts.form.institutionPlaceholder}
+                      hint={strings.banks.otherHint}
+                      value={field.value}
+                      onChangeText={(text) => {
+                        field.onChange(text);
+                        if (!formState.dirtyFields.icon) setValue('icon', suggestInitials(text));
+                      }}
+                      onBlur={field.onBlur}
+                      error={fieldState.error?.message}
+                    />
+                  )}
                 />
-              )}
-            />
-            <Controller
-              control={control}
-              name="icon"
-              render={({ field, fieldState }) => (
-                <TextField
-                  label={strings.accounts.form.initials}
-                  hint={strings.accounts.form.initialsHint}
-                  value={field.value}
-                  onChangeText={(text) =>
-                    setValue('icon', text.toUpperCase(), { shouldDirty: true })
-                  }
-                  onBlur={field.onBlur}
-                  maxLength={2}
-                  autoCapitalize="characters"
-                  error={fieldState.error?.message}
+                <Controller
+                  control={control}
+                  name="icon"
+                  render={({ field, fieldState }) => (
+                    <TextField
+                      label={strings.accounts.form.initials}
+                      hint={strings.accounts.form.initialsHint}
+                      value={field.value}
+                      onChangeText={(text) =>
+                        setValue('icon', text.toUpperCase(), { shouldDirty: true })
+                      }
+                      onBlur={field.onBlur}
+                      maxLength={2}
+                      autoCapitalize="characters"
+                      error={fieldState.error?.message}
+                    />
+                  )}
                 />
-              )}
-            />
+                <InstitutionAvatar
+                  institution={institution}
+                  color={color}
+                  icon={icon || suggestInitials(institution)}
+                />
+              </>
+            ) : null}
             <Controller
               control={control}
               name="color"
@@ -160,7 +196,6 @@ export function AccountFormScreen() {
                 />
               )}
             />
-            <InstitutionAvatar color={getValues('color')} initials={getValues('icon') || '?'} />
             <Button
               label={id ? strings.common.save : strings.accounts.form.create}
               block

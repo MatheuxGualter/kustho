@@ -6,7 +6,7 @@ import { strings } from '@/lib/strings';
 import { useServiceQuery, useServices } from '@/services';
 import { AppText } from '@/ui/components/AppText';
 import { Card } from '@/ui/components/Card';
-import { InstitutionAvatar, suggestInitials } from '@/ui/components/InstitutionAvatar';
+import { InstitutionAvatar } from '@/ui/components/InstitutionAvatar';
 import { MoneyText } from '@/ui/components/MoneyText';
 
 /** Seção da Início (trilha C): fatura atual de cada cartão, separada do saldo. */
@@ -25,7 +25,7 @@ export function HomeCardsSection() {
           accessibilityLabel={card.name}
         >
           <View className="flex-row items-center gap-3">
-            <InstitutionAvatar color={card.color} initials={suggestInitials(card.institution)} />
+            <InstitutionAvatar institution={card.institution} color={card.color} />
             <View className="flex-1 gap-1">
               <AppText variant="label" className="text-base" numberOfLines={1}>
                 {card.name}
