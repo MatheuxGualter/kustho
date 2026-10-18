@@ -5,7 +5,7 @@ import { Alert, View } from 'react-native';
 import { useLookups } from '@/features/shared/useLookups';
 import { errorMessage } from '@/features/shared/errorMessage';
 import type { Transaction } from '@/domain/types';
-import { formatDateBR, formatMonthLong, today } from '@/lib/dates';
+import { formatDateBR, formatMonthTitle, today } from '@/lib/dates';
 import { strings } from '@/lib/strings';
 import { useServiceQuery, useServices } from '@/services';
 import { AppText } from '@/ui/components/AppText';
@@ -48,7 +48,7 @@ export function InvoiceScreen() {
       },
     ]);
 
-  const title = invoice ? formatMonthLong(invoice.referenceMonth) : strings.screens.invoice.title;
+  const title = invoice ? formatMonthTitle(invoice.referenceMonth) : strings.screens.invoice.title;
 
   return (
     <>
