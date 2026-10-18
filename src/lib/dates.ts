@@ -163,3 +163,22 @@ export function formatDayMonth(date: ISODate): string {
   const { month, day } = parseISODate(date);
   return `${day} de ${strings.months[month - 1]}`;
 }
+
+/** Máscara de data digitada: só dígitos, com as barras entrando sozinhas ("17102026" → "17/10/2026"). */
+export function maskDateBR(text: string): string {
+  const d = text.replace(/\D/g, '').slice(0, 8);
+  if (d.length <= 2) return d;
+  if (d.length <= 4) return `${d.slice(0, 2)}/${d.slice(2)}`;
+  return `${d.slice(0, 2)}/${d.slice(2, 4)}/${d.slice(4)}`;
+}
+
+/** Dia da semana local (0 = domingo … 6 = sábado). */
+export function weekday(date: ISODate): number {
+  const { year, month, day } = parseISODate(date);
+  return new Date(year, month - 1, day).getDay();
+}
+
+/** Segunda-feira da semana da data. */
+export function startOfWeek(date: ISODate): ISODate {
+  return addDays(date, -((weekday(date) + 6) % 7));
+}

@@ -154,7 +154,7 @@ export function AccountFormScreen() {
                   label={strings.accounts.form.initialBalance}
                   hint={strings.accounts.form.initialBalanceHint}
                   value={field.value}
-                  onChange={(cents) => field.onChange(cents ?? Number.NaN)}
+                  onChange={(cents) => field.onChange(cents ?? 0)}
                   allowNegative
                   error={fieldState.error?.message}
                 />

@@ -2,9 +2,17 @@
  * Regras de lançamentos (trilha B): agrupar por dia, resumo do mês, filtros e o que é
  * excluído junto. Funções puras.
  */
-import type { CategoryTotal, MonthSummary } from '@/domain/contracts';
-import type { Cents, DayGroup, Id, Transaction, TxFilters, YearMonth } from '@/domain/types';
-import { compareDates, monthOf } from '@/lib/dates';
+import type { CategoryTotal, MonthSummary, PeriodSummary } from '@/domain/contracts';
+import type {
+  Cents,
+  DayGroup,
+  Id,
+  ISODate,
+  Transaction,
+  TxFilters,
+  YearMonth,
+} from '@/domain/types';
+import { compareDates, lastDayOfMonth } from '@/lib/dates';
 
 /** Receita em relatórios. Transferências, pagamentos de fatura e ajustes não contam. */
 export const isIncome = (t: Pick<Transaction, 'kind'>) => t.kind === 'income';
@@ -38,10 +46,16 @@ export function groupByDay(rows: readonly Transaction[]): DayGroup[] {
   return groups;
 }
 
-/** Resumo do mês a partir dos lançamentos (os de outros meses e excluídos são ignorados). */
-export function monthSummary(month: YearMonth, rows: readonly Transaction[]): MonthSummary {
-  const inMonth = rows.filter((t) => t.deletedAt === null && monthOf(t.date) === month);
-  const posted = inMonth.filter((t) => t.status === 'posted');
+/** Resumo de um período (datas inclusivas); excluídos e lançamentos fora dele são ignorados. */
+export function periodSummary(
+  from: ISODate,
+  to: ISODate,
+  rows: readonly Transaction[],
+): PeriodSummary {
+  const inPeriod = rows.filter(
+    (t) => t.deletedAt === null && compareDates(t.date, from) >= 0 && compareDates(t.date, to) <= 0,
+  );
+  const posted = inPeriod.filter((t) => t.status === 'posted');
   const totals = new Map<Id | null, Cents>();
   for (const t of posted.filter(isExpense)) {
     totals.set(t.categoryId, (totals.get(t.categoryId) ?? 0) + t.amountCents);
@@ -52,13 +66,24 @@ export function monthSummary(month: YearMonth, rows: readonly Transaction[]): Mo
   const incomeCents = posted.filter(isIncome).reduce((s, t) => s + t.amountCents, 0);
   const expenseCents = posted.filter(isExpense).reduce((s, t) => s + t.amountCents, 0);
   return {
-    month,
+    from,
+    to,
     incomeCents,
     expenseCents,
     netCents: incomeCents - expenseCents,
-    projectedNetCents: netCents(inMonth.filter((t) => t.status !== 'pending')),
+    projectedNetCents: netCents(inPeriod.filter((t) => t.status !== 'pending')),
     expensesByCategory,
   };
+}
+
+/** Resumo do mês a partir dos lançamentos (os de outros meses e excluídos são ignorados). */
+export function monthSummary(month: YearMonth, rows: readonly Transaction[]): MonthSummary {
+  const {
+    from: _from,
+    to: _to,
+    ...summary
+  } = periodSummary(`${month}-01`, lastDayOfMonth(month), rows);
+  return { month, ...summary };
 }
 
 /** Minúsculas e sem acentos, para a busca. */

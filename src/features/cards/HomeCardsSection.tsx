@@ -37,7 +37,7 @@ export function HomeCardsSection() {
               </AppText>
             </View>
             <MoneyText
-              cents={-(card.currentInvoice?.remainingCents ?? 0)}
+              cents={card.currentInvoice?.remainingCents ?? 0}
               variant="label"
               className="text-base"
             />

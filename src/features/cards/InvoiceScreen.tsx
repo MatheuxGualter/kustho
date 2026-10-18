@@ -66,17 +66,21 @@ export function InvoiceScreen() {
                 <AppText variant="caption" tone="muted">
                   {strings.cards.invoice.remaining}
                 </AppText>
-                <MoneyText cents={-invoice.remainingCents} variant="headline" />
+                <MoneyText cents={invoice.remainingCents} variant="headline" />
               </View>
-              <View className="flex-row justify-between">
-                <AppText variant="caption" tone="muted">
-                  {strings.cards.invoice.total}{' '}
-                  <MoneyText cents={invoice.totalCents} variant="caption" />
-                </AppText>
-                <AppText variant="caption" tone="muted">
-                  {strings.cards.invoice.paid}{' '}
-                  <MoneyText cents={invoice.paidCents} variant="caption" />
-                </AppText>
+              <View className="flex-row flex-wrap gap-x-6 gap-y-1">
+                <View className="flex-row items-baseline gap-x-1">
+                  <AppText variant="caption" tone="muted">
+                    {strings.cards.invoice.total}
+                  </AppText>
+                  <MoneyText cents={invoice.totalCents} variant="label" />
+                </View>
+                <View className="flex-row items-baseline gap-x-1">
+                  <AppText variant="caption" tone="muted">
+                    {strings.cards.invoice.paid}
+                  </AppText>
+                  <MoneyText cents={invoice.paidCents} variant="label" />
+                </View>
               </View>
               {invoice.remainingCents > 0 ? (
                 <Button

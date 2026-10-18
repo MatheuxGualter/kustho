@@ -37,7 +37,13 @@ export function SegmentedControl<T extends string>({
             }}
             className={`min-h-touch grow items-center justify-center rounded-input px-3 ${selected ? 'bg-brand' : ''}`}
           >
-            <AppText variant="label" tone={selected ? 'on-brand' : 'default'} numberOfLines={1}>
+            <AppText
+              variant="label"
+              tone={selected ? 'on-brand' : 'default'}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.75}
+            >
               {option.label}
             </AppText>
           </Pressable>

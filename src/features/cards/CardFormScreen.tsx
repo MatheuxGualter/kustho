@@ -121,7 +121,7 @@ export function CardFormScreen() {
                 <MoneyField
                   label={strings.cards.form.limit}
                   value={field.value}
-                  onChange={(cents) => field.onChange(cents ?? Number.NaN)}
+                  onChange={(cents) => field.onChange(cents ?? 0)}
                   error={fieldState.error?.message}
                 />
               )}

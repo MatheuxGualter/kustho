@@ -1,6 +1,6 @@
 import type { Transaction } from '@/domain/types';
 
-import { groupByDay, matchesFilters, monthSummary, relatedIds } from '../rules';
+import { groupByDay, matchesFilters, monthSummary, periodSummary, relatedIds } from '../rules';
 
 let seq = 0;
 const tx = (fields: Partial<Transaction>): Transaction => ({
@@ -131,5 +131,28 @@ describe('relatedIds', () => {
   it('lançamento simples leva só ele', () => {
     const single = tx({});
     expect(relatedIds(single, [single, tx({})])).toEqual([single.id]);
+  });
+});
+
+describe('periodSummary', () => {
+  const rows = [
+    tx({ date: '2026-10-18', amountCents: 1000 }),
+    tx({ date: '2026-10-19', amountCents: 2000 }),
+    tx({ date: '2026-10-25', kind: 'income', amountCents: 5000 }),
+    tx({ date: '2026-10-26', amountCents: 9999 }),
+  ];
+
+  it('inclui as duas pontas do período', () => {
+    const summary = periodSummary('2026-10-19', '2026-10-25', rows);
+    expect(summary).toMatchObject({
+      from: '2026-10-19',
+      to: '2026-10-25',
+      expenseCents: 2000,
+      incomeCents: 5000,
+    });
+  });
+
+  it('um único dia', () => {
+    expect(periodSummary('2026-10-18', '2026-10-18', rows).expenseCents).toBe(1000);
   });
 });

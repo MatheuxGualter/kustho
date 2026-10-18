@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { View } from 'react-native';
 
-import { addDays, formatDateBR, type ISODate, parseDateBR, today } from '@/lib/dates';
+import { addDays, formatDateBR, type ISODate, maskDateBR, parseDateBR, today } from '@/lib/dates';
 import { strings } from '@/lib/strings';
 
 import { AppText } from './AppText';
@@ -43,13 +43,16 @@ export function DateField({ value, onChange }: { value: ISODate; onChange: (d: I
         <TextField
           label={strings.fields.date}
           placeholder={strings.fields.datePlaceholder}
-          keyboardType="numbers-and-punctuation"
+          keyboardType="number-pad"
+          maxLength={10}
           value={text}
           error={invalid ? strings.fields.invalidDate : undefined}
           onChangeText={(next) => {
-            setText(next);
-            const parsed = parseDateBR(next);
-            setInvalid(parsed === null);
+            const masked = maskDateBR(next);
+            setText(masked);
+            const parsed = parseDateBR(masked);
+            // Só acusa erro com a data completa, não enquanto a pessoa ainda digita.
+            setInvalid(masked.length === 10 && parsed === null);
             if (parsed) onChange(parsed);
           }}
         />
