@@ -153,6 +153,12 @@ export function formatMonthLong(ym: YearMonth): string {
   return `${strings.months[month - 1]} de ${year}`;
 }
 
+/** Título de mês: `2026-10` → `Outubro de 2026` (só a primeira letra maiúscula). */
+export function formatMonthTitle(ym: YearMonth): string {
+  const text = formatMonthLong(ym);
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
 /** Último dia do mês: `2026-02` → `2026-02-28`. */
 export function lastDayOfMonth(ym: YearMonth): ISODate {
   return dateInMonth(ym, 31);

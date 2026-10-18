@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 import { Pressable, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
-import { addMonths, currentMonth, formatMonthLong, type YearMonth } from '@/lib/dates';
+import { addMonths, currentMonth, formatMonthTitle, type YearMonth } from '@/lib/dates';
 import { strings } from '@/lib/strings';
 import { useTheme } from '@/ui/theme';
 
@@ -50,9 +50,7 @@ export function MonthSwitcher({
           onPress={() => onChange(currentMonth())}
           className="min-h-touch flex-1 items-center justify-center"
         >
-          <AppText variant="title" className="capitalize">
-            {formatMonthLong(value)}
-          </AppText>
+          <AppText variant="title">{formatMonthTitle(value)}</AppText>
         </Pressable>
         <Pressable
           accessibilityRole="button"

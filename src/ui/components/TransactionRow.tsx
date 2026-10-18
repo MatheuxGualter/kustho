@@ -1,6 +1,8 @@
 import { Pencil, Trash2 } from 'lucide-react-native';
+import type { ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
+import Animated, { type SharedValue, useAnimatedStyle } from 'react-native-reanimated';
 
 import { signedAmount, transactionTone } from '@/domain/transactions/display';
 import type { Transaction } from '@/domain/types';
@@ -72,7 +74,8 @@ export function TransactionRow({
         if (e.nativeEvent.actionName === 'edit') onEdit?.();
         if (e.nativeEvent.actionName === 'delete') onDelete?.();
       }}
-      className="min-h-touch flex-row items-center gap-3 bg-surface px-4 py-3 active:opacity-80"
+      // Feedback de toque pela cor, nunca por opacidade: a linha cobre as ações do deslize.
+      className="min-h-touch flex-row items-center gap-3 bg-surface px-4 py-3 active:bg-surface-raised"
     >
       <CategoryIcon icon={icon} color={category?.color} />
       <View className="flex-1 gap-1">
@@ -101,8 +104,9 @@ export function TransactionRow({
       friction={2}
       rightThreshold={40}
       overshootRight={false}
-      renderRightActions={(_progress, _translation, methods) => (
-        <View className="flex-row">
+      containerStyle={{ backgroundColor: colors.surface }}
+      renderRightActions={(progress, _translation, methods) => (
+        <SwipeActions progress={progress}>
           {onEdit ? (
             <Pressable
               accessibilityRole="button"
@@ -129,10 +133,26 @@ export function TransactionRow({
               <Trash2 size={ACTION_ICON_SIZE} color={colors['on-brand']} />
             </Pressable>
           ) : null}
-        </View>
+        </SwipeActions>
       )}
     >
       {row}
     </ReanimatedSwipeable>
   );
+}
+
+/**
+ * As ações ficam atrás da linha. Com a linha fechada elas somem de vez: no Android a
+ * opacidade de um pai (transição de aba, toque) é aplicada filho a filho e deixaria os
+ * ícones aparecerem por cima do valor.
+ */
+function SwipeActions({
+  progress,
+  children,
+}: {
+  progress: SharedValue<number>;
+  children: ReactNode;
+}) {
+  const style = useAnimatedStyle(() => ({ opacity: progress.value > 0 ? 1 : 0 }));
+  return <Animated.View style={[{ flexDirection: 'row' }, style]}>{children}</Animated.View>;
 }

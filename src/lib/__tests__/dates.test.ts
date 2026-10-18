@@ -7,6 +7,7 @@ import {
   daysInMonth,
   formatDateBR,
   formatMonthLong,
+  formatMonthTitle,
   isISODate,
   isYearMonth,
   lastDayOfMonth,
@@ -129,6 +130,7 @@ describe('datas no formato brasileiro', () => {
 
   it('formatMonthLong e lastDayOfMonth', () => {
     expect(formatMonthLong('2026-03')).toBe('março de 2026');
+    expect(formatMonthTitle('2026-10')).toBe('Outubro de 2026');
     expect(lastDayOfMonth('2026-02')).toBe('2026-02-28');
     expect(lastDayOfMonth('2024-02')).toBe('2024-02-29');
   });

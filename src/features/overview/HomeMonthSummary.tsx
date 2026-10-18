@@ -2,7 +2,7 @@ import * as Haptics from 'expo-haptics';
 import { type ReactNode, useState } from 'react';
 import { Pressable, View } from 'react-native';
 
-import { formatMonthLong, monthOf, today } from '@/lib/dates';
+import { formatMonthTitle, monthOf, today } from '@/lib/dates';
 import { strings } from '@/lib/strings';
 import { useServiceQuery, useServices } from '@/services';
 import { AppText } from '@/ui/components/AppText';
@@ -19,7 +19,7 @@ import { type Period, periodRange, periods } from './period';
 const periodOptions = periods.map((value) => ({ value, label: strings.overview.periods[value] }));
 
 function periodTitle(period: Period, day: string): string {
-  if (period === 'month') return formatMonthLong(monthOf(day));
+  if (period === 'month') return formatMonthTitle(monthOf(day));
   if (period === 'year') return day.slice(0, 4);
   return strings.overview.periodTitles[period];
 }

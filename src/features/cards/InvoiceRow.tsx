@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { Pressable, View } from 'react-native';
 
 import type { InvoiceWithTotals } from '@/domain/contracts';
-import { formatDateBR, formatMonthLong } from '@/lib/dates';
+import { formatDateBR, formatMonthTitle } from '@/lib/dates';
 import { strings } from '@/lib/strings';
 import { AppText } from '@/ui/components/AppText';
 import { MoneyText } from '@/ui/components/MoneyText';
@@ -17,8 +17,8 @@ export function InvoiceRow({ invoice }: { invoice: InvoiceWithTotals }) {
       className="min-h-touch flex-row items-center gap-3 bg-surface px-4 py-3 active:opacity-80"
     >
       <View className="flex-1 gap-1">
-        <AppText variant="label" className="text-base capitalize">
-          {formatMonthLong(invoice.referenceMonth)}
+        <AppText variant="label" className="text-base">
+          {formatMonthTitle(invoice.referenceMonth)}
         </AppText>
         <AppText variant="caption" tone="muted">
           {`${strings.cards.status[invoice.status]} · ${strings.cards.dueOn(formatDateBR(invoice.dueDate))}`}
