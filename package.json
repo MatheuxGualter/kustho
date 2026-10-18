@@ -98,8 +98,14 @@
           "<rootDir>/src/**/*.test.tsx"
         ],
         "transformIgnorePatterns": [
-          "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@shopify/.*|lucide-react-native|nativewind|react-native-css-interop|drizzle-orm)"
-        ]
+          "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|standard-navigation|@shopify/.*|@gorhom/.*|lucide-react-native|nativewind|react-native-css-interop|drizzle-orm)"
+        ],
+        "setupFiles": [
+          "<rootDir>/src/test/setup.ui.ts"
+        ],
+        "moduleNameMapper": {
+          "^lucide-react-native$": "<rootDir>/node_modules/lucide-react-native/dist/cjs/lucide-react-native.js"
+        }
       }
     ]
   }

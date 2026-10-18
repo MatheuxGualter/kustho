@@ -81,6 +81,12 @@ Import com alias `@/` → `src/`.
   (`src/db/database.ts`) e sempre usam `await`; assim o mesmo código roda no app
   (expo-sqlite) e nos testes. Teste regra que toca o banco com `createTestDb()`
   (`src/db/test/testDb.ts`): SQLite real com as migrações e as restrições CHECK.
+- **Testes de componente** (`*.test.tsx`, projeto "ui"): use `renderWithTheme`
+  (`src/test/render.tsx`). No RNTL 14, `render`, `fireEvent` e `act` são assíncronos:
+  sempre `await`. Mocks de módulos nativos ficam em `src/test/setup.ui.ts`.
+- **Componentes base** em `src/ui/components/` (veja todos no catálogo `dev/ui`):
+  `AppText`, `MoneyText` (todo valor), `Button`, `TextField`, `Card`, `CategoryIcon`,
+  `TransactionRow`, `AmountKeypad`, `EmptyState`, `Screen`. Use-os antes de criar outro.
 - **Textos** só em `src/lib/strings.ts` (pt-BR). Moeda única BRL.
 - **Visual** só a partir de `src/ui/tokens.ts`: classes do Tailwind (`bg-surface`,
   `text-text-muted`, `p-4`, `rounded-card`, `font-semibold`, `text-lg`) ou `useTheme()`
