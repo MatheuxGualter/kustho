@@ -63,3 +63,18 @@ Decisões do kickoff:
 - [ ] Ponte para o TS com a interface do kickoff.
 - [ ] Testes JUnit (dedupe e filtro por pacote).
 - [ ] `scripts/simulate-notification.sh` com `adb`.
+
+### D · Caixa de Pendentes
+
+- [x] Serviço real `createCapturesService(db, …)` (`src/domain/captures/service.ts`) com
+      repositório próprio; a suíte de contrato roda no fake e no real (inclui duas leituras
+      ao mesmo tempo sem duplicar).
+- [x] Aba Pendentes: sugestões com valor, tipo, origem e o texto original; confirmar em 1
+      toque, "Confirmar N prontas", descartar com "Desfazer". Não interpretada pede
+      "Completar".
+- [x] Completar/editar (`/pendente/[id]`): tipo, valor, descrição, conta ou cartão, data,
+      categoria e parcelas, com a notificação original no topo.
+- [x] Aprende a origem (app + final do cartão → conta ou cartão) a cada confirmação.
+- [x] `CaptureIngestor` no layout raiz: lê o módulo ao abrir o app e ao voltar ao primeiro
+      plano; a aba também lê ao abrir.
+- [ ] Lista + detalhe na faixa expandida; conferência com fonte em 130%.

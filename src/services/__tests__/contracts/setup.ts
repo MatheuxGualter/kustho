@@ -4,6 +4,7 @@
  * igual nos dois, garantindo que trocar o fake pelo real não muda o comportamento.
  */
 import { createAccountsService } from '@/domain/accounts/service';
+import { createCapturesService } from '@/domain/captures/service';
 import { createCardsService } from '@/domain/cards/service';
 import { createCategoriesService } from '@/domain/categories/service';
 import { createTransactionsService } from '@/domain/transactions/service';
@@ -18,12 +19,7 @@ import {
   createFakeNotificationCapture,
   type FakeNotificationCapture,
 } from '../../../../modules/notification-capture/src/fake';
-import {
-  createCaptureStore,
-  createFakeCapturesService,
-  createFakeServices,
-  createFakeStore,
-} from '../../fakes';
+import { createFakeServices, createFakeStore } from '../../fakes';
 
 export const TODAY = '2026-10-17';
 export const NUBANK_PACKAGE = 'com.nu.production';
@@ -72,12 +68,7 @@ export const realEnv: EnvFactory = {
         transactions,
         cards,
         categories: createCategoriesService(db),
-        // Ainda fake (trilha D), sobre os serviços reais de lançamentos e cartões.
-        captures: createFakeCapturesService(createCaptureStore(), {
-          transactions,
-          cards,
-          notifications,
-        }),
+        captures: createCapturesService(db, { transactions, cards, notifications, parsers: [] }),
       },
       seed,
     };
