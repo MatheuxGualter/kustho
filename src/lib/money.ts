@@ -86,3 +86,19 @@ export function splitInstallments(totalCents: Cents, count: number): Cents[] {
   const remainder = totalCents - base * count;
   return Array.from({ length: count }, (_, i) => (i === 0 ? base + remainder : base));
 }
+
+/**
+ * Campo de valor com máscara de banco: só os dígitos contam, da direita para a esquerda
+ * ("15562" → 15562 centavos = R$ 155,62). Limitado a `MAX_INPUT_CENTS`.
+ */
+export function centsFromDigits(text: string): Cents {
+  const digits = text.replace(/\D/g, '').replace(/^0+/, '');
+  if (digits === '') return 0;
+  const cents = Number(digits);
+  return cents > MAX_INPUT_CENTS ? MAX_INPUT_CENTS : cents;
+}
+
+/** Texto do campo com máscara: 15562 → "155,62"; 123456789 → "1.234.567,89". */
+export function formatCentsInput(cents: Cents): string {
+  return formatBRL(Math.abs(cents)).replace(/^R\$\s?/, '');
+}

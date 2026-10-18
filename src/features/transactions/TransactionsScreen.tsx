@@ -81,6 +81,7 @@ export function TransactionsScreen() {
       <DueScheduledBanner />
       <TextField
         label={strings.transactions.searchPlaceholder}
+        hideLabel
         placeholder={strings.transactions.searchPlaceholder}
         value={search}
         onChangeText={setSearch}

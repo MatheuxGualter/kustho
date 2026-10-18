@@ -4,7 +4,13 @@
  */
 import type { TransactionsService } from '@/domain/contracts';
 import { DomainError } from '@/domain/errors';
-import { groupByDay, matchesFilters, monthSummary, relatedIds } from '@/domain/transactions/rules';
+import {
+  groupByDay,
+  matchesFilters,
+  monthSummary,
+  periodSummary,
+  relatedIds,
+} from '@/domain/transactions/rules';
 import type { Transaction } from '@/domain/types';
 import { compareDates, monthOf } from '@/lib/dates';
 import { nowTimestamp } from '@/lib/id';
@@ -79,6 +85,9 @@ export function createFakeTransactionsService(store: FakeStore): TransactionsSer
     },
     async getMonthSummary(month) {
       return monthSummary(month, store.transactions);
+    },
+    async getPeriodSummary(from, to) {
+      return periodSummary(from, to, store.transactions);
     },
     async listDueScheduled(today) {
       return alive(store.transactions)

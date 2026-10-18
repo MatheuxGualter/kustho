@@ -41,12 +41,12 @@ export function CreditCardVisual({
             </AppText>
           </View>
         </View>
-        <View className="flex-row items-end justify-between">
+        <View className="flex-row flex-wrap items-end justify-between gap-2">
           <View className="gap-1">
             <AppText variant="caption" tone="muted">
               {strings.cards.currentInvoice}
             </AppText>
-            <MoneyText cents={-(invoice?.remainingCents ?? 0)} variant="title" />
+            <MoneyText cents={invoice?.remainingCents ?? 0} variant="title" />
           </View>
           {invoice ? (
             <AppText variant="caption" tone="muted">
@@ -64,16 +64,18 @@ export function CreditCardVisual({
             style={{ width: `${usedRatio * 100}%`, backgroundColor: card.color }}
           />
         </View>
-        <View className="flex-row justify-between">
+        <View className="gap-1">
           <AppText variant="caption" tone="muted" numeric>
             {hideValues
               ? strings.money.hidden
               : strings.cards.limitUsed(formatBRL(usedCents), formatBRL(card.limitCents))}
           </AppText>
-          <AppText variant="caption" tone="muted">
-            {strings.cards.available}{' '}
-            <MoneyText cents={card.availableLimitCents} variant="caption" />
-          </AppText>
+          <View className="flex-row flex-wrap items-baseline gap-x-1">
+            <AppText variant="caption" tone="muted">
+              {strings.cards.available}
+            </AppText>
+            <MoneyText cents={card.availableLimitCents} variant="label" />
+          </View>
         </View>
       </View>
     </Card>

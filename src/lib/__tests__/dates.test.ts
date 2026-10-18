@@ -10,10 +10,13 @@ import {
   isISODate,
   isYearMonth,
   lastDayOfMonth,
+  maskDateBR,
   monthOf,
   parseDateBR,
   parseISODate,
+  startOfWeek,
   toISODate,
+  weekday,
 } from '../dates';
 
 describe('validação', () => {
@@ -128,5 +131,26 @@ describe('datas no formato brasileiro', () => {
     expect(formatMonthLong('2026-03')).toBe('março de 2026');
     expect(lastDayOfMonth('2026-02')).toBe('2026-02-28');
     expect(lastDayOfMonth('2024-02')).toBe('2024-02-29');
+  });
+});
+
+describe('máscara e semana', () => {
+  it.each([
+    ['1', '1'],
+    ['171', '17/1'],
+    ['17102', '17/10/2'],
+    ['17102026', '17/10/2026'],
+    ['17/10/2026', '17/10/2026'],
+    ['171020269', '17/10/2026'],
+  ])('maskDateBR(%p) → %p', (text, expected) => {
+    expect(maskDateBR(text)).toBe(expected);
+  });
+
+  it('startOfWeek volta para a segunda-feira', () => {
+    expect(weekday('2026-10-18')).toBe(0); // domingo
+    expect(startOfWeek('2026-10-18')).toBe('2026-10-12');
+    expect(startOfWeek('2026-10-19')).toBe('2026-10-19');
+    expect(startOfWeek('2026-10-21')).toBe('2026-10-19');
+    expect(startOfWeek('2026-11-01')).toBe('2026-10-26');
   });
 });

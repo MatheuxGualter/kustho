@@ -47,7 +47,14 @@ export function TabBar({ state, descriptors, emitter, navigateToTab }: BottomTab
         className="min-h-touch flex-1 items-center justify-center gap-1 py-2"
       >
         <Icon size={ICON_SIZE} color={focused ? colors.brand : colors['text-muted']} />
-        <AppText variant="caption" tone={focused ? 'brand' : 'muted'} numberOfLines={1}>
+        <AppText
+          variant="caption"
+          tone={focused ? 'brand' : 'muted'}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.7}
+          maxFontSizeMultiplier={1.3}
+        >
           {label}
         </AppText>
       </Pressable>

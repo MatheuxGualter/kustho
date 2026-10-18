@@ -91,6 +91,8 @@ export const strings = {
     colorOption: (n: number) => `Cor ${n}`,
     required: 'Campo obrigatório',
     invalidAmount: 'Informe um valor válido, ex.: 1.234,56',
+    toggleSign: 'Trocar entre positivo e negativo',
+    signToggle: '+/−',
     invalidDate: 'Data inválida',
   },
   month: {
@@ -174,6 +176,13 @@ export const strings = {
     },
   },
   overview: {
+    summary: 'Resumo',
+    periods: { day: 'Dia', week: 'Semana', month: 'Mês', year: 'Ano' },
+    periodTitles: { day: 'Hoje', week: 'Esta semana' },
+    totalSpent: 'Total gasto',
+    tapHint: 'Toque numa fatia ou categoria para ver o valor',
+    selectCategory: (name: string) => `Ver gastos de ${name}`,
+    noExpensesPeriod: 'Nenhum gasto neste período.',
     monthSummary: 'Resumo do mês',
     income: 'Entradas',
     expense: 'Saídas',

@@ -12,7 +12,7 @@ import { DomainError } from '@/domain/errors';
 import type { Id, Transaction } from '@/domain/types';
 import { lastDayOfMonth } from '@/lib/dates';
 
-import { groupByDay, matchesFilters, monthSummary, relatedIds } from './rules';
+import { groupByDay, matchesFilters, monthSummary, periodSummary, relatedIds } from './rules';
 
 const assertAmount = (amountCents: number | undefined) => {
   if (amountCents !== undefined && (!Number.isSafeInteger(amountCents) || amountCents <= 0)) {
@@ -113,6 +113,10 @@ export function createTransactionsService(db: AppDatabase): TransactionsService 
 
     async getMonthSummary(month) {
       return monthSummary(month, await monthRows(month));
+    },
+
+    async getPeriodSummary(from, to) {
+      return periodSummary(from, to, await repo.listTransactionsBetween(db, from, to));
     },
 
     async listDueScheduled(today) {

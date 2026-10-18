@@ -1,7 +1,10 @@
 import {
   appendDigit,
   assertCents,
+  centsFromDigits,
   formatBRL,
+  formatCentsInput,
+  MAX_INPUT_CENTS,
   parseBRL,
   removeLastDigit,
   splitInstallments,
@@ -121,5 +124,41 @@ describe('assertCents', () => {
     expect(() => assertCents(0.1)).toThrow();
     expect(() => assertCents(Infinity)).toThrow();
     expect(() => assertCents(Number.MAX_SAFE_INTEGER + 1)).toThrow();
+  });
+});
+
+describe('máscara de valor (campo)', () => {
+  it.each([
+    ['', 0],
+    ['1', 1],
+    ['15562', 15562],
+    ['155,62', 15562],
+    ['1.556,2', 15562],
+    ['000123', 123],
+    ['R$ 45,90', 4590],
+  ])('centsFromDigits(%p) → %i', (text, expected) => {
+    expect(centsFromDigits(text)).toBe(expected);
+  });
+
+  it('digitar mais um número desloca a vírgula, como nos bancos', () => {
+    expect(centsFromDigits(`${formatCentsInput(15562)}3`)).toBe(155623);
+  });
+
+  it('apagar o último caractere remove o último dígito', () => {
+    expect(centsFromDigits(formatCentsInput(15562).slice(0, -1))).toBe(1556);
+  });
+
+  it('respeita o limite', () => {
+    expect(centsFromDigits('9'.repeat(20))).toBe(MAX_INPUT_CENTS);
+  });
+
+  it.each([
+    [0, '0,00'],
+    [5, '0,05'],
+    [15562, '155,62'],
+    [123456789, '1.234.567,89'],
+    [-4590, '45,90'],
+  ])('formatCentsInput(%i) → %p', (cents, expected) => {
+    expect(formatCentsInput(cents)).toBe(expected);
   });
 });

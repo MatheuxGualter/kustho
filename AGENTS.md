@@ -94,6 +94,10 @@ Import com alias `@/` → `src/`.
   `SegmentedControl`, `ChipSelect`, `ColorPicker`, `MonthSwitcher`, `Card`, `InstitutionAvatar`,
   `CategoryIcon`, `TransactionRow`, `AmountKeypad`, `EmptyState`, `Skeleton`, `Screen` e
   `showToast(msg, onUndo?)` (aviso com "Desfazer"). Use-os antes de criar outro.
+- **Formulários**: valores sempre com `MoneyField` (máscara de banco: só dígitos, a
+  vírgula entra sozinha; `allowNegative` mostra o botão +/−); datas com `DateField`
+  (barras automáticas). Campos dentro de `Screen` rolam sozinhos para ficar acima do
+  teclado. Faixas horizontais (`ChipSelect`) mostram degradê quando há mais itens.
 - **Erros de regra**: serviços lançam `DomainError` (`src/domain/errors.ts`); a tela mostra
   `errorMessage(e)` (`src/features/shared/errorMessage.ts`), com textos em
   `strings.errors.domain`.

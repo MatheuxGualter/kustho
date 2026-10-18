@@ -25,7 +25,7 @@ export function InvoiceRow({ invoice }: { invoice: InvoiceWithTotals }) {
         </AppText>
       </View>
       <MoneyText
-        cents={-(settled ? invoice.totalCents : invoice.remainingCents)}
+        cents={settled ? invoice.totalCents : invoice.remainingCents}
         variant="label"
         className={`text-base ${settled ? 'opacity-50' : ''}`}
       />

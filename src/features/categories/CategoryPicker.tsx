@@ -40,6 +40,7 @@ export function CategoryPicker({
       {categories.length >= SEARCH_FROM ? (
         <TextField
           label={strings.categories.searchPlaceholder}
+          hideLabel
           placeholder={strings.categories.searchPlaceholder}
           value={search}
           onChangeText={setSearch}

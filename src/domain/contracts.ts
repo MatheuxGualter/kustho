@@ -83,6 +83,20 @@ export interface AccountsService {
 
 export type CategoryTotal = { categoryId: Id | null; expenseCents: Cents };
 
+/** Resumo de um período qualquer (dia, semana, mês, ano), datas inclusivas. */
+export type PeriodSummary = {
+  from: ISODate;
+  to: ISODate;
+  /** Só `posted`; transferências, pagamentos de fatura e ajustes não entram. */
+  incomeCents: Cents;
+  expenseCents: Cents;
+  netCents: Cents;
+  /** Resultado somando também os `scheduled` do período. */
+  projectedNetCents: Cents;
+  /** Despesas por categoria, da maior para a menor. */
+  expensesByCategory: CategoryTotal[];
+};
+
 export type MonthSummary = {
   month: YearMonth;
   /** Só `posted`; transferências, pagamentos de fatura e ajustes não entram. */
@@ -111,6 +125,8 @@ export interface TransactionsService {
   listMonthTransactions(month: YearMonth, filters?: TxFilters): Promise<DayGroup[]>;
   listRecentTransactions(limit: number): Promise<Transaction[]>;
   getMonthSummary(month: YearMonth): Promise<MonthSummary>;
+  /** Resumo entre duas datas (inclusivas): filtro diário, semanal, mensal ou anual. */
+  getPeriodSummary(from: ISODate, to: ISODate): Promise<PeriodSummary>;
   /** `scheduled` com data ≤ `today`, para perguntar se foram efetivados. */
   listDueScheduled(today: ISODate): Promise<Transaction[]>;
   /** Marca um lançamento previsto como efetivado (`posted`). */

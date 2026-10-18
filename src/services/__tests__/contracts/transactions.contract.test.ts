@@ -83,6 +83,17 @@ describe.each(environments)('TransactionsService ($name)', ({ create }) => {
     expect(next.projectedNetCents).toBeLessThan(next.netCents);
   });
 
+  it('resumo por período bate com o do mês quando cobre o mês inteiro', async () => {
+    const { services } = await create();
+    const month = await services.transactions.getMonthSummary('2026-09');
+    const period = await services.transactions.getPeriodSummary('2026-09-01', '2026-09-30');
+    const { month: _m, ...fromMonth } = month;
+    const { from: _f, to: _t, ...fromPeriod } = period;
+    expect(fromPeriod).toEqual(fromMonth);
+    const year = await services.transactions.getPeriodSummary('2026-01-01', '2026-12-31');
+    expect(year.expenseCents).toBeGreaterThan(month.expenseCents);
+  });
+
   it('agendado vencido aparece para confirmar e some depois de confirmado', async () => {
     const { services, seed } = await create();
     const scheduled = seed.transactions.find((t) => t.status === 'scheduled')!;

@@ -33,8 +33,8 @@ export function DueScheduledBanner() {
         {strings.transactions.due.question}
       </AppText>
       {due.map((tx) => (
-        <View key={tx.id} className="flex-row items-center gap-3">
-          <AppText className="flex-1" numberOfLines={1}>
+        <View key={tx.id} className="flex-row flex-wrap items-center gap-x-3 gap-y-1">
+          <AppText className="min-w-[40%] flex-1" numberOfLines={1}>
             {tx.description}
           </AppText>
           <MoneyText
