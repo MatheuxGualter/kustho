@@ -8,7 +8,7 @@
     "scheme": "kustho",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon",
+      "icon": "./assets/images/icon.png",
       "bundleIdentifier": "app.kustho"
     },
     "android": {
@@ -31,7 +31,7 @@
         {
           "backgroundColor": "#F5F8F7",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76,
+          "imageWidth": 120,
           "dark": {
             "backgroundColor": "#0A1110"
           }
