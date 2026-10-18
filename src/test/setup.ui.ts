@@ -16,3 +16,8 @@ jest.mock('react-native-gesture-handler/ReanimatedSwipeable', () => ({
   __esModule: true,
   default: ({ children }: { children: unknown }) => children,
 }));
+
+// expo-sqlite precisa do módulo nativo; nos testes de tela os serviços são os fakes.
+jest.mock('expo-sqlite', () => ({
+  addDatabaseChangeListener: jest.fn(() => ({ remove: jest.fn() })),
+}));

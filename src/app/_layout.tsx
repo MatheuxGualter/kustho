@@ -17,8 +17,11 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { useDatabaseSetup } from '@/db/setup';
 import { strings } from '@/lib/strings';
+import { ServicesProvider } from '@/services';
+import { subscribeToDatabaseChanges } from '@/services/dataVersion';
 import { AppText } from '@/ui/components/AppText';
 import { ThemeProvider, useTheme } from '@/ui/theme';
+import { fontFamily } from '@/ui/tokens';
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -36,13 +39,23 @@ export default function RootLayout() {
     if (ready) void SplashScreen.hideAsync();
   }, [ready]);
 
+  useEffect(() => {
+    if (database.ready) return subscribeToDatabaseChanges();
+  }, [database.ready]);
+
   if (!ready) return null;
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider>
         <BottomSheetModalProvider>
-          {database.error ? <DatabaseError /> : <RootStack />}
+          {database.error ? (
+            <DatabaseError />
+          ) : (
+            <ServicesProvider>
+              <RootStack />
+            </ServicesProvider>
+          )}
         </BottomSheetModalProvider>
       </ThemeProvider>
     </GestureHandlerRootView>
@@ -54,20 +67,23 @@ function RootStack() {
   return (
     <>
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(tabs)" />
+      {/* Telas fora das abas têm cabeçalho com voltar; cada rota define o título. */}
+      <Stack
+        screenOptions={{
+          headerShadowVisible: false,
+          headerTitleStyle: { fontFamily: fontFamily.semibold },
+        }}
+      >
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen
           name="lancamento/novo"
           options={{ presentation: 'modal', title: strings.screens.newTransaction.title }}
         />
         <Stack.Screen
           name="lancamento/[id]"
-          options={{ headerShown: true, title: strings.screens.editTransaction.title }}
+          options={{ title: strings.screens.editTransaction.title }}
         />
-        <Stack.Screen
-          name="dev/ui"
-          options={{ headerShown: true, title: strings.devCatalog.title }}
-        />
+        <Stack.Screen name="dev/ui" options={{ title: strings.devCatalog.title }} />
       </Stack>
     </>
   );

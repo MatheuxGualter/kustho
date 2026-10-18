@@ -34,4 +34,4 @@ APK para testes internos: `npx eas-cli@latest build --profile preview --platform
 
 ## Status
 
-Fase 0 (fundação) em andamento. Ver o roteiro em `docs/plano.md`.
+Fase 0 concluída; Fase 1 (CRUD financeiro) em andamento — ver [`docs/fase-1.md`](docs/fase-1.md) e o roteiro em `docs/plano.md`.
