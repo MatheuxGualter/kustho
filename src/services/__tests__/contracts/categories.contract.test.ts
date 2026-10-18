@@ -10,8 +10,8 @@ describe.each(environments)('CategoriesService ($name)', ({ create }) => {
     const { services } = await create();
     const expense = await services.categories.listCategories('expense');
     const income = await services.categories.listCategories('income');
-    expect(expense.length).toBe(13);
-    expect(income.length).toBe(6);
+    expect(expense.length).toBe(23);
+    expect(income.length).toBe(7);
     expect(expense.every((c) => c.kind === 'expense')).toBe(true);
     const names = expense.map((c) => c.name);
     expect([...names].sort((a, b) => a.localeCompare(b))).toEqual(names);
@@ -20,13 +20,13 @@ describe.each(environments)('CategoriesService ($name)', ({ create }) => {
   it('cria, edita e recusa nome repetido no mesmo tipo', async () => {
     const { services } = await create();
     const created = await services.categories.createCategory({
-      name: ' Academia ',
+      name: ' Natação ',
       kind: 'expense',
       icon: 'heart-pulse',
       color: '#DB2777',
       parentId: null,
     });
-    expect(created.name).toBe('Academia');
+    expect(created.name).toBe('Natação');
     const error = await services.categories
       .createCategory({
         name: 'mercado',

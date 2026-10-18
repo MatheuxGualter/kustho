@@ -157,11 +157,21 @@ export const strings = {
     income: 'Receitas',
     searchPlaceholder: 'Buscar categoria',
     none: 'Sem categoria',
+    iconGroups: {
+      food: 'Comida e bebida',
+      transport: 'Transporte',
+      home: 'Casa e contas',
+      health: 'Saúde e cuidados',
+      leisure: 'Lazer',
+      shopping: 'Compras',
+      family: 'Família, estudo e pets',
+      money: 'Dinheiro e trabalho',
+    },
     usage: (n: number) =>
       n === 0 ? 'Sem lançamentos' : n === 1 ? '1 lançamento' : `${n} lançamentos`,
     form: {
       name: 'Nome',
-      namePlaceholder: 'Ex.: Academia',
+      namePlaceholder: 'Ex.: Café da tarde',
       kind: 'Tipo',
       icon: 'Ícone',
       iconOption: (name: string) => `Ícone ${name}`,
