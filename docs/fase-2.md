@@ -66,8 +66,8 @@ Decisões do kickoff:
       `cd android && ./gradlew :notification-capture:testDebugUnitTest`.
 - [x] `scripts/simulate-notification.sh` com `adb` (`--exemplos` posta três casos).
 - [ ] Job de JUnit no CI (precisa de JDK e Android SDK no runner).
-- [ ] Conferir a ponte pelo JS no aparelho (`getPending`, `onCaptured`): entra com a tela
-      de diagnóstico da trilha B.
+- [x] Ponte conferida pelo JS no aparelho (`getPending`, `onCaptured`, pacotes permitidos)
+      pela seção "Captura de notificações" do catálogo dev. Registrada em `src/services/app.ts`.
 - [ ] Teste de reinício do celular e de um período sem abrir o app (portão da fase).
 - [ ] Revisão humana do Kotlin (obrigatória).
 

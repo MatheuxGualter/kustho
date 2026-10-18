@@ -2,7 +2,10 @@
  * Serviços reais sobre o SQLite do aparelho, usados pelo app. Importado só pelo layout
  * raiz: testes de tela passam fakes ao `ServicesProvider` e não abrem o banco nativo.
  */
-import { createFakeNotificationCapture } from '../../modules/notification-capture/src/fake';
+import {
+  createFakeNotificationCapture,
+  NotificationCapture,
+} from '../../modules/notification-capture';
 import { db } from '@/db/client';
 import { createAccountsService } from '@/domain/accounts/service';
 import { createCardsService } from '@/domain/cards/service';
@@ -21,10 +24,10 @@ export const appServices: Services = {
   cards,
   categories: createCategoriesService(db),
   // Fase 2: capturas ainda em memória (trilha D entrega o serviço real); os lançamentos
-  // confirmados já vão para o SQLite. O módulo nativo entra no lugar do fake na trilha A.
+  // confirmados já vão para o SQLite. Sem o módulo nativo (iOS, web), uma fila vazia.
   captures: createFakeCapturesService(createCaptureStore(), {
     transactions,
     cards,
-    notifications: createFakeNotificationCapture(),
+    notifications: NotificationCapture ?? createFakeNotificationCapture(),
   }),
 };
