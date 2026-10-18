@@ -116,7 +116,9 @@ describe('HomeCaptureNotice', () => {
 
 describe('CaptureDiagnosticsScreen', () => {
   it('resume por app e exporta anonimizado', async () => {
-    const share = jest.spyOn(Share, 'share').mockResolvedValue({ action: 'sharedAction', activityType: undefined });
+    const share = jest
+      .spyOn(Share, 'share')
+      .mockResolvedValue({ action: 'sharedAction', activityType: undefined });
     await render(<CaptureDiagnosticsScreen />);
     expect(await screen.findByText('Acesso às notificações desligado')).toBeTruthy();
     expect(await screen.findByText(/não interpretada/)).toBeTruthy();
