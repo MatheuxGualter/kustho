@@ -17,6 +17,16 @@ describe.each(environments)('CapturesService ($name)', ({ create }) => {
     expect(await services.captures.countPending()).toBe(before + 1);
   });
 
+  it('duas leituras ao mesmo tempo não duplicam capturas', async () => {
+    const { services, notifications } = await create();
+    const before = await services.captures.countPending();
+    notifications.post({ packageName: NUBANK_PACKAGE, title: 'A', text: 'a' });
+    notifications.post({ packageName: NUBANK_PACKAGE, title: 'B', text: 'b' });
+
+    await Promise.all([services.captures.ingest(), services.captures.ingest()]);
+    expect(await services.captures.countPending()).toBe(before + 2);
+  });
+
   it('sem parser, entra como não interpretada, com o texto guardado', async () => {
     const { services, notifications } = await create();
     notifications.post({ packageName: NUBANK_PACKAGE, title: 'Nubank', text: 'Algo novo' });
