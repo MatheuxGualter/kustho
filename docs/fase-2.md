@@ -63,3 +63,16 @@ Decisões do kickoff:
 - [ ] Ponte para o TS com a interface do kickoff.
 - [ ] Testes JUnit (dedupe e filtro por pacote).
 - [ ] `scripts/simulate-notification.sh` com `adb`.
+
+### C · Parsers
+
+- [x] Parser genérico de reserva (`src/domain/captures/parsers/generic.ts`): valor com R$,
+      tipo por palavras-chave (entrada, débito, cartão, saída), estabelecimento ou pessoa,
+      final do cartão. Recusa compra negada, fatura, limite, código, agendamento e estorno
+      (estorno fica para a Fase 3). Data = data local da notificação. Confiança 0,6 a 0,8.
+- [x] Fixtures rodadas por `parsers/__tests__/fixtures.test.ts` (17 casos **sintéticos** em
+      `__fixtures__/generic.json`).
+- [ ] Pelo menos 30 notificações **reais** de 3 ou mais bancos, anonimizadas, em
+      `__fixtures__/<banco>.json`.
+- [ ] Parsers por banco (`parsers/<banco>.ts`, registrados em `parsers/index.ts`) quando
+      as fixtures reais mostrarem formatos que o genérico erra.
