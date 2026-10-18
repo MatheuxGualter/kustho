@@ -28,6 +28,8 @@ export type TransactionRowProps = {
   originName: string;
   category?: { name: string; icon: string; color: string } | null;
   onPress?: () => void;
+  /** Destaque da linha aberta no painel de detalhe (tela larga). */
+  selected?: boolean;
   onEdit?: () => void;
   onDelete?: () => void;
 };
@@ -46,6 +48,7 @@ export function TransactionRow({
   originName,
   category,
   onPress,
+  selected = false,
   onEdit,
   onDelete,
 }: TransactionRowProps) {
@@ -69,13 +72,14 @@ export function TransactionRow({
       onPress={onPress}
       disabled={!onPress}
       accessibilityRole={onPress ? 'button' : undefined}
+      accessibilityState={selected ? { selected } : undefined}
       accessibilityActions={accessibilityActions}
       onAccessibilityAction={(e) => {
         if (e.nativeEvent.actionName === 'edit') onEdit?.();
         if (e.nativeEvent.actionName === 'delete') onDelete?.();
       }}
       // Feedback de toque pela cor, nunca por opacidade: a linha cobre as ações do deslize.
-      className="min-h-touch flex-row items-center gap-3 bg-surface px-4 py-3 active:bg-surface-raised"
+      className={`min-h-touch flex-row items-center gap-3 px-4 py-3 active:bg-surface-raised ${selected ? 'bg-surface-raised' : 'bg-surface'}`}
     >
       <CategoryIcon icon={icon} color={category?.color} />
       <View className="flex-1 gap-1">

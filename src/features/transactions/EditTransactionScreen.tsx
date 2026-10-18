@@ -17,9 +17,25 @@ import { SkeletonRows } from '@/ui/components/Skeleton';
 import { TextField } from '@/ui/components/TextField';
 import { showToast } from '@/ui/components/Toast';
 
-/** Editar ou excluir um lançamento. */
+/** Editar ou excluir um lançamento (`/lancamento/[id]`). */
 export function EditTransactionScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  return <TransactionEditor id={id} onDone={() => router.back()} />;
+}
+
+/**
+ * Formulário de edição. Como rota, volta ao terminar; no painel de detalhe da tela larga
+ * (`embedded`), não mexe no cabeçalho e avisa o pai com `onDone`.
+ */
+export function TransactionEditor({
+  id,
+  onDone,
+  embedded = false,
+}: {
+  id: string;
+  onDone: () => void;
+  embedded?: boolean;
+}) {
   const { transactions, categories } = useServices();
   const query = useServiceQuery(async () => {
     const [tx, categoryList] = await Promise.all([
@@ -44,10 +60,28 @@ export function EditTransactionScreen() {
       </Screen>
     );
   }
-  return <EditForm key={tx.id} tx={tx} categoryList={query.data.categoryList} />;
+  return (
+    <EditForm
+      key={tx.id}
+      tx={tx}
+      categoryList={query.data.categoryList}
+      onDone={onDone}
+      embedded={embedded}
+    />
+  );
 }
 
-function EditForm({ tx, categoryList }: { tx: Transaction; categoryList: Category[] }) {
+function EditForm({
+  tx,
+  categoryList,
+  onDone,
+  embedded,
+}: {
+  tx: Transaction;
+  categoryList: Category[];
+  onDone: () => void;
+  embedded: boolean;
+}) {
   const { transactions } = useServices();
   const [amount, setAmount] = useState<number | null>(tx.amountCents);
   const [description, setDescription] = useState(tx.description);
@@ -82,7 +116,7 @@ function EditForm({ tx, categoryList }: { tx: Transaction; categoryList: Categor
         ...(tx.kind === 'income' || tx.kind === 'expense' ? { status } : {}),
       });
       showToast(strings.transactions.saved);
-      router.back();
+      onDone();
     } catch (e) {
       showToast(errorMessage(e));
       setBusy(false);
@@ -92,7 +126,7 @@ function EditForm({ tx, categoryList }: { tx: Transaction; categoryList: Categor
   const remove = async () => {
     try {
       const ids = await transactions.deleteTransaction(tx.id);
-      router.back();
+      onDone();
       showToast(strings.transactions.deleted(ids.length), () => {
         void transactions.restoreTransactions(ids);
       });
@@ -103,7 +137,9 @@ function EditForm({ tx, categoryList }: { tx: Transaction; categoryList: Categor
 
   return (
     <>
-      <Stack.Screen options={{ title: strings.screens.editTransaction.title }} />
+      {embedded ? null : (
+        <Stack.Screen options={{ title: strings.screens.editTransaction.title }} />
+      )}
       <Screen edges={['bottom']}>
         {note ? (
           <AppText variant="caption" tone="muted">

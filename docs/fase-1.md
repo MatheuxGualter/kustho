@@ -115,7 +115,9 @@ pendência de outra trilha.
 - [x] Vibração leve nas ações principais; desfazer em toda exclusão
 - [x] Valores com máscara de banco (`MoneyField`), datas com `DateField`, campos acima do
       teclado (`Screen`), faixas horizontais com degradê (`ChipSelect`)
-- [ ] Lista + detalhe na faixa expandida (tablet e dobrável)
+- [x] Lista + detalhe na faixa expandida em Lançamentos (≥ 600 dp: lista à esquerda,
+      edição à direita)
+- [ ] Lista + detalhe nas demais listas (contas, cartões, Pendentes)
 - [ ] Conferência completa com fonte em 130%, leitor de tela e contraste AA nos dois temas
 - [x] Contraste do verde de receita no tema claro: `#15803D` (AA ≥ 4.5; o teste de
       contraste agora cobre `income`)
