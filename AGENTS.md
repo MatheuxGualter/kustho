@@ -90,8 +90,16 @@ Import com alias `@/` → `src/`.
   (`src/test/render.tsx`). No RNTL 14, `render`, `fireEvent` e `act` são assíncronos:
   sempre `await`. Mocks de módulos nativos ficam em `src/test/setup.ui.ts`.
 - **Componentes base** em `src/ui/components/` (veja todos no catálogo `dev/ui`):
-  `AppText`, `MoneyText` (todo valor), `Button`, `TextField`, `Card`, `CategoryIcon`,
-  `TransactionRow`, `AmountKeypad`, `EmptyState`, `Screen`. Use-os antes de criar outro.
+  `AppText`, `MoneyText` (todo valor), `Button`, `TextField`, `MoneyField`, `DateField`,
+  `SegmentedControl`, `ChipSelect`, `ColorPicker`, `Card`, `InstitutionAvatar`,
+  `CategoryIcon`, `TransactionRow`, `AmountKeypad`, `EmptyState`, `Skeleton`, `Screen` e
+  `showToast(msg, onUndo?)` (aviso com "Desfazer"). Use-os antes de criar outro.
+- **Erros de regra**: serviços lançam `DomainError` (`src/domain/errors.ts`); a tela mostra
+  `errorMessage(e)` (`src/features/shared/errorMessage.ts`), com textos em
+  `strings.errors.domain`.
+- **Suítes de contrato** (`src/services/__tests__/contracts/`): o mesmo teste roda contra o
+  fake e o serviço real, com os mesmos dados de exemplo. Ao entregar um serviço real,
+  mova os testes do fake para uma suíte de contrato.
 - **Textos** só em `src/lib/strings.ts` (pt-BR). Moeda única BRL.
 - **Visual** só a partir de `src/ui/tokens.ts`: classes do Tailwind (`bg-surface`,
   `text-text-muted`, `p-4`, `rounded-card`, `font-semibold`, `text-lg`) ou `useTheme()`

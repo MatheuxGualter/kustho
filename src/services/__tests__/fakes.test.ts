@@ -1,6 +1,6 @@
 /**
- * Testes de fumaça dos fakes: garantem que as telas recebem dados coerentes antes dos
- * serviços reais. Servem também de exemplo de uso de cada contrato.
+ * Testes de fumaça dos fakes ainda sem serviço real. Quando a trilha entregar o real, os
+ * testes do domínio dela migram para uma suíte em `contracts/` (como contas).
  */
 import { createFakeServices, createFakeStore } from '../fakes';
 
@@ -11,47 +11,6 @@ const setup = () => {
   const store = createFakeStore(today);
   return { store, services: createFakeServices(store) };
 };
-
-describe('fake de contas', () => {
-  it('lista 3 contas com saldo e soma o total', async () => {
-    const { services } = setup();
-    const accounts = await services.accounts.listAccountsWithBalance({ until: today });
-    expect(accounts).toHaveLength(3);
-    const total = await services.accounts.getTotalBalance(today);
-    expect(total).toBe(accounts.reduce((s, a) => s + a.balanceCents, 0));
-  });
-
-  it('transferência move saldo sem mudar o total', async () => {
-    const { services } = setup();
-    const [from, to] = await services.accounts.listAccountsWithBalance({ until: today });
-    const before = await services.accounts.getTotalBalance(today);
-    await services.accounts.createTransfer({
-      fromAccountId: from.id,
-      toAccountId: to.id,
-      amountCents: 5000,
-      date: today,
-    });
-    expect(await services.accounts.getAccountBalance(from.id, today)).toBe(
-      from.balanceCents - 5000,
-    );
-    expect(await services.accounts.getTotalBalance(today)).toBe(before);
-  });
-
-  it('ajuste leva o saldo ao valor informado', async () => {
-    const { services } = setup();
-    const [account] = await services.accounts.listAccountsWithBalance({ until: today });
-    const adjustment = await services.accounts.adjustBalance(account.id, 100000, today);
-    expect(adjustment?.kind).toBe('adjustment');
-    expect(await services.accounts.getAccountBalance(account.id, today)).toBe(100000);
-    expect(await services.accounts.adjustBalance(account.id, 100000, today)).toBeNull();
-  });
-
-  it('conta com lançamentos não pode ser excluída', async () => {
-    const { services } = setup();
-    const [account] = await services.accounts.listAccountsWithBalance();
-    await expect(services.accounts.deleteAccount(account.id)).rejects.toThrow();
-  });
-});
 
 describe('fake de lançamentos', () => {
   it('agrupa o mês por dia, do mais recente ao mais antigo', async () => {

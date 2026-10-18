@@ -1,11 +1,12 @@
 /**
- * Fake da trilha A. Aproximação em memória: a regra oficial de saldo fica no serviço
- * real (`src/domain/accounts/`), com testes.
+ * Fake da trilha A em memória. Usa as mesmas regras puras do serviço real
+ * (`src/domain/accounts/balance.ts`); só o armazenamento é diferente.
  */
+import { accountBalance, adjustmentFor, transferLegs } from '@/domain/accounts/balance';
 import type { AccountsService } from '@/domain/contracts';
-import { signedAmount } from '@/domain/transactions/display';
+import { DomainError } from '@/domain/errors';
 import type { Transaction } from '@/domain/types';
-import { compareDates, today } from '@/lib/dates';
+import { today } from '@/lib/dates';
 import { nowTimestamp } from '@/lib/id';
 import { sumCents } from '@/lib/money';
 
@@ -16,10 +17,7 @@ import { alive, type FakeStore, findOrThrow } from './store';
 export function createFakeAccountsService(store: FakeStore): AccountsService {
   const balance = (accountId: string, until = today()) => {
     const account = findOrThrow(store.accounts, accountId, 'Conta');
-    const movements = alive(store.transactions).filter(
-      (t) => t.accountId === accountId && t.status === 'posted' && compareDates(t.date, until) <= 0,
-    );
-    return account.initialBalanceCents + sumCents(movements.map(signedAmount));
+    return accountBalance(account.initialBalanceCents, accountId, store.transactions, until);
   };
 
   const service: AccountsService = {
@@ -55,25 +53,19 @@ export function createFakeAccountsService(store: FakeStore): AccountsService {
     },
     async deleteAccount(id) {
       if (alive(store.transactions).some((t) => t.accountId === id)) {
-        throw new Error('Conta com lançamentos só pode ser arquivada');
+        throw new DomainError('account_has_transactions');
       }
       findOrThrow(store.accounts, id, 'Conta').deletedAt = nowTimestamp();
       notifyDataChanged();
     },
-    async createTransfer({ fromAccountId, toAccountId, amountCents, date, description }) {
-      const base = { kind: 'transfer' as const, amountCents, date, description: description ?? '' };
-      const outLeg: Transaction = {
-        ...blankTransaction(),
-        ...base,
-        direction: 'out',
-        accountId: fromAccountId,
-      };
-      const inLeg: Transaction = {
-        ...blankTransaction(),
-        ...base,
-        direction: 'in',
-        accountId: toAccountId,
-      };
+    async restoreAccount(id) {
+      findOrThrow(store.accounts, id, 'Conta').deletedAt = null;
+      notifyDataChanged();
+    },
+    async createTransfer(input) {
+      const [outBase, inBase] = transferLegs(input);
+      const outLeg: Transaction = { ...blankTransaction(), ...outBase };
+      const inLeg: Transaction = { ...blankTransaction(), ...inBase };
       outLeg.transferPeerId = inLeg.id;
       inLeg.transferPeerId = outLeg.id;
       store.transactions.push(outLeg, inLeg);
@@ -81,20 +73,19 @@ export function createFakeAccountsService(store: FakeStore): AccountsService {
       return [outLeg, inLeg];
     },
     async adjustBalance(accountId, targetBalanceCents, date) {
-      const diff = targetBalanceCents - balance(accountId, date);
-      if (diff === 0) return null;
-      const adjustment: Transaction = {
+      const adjustment = adjustmentFor(balance(accountId, date), targetBalanceCents);
+      if (!adjustment) return null;
+      const tx: Transaction = {
         ...blankTransaction(),
+        ...adjustment,
         kind: 'adjustment',
-        direction: diff > 0 ? 'in' : 'out',
-        amountCents: Math.abs(diff),
         accountId,
         date,
         description: 'Ajuste de saldo',
       };
-      store.transactions.push(adjustment);
+      store.transactions.push(tx);
       notifyDataChanged();
-      return adjustment;
+      return tx;
     },
   };
   return service;

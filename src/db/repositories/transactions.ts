@@ -45,12 +45,13 @@ export async function getTransaction(
 }
 
 /**
- * Grava lançamentos já montados pelo domínio. Regras (parcelas, pernas de transferência,
- * fatura) são responsabilidade de quem chama.
+ * Grava lançamentos já montados pelo domínio, num único INSERT (tudo ou nada). Regras
+ * (parcelas, pernas de transferência, fatura) são responsabilidade de quem chama. Um `id`
+ * pode vir pronto quando as linhas se referenciam (ex.: `transferPeerId`).
  */
 export async function insertTransactions(
   db: AppDatabase,
-  inputs: readonly TransactionInput[],
+  inputs: readonly (TransactionInput & { id?: string })[],
 ): Promise<Transaction[]> {
   if (inputs.length === 0) return [];
   const rows: Transaction[] = inputs.map((input) => ({ ...newEntity(), ...input }));

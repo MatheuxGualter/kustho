@@ -14,7 +14,7 @@ export type AppTextVariant = keyof typeof variants;
 export type AppTextProps = TextProps & {
   variant?: AppTextVariant;
   /** Cor padrão é `text`; `muted` para textos secundários. */
-  tone?: 'default' | 'muted' | 'brand' | 'on-brand' | 'income' | 'expense';
+  tone?: 'default' | 'muted' | 'brand' | 'on-brand' | 'income' | 'expense' | 'inverse';
   /** Dígitos de largura fixa, para valores alinhados. */
   numeric?: boolean;
   className?: string;
@@ -27,6 +27,8 @@ const tones = {
   'on-brand': 'text-on-brand',
   income: 'text-income',
   expense: 'text-expense',
+  /** Texto sobre fundo `bg-text` (ex.: aviso no rodapé). */
+  inverse: 'text-bg',
 } as const;
 
 /** Texto base do app: Inter, escala tipográfica e cores dos tokens. */
