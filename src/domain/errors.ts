@@ -3,6 +3,7 @@ export const domainErrorCodes = [
   'account_has_transactions',
   'card_has_transactions',
   'category_in_use',
+  'duplicate_name',
   'same_account_transfer',
   'invalid_amount',
   'not_found',

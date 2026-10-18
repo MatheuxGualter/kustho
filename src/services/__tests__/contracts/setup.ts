@@ -5,6 +5,7 @@
  */
 import { createAccountsService } from '@/domain/accounts/service';
 import { createCardsService } from '@/domain/cards/service';
+import { createCategoriesService } from '@/domain/categories/service';
 import { createTransactionsService } from '@/domain/transactions/service';
 import type { Services } from '@/domain/contracts';
 import type { DevSeed } from '@/db/devSeed';
@@ -37,7 +38,7 @@ export const fakeEnv: EnvFactory = {
   },
 };
 
-/** Serviços reais sobre SQLite; os que ainda não existem continuam com o fake. */
+/** Os quatro serviços reais sobre o SQLite de teste. */
 export const realEnv: EnvFactory = {
   name: 'real',
   create: async () => {
@@ -46,10 +47,10 @@ export const realEnv: EnvFactory = {
     const seed = await runDevSeed(db, TODAY);
     return {
       services: {
-        ...createFakeServices(createFakeStore(TODAY)),
         accounts: createAccountsService(db),
         transactions: createTransactionsService(db),
         cards: createCardsService(db),
+        categories: createCategoriesService(db),
       },
       seed,
     };

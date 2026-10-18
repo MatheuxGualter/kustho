@@ -89,5 +89,10 @@ export function createFakeTransactionsService(store: FakeStore): TransactionsSer
       live(id).status = 'posted';
       notifyDataChanged();
     },
+    async listAllTransactions() {
+      return alive(store.transactions).sort(
+        (a, b) => compareDates(a.date, b.date) || a.createdAt.localeCompare(b.createdAt),
+      );
+    },
   };
 }

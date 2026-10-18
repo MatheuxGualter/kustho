@@ -1,13 +1,4 @@
-import { RoutePlaceholder } from '@/features/shared/RoutePlaceholder';
-import { strings } from '@/lib/strings';
+import { CategoryFormScreen } from '@/features/categories/CategoryFormScreen';
 
 // Trilha D da Fase 1.
-export default function Route() {
-  return (
-    <RoutePlaceholder
-      title={strings.screens.newCategory.title}
-      description={strings.screens.newCategory.placeholder}
-      track="D"
-    />
-  );
-}
+export default CategoryFormScreen;

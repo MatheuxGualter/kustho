@@ -16,6 +16,8 @@ import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { useDatabaseSetup } from '@/db/setup';
+import { AppLockGate } from '@/features/security/AppLockGate';
+import { usePreferencesHydrated } from '@/lib/preferences';
 import { strings } from '@/lib/strings';
 import { ServicesProvider } from '@/services';
 import { subscribeToDatabaseChanges } from '@/services/dataVersion';
@@ -34,7 +36,11 @@ export default function RootLayout() {
     Inter_700Bold,
   });
   const database = useDatabaseSetup();
-  const ready = (fontsLoaded || fontError !== null) && (database.ready || database.error !== null);
+  const preferencesReady = usePreferencesHydrated();
+  const ready =
+    (fontsLoaded || fontError !== null) &&
+    (database.ready || database.error !== null) &&
+    preferencesReady;
 
   useEffect(() => {
     if (ready) void SplashScreen.hideAsync();
@@ -54,8 +60,10 @@ export default function RootLayout() {
             <DatabaseError />
           ) : (
             <ServicesProvider>
-              <RootStack />
-              <ToastHost />
+              <AppLockGate>
+                <RootStack />
+                <ToastHost />
+              </AppLockGate>
             </ServicesProvider>
           )}
         </BottomSheetModalProvider>
@@ -86,6 +94,7 @@ function RootStack() {
           options={{ title: strings.screens.editTransaction.title }}
         />
         <Stack.Screen name="dev/ui" options={{ title: strings.devCatalog.title }} />
+        <Stack.Screen name="onboarding" options={{ headerShown: false, presentation: 'modal' }} />
       </Stack>
     </>
   );

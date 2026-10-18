@@ -115,6 +115,8 @@ export interface TransactionsService {
   listDueScheduled(today: ISODate): Promise<Transaction[]>;
   /** Marca um lançamento previsto como efetivado (`posted`). */
   confirmScheduled(id: Id): Promise<void>;
+  /** Todos os lançamentos não excluídos, do mais antigo ao mais recente (exportação). */
+  listAllTransactions(): Promise<Transaction[]>;
 }
 
 // ─── Trilha C · Cartões e faturas ────────────────────────────────────────────
@@ -171,6 +173,10 @@ export interface CategoriesService {
   updateCategory(id: Id, patch: Partial<CategoryInput>): Promise<void>;
   /** Categoria com lançamentos exige `moveTo`: os lançamentos passam para ela antes. */
   deleteCategory(id: Id, moveTo?: Id): Promise<void>;
+  /** Desfaz `deleteCategory` (os lançamentos movidos continuam na nova categoria). */
+  restoreCategory(id: Id): Promise<void>;
+  /** Quantos lançamentos não excluídos usam a categoria. */
+  countUsage(id: Id): Promise<number>;
 }
 
 export type Services = {

@@ -1,13 +1,4 @@
-import { RoutePlaceholder } from '@/features/shared/RoutePlaceholder';
-import { strings } from '@/lib/strings';
+import { ExportScreen } from '@/features/settings/ExportScreen';
 
 // Trilha D da Fase 1.
-export default function Route() {
-  return (
-    <RoutePlaceholder
-      title={strings.screens.export.title}
-      description={strings.screens.export.placeholder}
-      track="D"
-    />
-  );
-}
+export default ExportScreen;

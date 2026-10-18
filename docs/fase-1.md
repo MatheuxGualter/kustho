@@ -90,11 +90,24 @@ await accounts.createTransfer({ ... }); // todas as consultas abertas recarregam
 
 ### D · Categorias e visão geral
 
-- CRUD de categorias e `CategoryPicker` (grade com busca); `MonthSwitcher`.
-- `HomeMonthSummary` (resumo do mês e rosca por categoria) e montagem da Início e da Mais.
-- Onboarding, exportar CSV e JSON, modo ocultar valores.
-- Bloqueio por biometria ou PIN (`expo-local-authentication`), com bloqueio automático em
-  segundo plano e conteúdo oculto na tela de apps recentes.
+- [x] Serviço real `createCategoriesService(db)` com suíte de contrato: nome repetido no
+      mesmo tipo recusado, excluir em uso exige mover os lançamentos, "Desfazer" quando não
+      há lançamentos (`restoreCategory` e `countUsage` entraram no contrato).
+- [x] `CategoryPicker` (grade com ícones e busca), usado no novo lançamento e na edição.
+- [x] Telas de categorias: lista por tipo com uso, nova/editar com ícone e cor, excluir
+      movendo os lançamentos.
+- [x] `HomeMonthSummary`: entradas, saídas, resultado, previsto e rosca por categoria
+      (SVG; top 4 + "Outros").
+- [x] Configurações: tema, ocultar valores, bloqueio por biometria ou PIN do aparelho.
+- [x] Bloqueio ao abrir e ao voltar de segundo plano; conteúdo coberto fora de primeiro
+      plano.
+- [x] Exportar CSV (pt-BR, `;`, BOM) e JSON pelo compartilhamento do sistema
+      (`listAllTransactions` entrou no contrato).
+- [x] Boas-vindas em 3 passos, mostradas uma vez.
+- [ ] `FLAG_SECURE` para a tela de apps recentes não mostrar nada (precisa de
+      `expo-screen-capture`, módulo nativo: exige recompilar).
+- [ ] Exportar como arquivo (hoje vai como texto no compartilhamento; arquivo precisa de
+      `expo-sharing`, módulo nativo).
 
 ## Checklist de polimento (cada trilha nas suas telas)
 

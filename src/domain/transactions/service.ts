@@ -1,7 +1,7 @@
 /**
  * Serviço real de lançamentos (trilha B) sobre o SQLite. Regras em `./rules.ts`.
  */
-import { and, desc, eq, isNull, lte, or } from 'drizzle-orm';
+import { and, asc, desc, eq, isNull, lte, or } from 'drizzle-orm';
 
 import type { AppDatabase } from '@/db/database';
 import { getAccount } from '@/db/repositories/accounts';
@@ -133,5 +133,12 @@ export function createTransactionsService(db: AppDatabase): TransactionsService 
       await requireTransaction(id);
       await repo.updateTransaction(db, id, { status: 'posted' });
     },
+
+    listAllTransactions: () =>
+      db
+        .select()
+        .from(transactions)
+        .where(isNull(transactions.deletedAt))
+        .orderBy(asc(transactions.date), asc(transactions.createdAt)),
   };
 }

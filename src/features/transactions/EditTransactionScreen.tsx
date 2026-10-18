@@ -3,12 +3,12 @@ import { Trash2 } from 'lucide-react-native';
 import { useState } from 'react';
 
 import { errorMessage } from '@/features/shared/errorMessage';
-import type { Transaction, TransactionStatus } from '@/domain/types';
+import type { Category, Transaction, TransactionStatus } from '@/domain/types';
 import { strings } from '@/lib/strings';
+import { CategoryPicker } from '@/features/categories/CategoryPicker';
 import { useServiceQuery, useServices } from '@/services';
 import { AppText } from '@/ui/components/AppText';
 import { Button } from '@/ui/components/Button';
-import { ChipSelect } from '@/ui/components/ChipSelect';
 import { DateField } from '@/ui/components/DateField';
 import { MoneyField } from '@/ui/components/MoneyField';
 import { Screen } from '@/ui/components/Screen';
@@ -16,8 +16,6 @@ import { SegmentedControl } from '@/ui/components/SegmentedControl';
 import { SkeletonRows } from '@/ui/components/Skeleton';
 import { TextField } from '@/ui/components/TextField';
 import { showToast } from '@/ui/components/Toast';
-
-const NO_CATEGORY = 'none';
 
 /** Editar ou excluir um lançamento. */
 export function EditTransactionScreen() {
@@ -49,17 +47,11 @@ export function EditTransactionScreen() {
   return <EditForm key={tx.id} tx={tx} categoryList={query.data.categoryList} />;
 }
 
-function EditForm({
-  tx,
-  categoryList,
-}: {
-  tx: Transaction;
-  categoryList: { id: string; name: string; kind: string; color: string }[];
-}) {
+function EditForm({ tx, categoryList }: { tx: Transaction; categoryList: Category[] }) {
   const { transactions } = useServices();
   const [amount, setAmount] = useState<number | null>(tx.amountCents);
   const [description, setDescription] = useState(tx.description);
-  const [categoryId, setCategoryId] = useState(tx.categoryId ?? NO_CATEGORY);
+  const [categoryId, setCategoryId] = useState(tx.categoryId);
   const [date, setDate] = useState(tx.date);
   const [status, setStatus] = useState<TransactionStatus>(tx.status);
   const [notes, setNotes] = useState(tx.notes ?? '');
@@ -86,7 +78,7 @@ function EditForm({
         description: description.trim(),
         date,
         notes: notes.trim() || null,
-        ...(hasCategory ? { categoryId: categoryId === NO_CATEGORY ? null : categoryId } : {}),
+        ...(hasCategory ? { categoryId } : {}),
         ...(tx.kind === 'income' || tx.kind === 'expense' ? { status } : {}),
       });
       showToast(strings.transactions.saved);
@@ -125,14 +117,9 @@ function EditForm({
           onChangeText={setDescription}
         />
         {hasCategory ? (
-          <ChipSelect
+          <CategoryPicker
             label={strings.transactions.form.category}
-            options={[
-              { value: NO_CATEGORY, label: strings.transactions.form.noCategory },
-              ...categoryList
-                .filter((c) => c.kind === categoryKind)
-                .map((c) => ({ value: c.id, label: c.name, color: c.color })),
-            ]}
+            categories={categoryList.filter((c) => c.kind === categoryKind)}
             value={categoryId}
             onChange={setCategoryId}
           />
