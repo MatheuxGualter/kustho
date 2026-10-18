@@ -234,20 +234,21 @@ Fluxo de branches, PRs e trabalho com o Claude Code: [`trabalhando-com-claude.md
 
 ## 5. Problemas comuns
 
-| Sintoma                                                     | O que fazer                                                                                                  |
-| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| PC trava durante o `pnpm android`                           | Faça o passo 1.6, feche Android Studio e emulador, e use a variável de arquitetura do passo 3.2              |
-| A compilação parou no meio                                  | Rode o mesmo comando de novo: o Gradle retoma do que já ficou pronto. Antes, `pkill -f GradleDaemon`         |
-| Erro estranho ao retomar                                    | `cd android && ./gradlew clean && cd ..` e compile de novo. Persistindo, `rm -rf android` (a pasta é gerada) |
-| Saber se o app está instalado                               | `adb shell pm list packages \| grep kustho` deve mostrar `package:app.kustho`                                |
-| `adb devices` mostra `no permissions`                       | Faltou logout depois do `usermod`. Depois: `adb kill-server && adb devices`                                  |
-| `adb devices` vazio                                         | Troque o cabo (alguns só carregam) e confirme o aviso no celular                                             |
-| `SDK location not found`                                    | `echo $ANDROID_HOME` vazio: `source ~/.bashrc` ou reabra o terminal                                          |
-| `ENOSPC: System limit for number of file watchers`          | Passo 1.5                                                                                                    |
-| Erro de versão do Java no Gradle                            | `java -version`; o `JAVA_HOME` deve apontar para o `jbr` do Android Studio                                   |
-| Emulador: "KVM is required"                                 | Grupo `kvm` (passo 1.3) e virtualização ligada na BIOS                                                       |
-| Tela vermelha "unable to connect" no app                    | `pnpm start` rodando? Com cabo, rode `adb reverse tcp:8081 tcp:8081`                                         |
-| App abre com tela branca ou erro depois de trocar de branch | `pnpm install` e `pnpm start --clear`                                                                        |
+| Sintoma                                                     | O que fazer                                                                                                                                                |
+| ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PC trava durante o `pnpm android`                           | Faça o passo 1.6, feche Android Studio e emulador, e use a variável de arquitetura do passo 3.2                                                            |
+| A compilação parou no meio                                  | Rode o mesmo comando de novo: o Gradle retoma do que já ficou pronto. Antes, `pkill -f GradleDaemon`                                                       |
+| Erro estranho ao retomar                                    | `cd android && ./gradlew clean && cd ..` e compile de novo. Persistindo, `rm -rf android` (a pasta é gerada)                                               |
+| Saber se o app está instalado                               | `adb shell pm list packages \| grep kustho` deve mostrar `package:app.kustho`                                                                              |
+| `adb devices` mostra `no permissions`                       | Faltou logout depois do `usermod`. Depois: `adb kill-server && adb devices`                                                                                |
+| `adb devices` vazio                                         | Troque o cabo (alguns só carregam) e confirme o aviso no celular                                                                                           |
+| `pnpm android` tenta abrir o emulador e ele fecha sozinho   | O Expo só abre o emulador quando não vê nenhum celular. Conecte o celular, confira `adb devices` e rode de novo (ou `pnpm android --device` para escolher) |
+| `SDK location not found`                                    | `echo $ANDROID_HOME` vazio: `source ~/.bashrc` ou reabra o terminal                                                                                        |
+| `ENOSPC: System limit for number of file watchers`          | Passo 1.5                                                                                                                                                  |
+| Erro de versão do Java no Gradle                            | `java -version`; o `JAVA_HOME` deve apontar para o `jbr` do Android Studio                                                                                 |
+| Emulador: "KVM is required"                                 | Grupo `kvm` (passo 1.3) e virtualização ligada na BIOS                                                                                                     |
+| Tela vermelha "unable to connect" no app                    | `pnpm start` rodando? Com cabo, rode `adb reverse tcp:8081 tcp:8081`                                                                                       |
+| App abre com tela branca ou erro depois de trocar de branch | `pnpm install` e `pnpm start --clear`                                                                                                                      |
 
 ---
 
