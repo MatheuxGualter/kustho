@@ -22,6 +22,7 @@ export function AccountCard({ account }: { account: AccountWithBalance }) {
           institution={account.institution}
           color={account.color}
           icon={account.icon}
+          accountType={account.type}
         />
         <View className="flex-1 gap-1">
           <AppText variant="label" className="text-base" numberOfLines={1}>

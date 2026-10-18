@@ -314,6 +314,11 @@ export const strings = {
     archived: 'Arquivadas',
     accountsCount: (n: number) => (n === 1 ? '1 conta' : `${n} contas`),
     archivedBadge: 'Arquivada',
+    cash: {
+      institution: 'Dinheiro',
+      name: 'Carteira',
+      hint: 'Dinheiro em espécie, sem banco. Escolha a cor do ícone mais abaixo.',
+    },
     types: {
       checking: 'Conta corrente',
       savings: 'Poupança',

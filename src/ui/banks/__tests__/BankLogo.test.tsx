@@ -22,6 +22,18 @@ describe('InstitutionAvatar', () => {
     expect(screen.getByLabelText('Nubank')).toBeOnTheScreen();
   });
 
+  it('conta de dinheiro mostra a carteira, nunca iniciais nem logo', async () => {
+    await renderWithTheme(
+      <InstitutionAvatar institution="Dinheiro" color="#475569" icon="DI" accountType="cash" />,
+    );
+    expect(screen.queryByText('DI', { includeHiddenElements: true })).toBeNull();
+    // Mesmo com nome de banco, dinheiro não vira logo.
+    await renderWithTheme(
+      <InstitutionAvatar institution="Nubank" color="#475569" accountType="cash" />,
+    );
+    expect(screen.queryByLabelText('Nubank')).toBeNull();
+  });
+
   it('instituição fora do catálogo mostra as iniciais', async () => {
     await renderWithTheme(<InstitutionAvatar institution="Carteira" color="#475569" icon="CA" />);
     expect(screen.getByText('CA', { includeHiddenElements: true })).toBeOnTheScreen();
