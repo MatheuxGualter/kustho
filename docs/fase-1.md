@@ -75,11 +75,18 @@ await accounts.createTransfer({ ... }); // todas as consultas abertas recarregam
 
 ### C · Cartões e faturas
 
-- Regras 3 a 6 (fatura, parcelas, limite, pagamento) e estorno, com testes de datas-limite,
-  parcelas com resto e pagamento parcial.
-- CRUD de cartões, tela da fatura, pagar fatura (total ou parcial).
-- `CreditCardVisual` e `HomeCardsSection` (fatura atual) para a Início.
-- Campos de compra no cartão (parcelas) que a B encaixa no sheet.
+- [x] Regras 3 a 6 e estorno com testes (`src/domain/cards/rules.ts`): totais da fatura,
+      situação (aberta, fechada, parcial, paga, recalculada na leitura), limite disponível
+      com parcelas futuras, parcelas com resto na 1ª, estorno na fatura certa.
+- [x] Serviço real `createCardsService(db)` com suíte de contrato (fake e real), incluindo
+      "compra em 3x aparece em 3 faturas" e "pagar fatura reduz o saldo".
+- [x] Telas: aba Cartões (`CreditCardVisual`), novo/editar cartão, detalhe com faturas
+      atual, próximas e anteriores, fatura com compras e estorno, pagar fatura (total ou
+      parcial).
+- [x] `HomeCardsSection` na Início.
+- [x] Campo de parcelas no novo lançamento (entregue junto com a B).
+- [ ] Estorno parcial pela interface (o serviço já aceita; a tela estorna o valor total).
+- [ ] Trocar o fake pelo real no registro (na integração).
 
 ### D · Categorias e visão geral
 
