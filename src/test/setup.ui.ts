@@ -22,6 +22,17 @@ jest.mock('expo-sqlite', () => ({
   addDatabaseChangeListener: jest.fn(() => ({ remove: jest.fn() })),
 }));
 
+// Módulos nativos sem efeito nos testes de tela.
+jest.mock('expo-screen-capture', () => ({
+  preventScreenCaptureAsync: jest.fn(() => Promise.resolve()),
+  allowScreenCaptureAsync: jest.fn(() => Promise.resolve()),
+}));
+jest.mock('expo-sharing', () => ({
+  isAvailableAsync: jest.fn(() => Promise.resolve(false)),
+  shareAsync: jest.fn(() => Promise.resolve()),
+}));
+jest.mock('expo-file-system', () => ({ File: jest.fn(), Paths: { cache: 'cache' } }));
+
 // Mock mínimo do Reanimated (o oficial não carrega no Jest com Reanimated 4.7):
 // animações viram valores estáticos e "reduzir movimento" fica ligado.
 jest.mock('react-native-reanimated', () => {

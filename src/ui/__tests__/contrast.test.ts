@@ -15,10 +15,17 @@ function contrast(a: string, b: string): number {
 }
 
 const AA_TEXT = 4.5;
-const AA_LARGE = 3;
 
 const backgrounds: ColorToken[] = ['bg', 'surface', 'surface-raised'];
-const textTokens: ColorToken[] = ['text', 'text-muted', 'brand', 'expense', 'warning', 'info'];
+const textTokens: ColorToken[] = [
+  'text',
+  'text-muted',
+  'brand',
+  'income',
+  'expense',
+  'warning',
+  'info',
+];
 
 describe.each<ColorScheme>(['light', 'dark'])('contraste AA no tema %s', (scheme) => {
   const c = colors[scheme];
@@ -32,11 +39,5 @@ describe.each<ColorScheme>(['light', 'dark'])('contraste AA no tema %s', (scheme
 
   it('on-brand sobre brand ≥ 4.5', () => {
     expect(contrast(c['on-brand'], c.brand)).toBeGreaterThanOrEqual(AA_TEXT);
-  });
-
-  // O verde de receitas do plano (#16A34A) só passa AA para texto grande no tema claro;
-  // por isso ele sempre vem com sinal "+" ou ícone. A trilha B decide o tom final.
-  it.each(backgrounds)('income sobre %s ≥ 3 (texto grande)', (bg) => {
-    expect(contrast(c.income, c[bg])).toBeGreaterThanOrEqual(AA_LARGE);
   });
 });

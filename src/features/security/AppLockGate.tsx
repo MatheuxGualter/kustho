@@ -1,4 +1,5 @@
 import * as LocalAuthentication from 'expo-local-authentication';
+import * as ScreenCapture from 'expo-screen-capture';
 import { Lock } from 'lucide-react-native';
 import { type ReactNode, useCallback, useEffect, useState } from 'react';
 import { AppState, View } from 'react-native';
@@ -27,6 +28,8 @@ export async function canUseLock(): Promise<boolean> {
   return level !== LocalAuthentication.SecurityLevel.NONE;
 }
 
+const SECURE_KEY = 'app-lock';
+
 /**
  * Bloqueio do app: com o bloqueio ligado, pede autenticação ao abrir e ao voltar de
  * segundo plano. Fora de primeiro plano, cobre o conteúdo (tela de apps recentes).
@@ -54,6 +57,16 @@ export function AppLockGate({ children }: { children: ReactNode }) {
     });
     return () => subscription.remove();
   }, []);
+
+  // Com o bloqueio ligado, o Android mostra a tela em branco nos apps recentes e bloqueia
+  // prints (FLAG_SECURE). Desligado, prints voltam a funcionar (úteis para reportar bugs).
+  useEffect(() => {
+    const toggle = lockEnabled
+      ? ScreenCapture.preventScreenCaptureAsync(SECURE_KEY)
+      : ScreenCapture.allowScreenCaptureAsync(SECURE_KEY);
+    // Dev client sem o módulo nativo: segue sem a proteção extra.
+    toggle.catch(() => {});
+  }, [lockEnabled]);
 
   // Pede a autenticação sozinho ao abrir e ao voltar para o app bloqueado.
   useEffect(() => {

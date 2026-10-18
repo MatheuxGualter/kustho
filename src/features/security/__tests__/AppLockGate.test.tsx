@@ -42,3 +42,20 @@ it('com bloqueio, cobre o conteúdo até autenticar', async () => {
   await act(async () => {});
   expect(screen.queryByText('Kustho bloqueado')).toBeNull();
 });
+
+it('com bloqueio, esconde o app nos recentes e bloqueia prints; sem, libera', async () => {
+  const ScreenCapture = jest.requireMock('expo-screen-capture') as {
+    preventScreenCaptureAsync: jest.Mock;
+    allowScreenCaptureAsync: jest.Mock;
+  };
+  authenticate.mockResolvedValue({ success: true });
+  await renderWithTheme(
+    <AppLockGate>
+      <Text>conteúdo</Text>
+    </AppLockGate>,
+  );
+  expect(ScreenCapture.allowScreenCaptureAsync).toHaveBeenLastCalledWith('app-lock');
+
+  await act(() => usePreferences.setState({ lockEnabled: true }));
+  expect(ScreenCapture.preventScreenCaptureAsync).toHaveBeenLastCalledWith('app-lock');
+});

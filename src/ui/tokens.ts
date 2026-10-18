@@ -37,7 +37,7 @@ export const colors: Record<ColorScheme, Record<ColorToken, string>> = {
     'text-muted': '#56645F',
     brand: '#0F766E',
     'on-brand': '#FFFFFF',
-    income: '#16A34A',
+    income: '#15803D',
     expense: '#DC2626',
     warning: '#B45309',
     info: '#2563EB',

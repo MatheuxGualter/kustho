@@ -1,10 +1,11 @@
 import { Stack } from 'expo-router';
 import { FileJson, FileSpreadsheet } from 'lucide-react-native';
 import { useState } from 'react';
-import { Share } from 'react-native';
 
 import { errorMessage } from '@/features/shared/errorMessage';
+import { shareTextFile } from '@/features/shared/shareFile';
 import { type ExportData, toCsv, toJson } from '@/domain/export/export';
+import { today } from '@/lib/dates';
 import { nowTimestamp } from '@/lib/id';
 import { strings } from '@/lib/strings';
 import { useServiceQuery, useServices } from '@/services';
@@ -37,8 +38,13 @@ export function ExportScreen() {
     setBusy(format);
     try {
       const data = await load();
-      const message = format === 'csv' ? toCsv(data) : toJson(data, nowTimestamp());
-      await Share.share({ title: strings.exportData.shareTitle, message });
+      const now = nowTimestamp();
+      await shareTextFile({
+        name: `kustho-${today()}.${format}`,
+        content: format === 'csv' ? toCsv(data) : toJson(data, now),
+        mimeType: format === 'csv' ? 'text/csv' : 'application/json',
+        title: strings.exportData.shareTitle,
+      });
     } catch (e) {
       showToast(errorMessage(e));
     } finally {

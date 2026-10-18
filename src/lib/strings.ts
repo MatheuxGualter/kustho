@@ -344,6 +344,15 @@ export const strings = {
       refundPurchase: 'Estornar compra',
       refunded: 'Estorno registrado',
     },
+    refund: {
+      title: 'Estornar compra',
+      intro: (description: string) =>
+        `Estorno de "${description}". Use um valor menor para estorno parcial; ele entra como crédito na fatura.`,
+      amount: 'Valor estornado',
+      amountHint: (total: string) => `Compra de ${total}`,
+      tooHigh: (total: string) => `O estorno não pode passar de ${total}`,
+      confirm: 'Registrar estorno',
+    },
     pay: {
       account: 'Pagar com a conta',
       amount: 'Valor do pagamento',

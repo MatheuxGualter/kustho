@@ -3,9 +3,8 @@ import { Wallet } from 'lucide-react-native';
 import { Alert, View } from 'react-native';
 
 import { useLookups } from '@/features/shared/useLookups';
-import { errorMessage } from '@/features/shared/errorMessage';
 import type { Transaction } from '@/domain/types';
-import { formatDateBR, formatMonthTitle, today } from '@/lib/dates';
+import { formatDateBR, formatMonthTitle } from '@/lib/dates';
 import { strings } from '@/lib/strings';
 import { useServiceQuery, useServices } from '@/services';
 import { AppText } from '@/ui/components/AppText';
@@ -14,7 +13,6 @@ import { Card } from '@/ui/components/Card';
 import { MoneyText } from '@/ui/components/MoneyText';
 import { Screen } from '@/ui/components/Screen';
 import { SkeletonRows } from '@/ui/components/Skeleton';
-import { showToast } from '@/ui/components/Toast';
 import { TransactionRow } from '@/ui/components/TransactionRow';
 
 /** Fatura: totais, datas, situação, compras, estornos e pagamentos. */
@@ -40,11 +38,7 @@ export function InvoiceScreen() {
       },
       {
         text: strings.cards.invoice.refundPurchase,
-        onPress: () =>
-          void cards
-            .refundCardPurchase(tx.id, tx.amountCents, today())
-            .then(() => showToast(strings.cards.invoice.refunded))
-            .catch((e: unknown) => showToast(errorMessage(e))),
+        onPress: () => router.push(`/fatura/${id}/estorno?compra=${tx.id}`),
       },
     ]);
 
