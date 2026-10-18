@@ -242,6 +242,8 @@ export interface CapturesService {
   listPending(): Promise<Capture[]>;
   /** Selo da aba Pendentes. */
   countPending(): Promise<number>;
+  /** Últimas capturas em qualquer situação, da mais recente para a mais antiga (diagnóstico). */
+  listRecent(limit: number): Promise<Capture[]>;
   getCapture(id: Id): Promise<Capture | undefined>;
   /**
    * Cria o lançamento (`source: 'notification'`) e marca a captura como confirmada. Sem

@@ -116,10 +116,104 @@ export const strings = {
     next: 'Próximo mês',
     current: 'Voltar para o mês atual',
   },
+  captureSetup: {
+    intro:
+      'O Kustho lê as notificações dos apps de banco que você escolher e sugere o lançamento na aba Pendentes. Nada entra no saldo sem você confirmar.',
+    privacyTitle: 'O que é lido',
+    privacy: [
+      'Só as notificações dos apps escolhidos abaixo; as dos outros apps são ignoradas.',
+      'O texto fica guardado só neste celular. Nada é enviado para a internet.',
+      'Você pode desligar a qualquer momento nas configurações do Android.',
+    ],
+    unavailable:
+      'A leitura de notificações precisa do app Android atualizado. Recompile o app (pnpm android) e abra esta tela de novo.',
+    step: (n: number, title: string) => `${n}. ${title}`,
+    banksTitle: 'Escolha seus bancos',
+    banksHint: 'Sugerimos os bancos das suas contas e cartões.',
+    otherApps: 'Outros apps (pacote Android)',
+    otherAppsHint: 'Separe por vírgula. Ex.: com.banco.app',
+    saveBanks: 'Salvar bancos',
+    banksSaved: (n: number) => (n === 1 ? '1 app escolhido' : `${n} apps escolhidos`),
+    accessTitle: 'Libere o acesso às notificações',
+    accessHint: 'Na lista que abrir, ative o Kustho e confirme.',
+    openAccess: 'Abrir configuração de acesso',
+    restrictedTitle: 'A opção está cinza ou bloqueada?',
+    restricted:
+      'No Android 13 ou mais novo, apps instalados por APK precisam de um passo extra: abra as informações do app, toque no menu ⋮ no canto superior e escolha "Permitir configurações restritas". Depois volte e libere o acesso.',
+    openAppInfo: 'Abrir informações do app',
+    batteryTitle: 'Deixe o Kustho rodar em segundo plano',
+    batteryHint:
+      'Sem isso, o Android pode encerrar a leitura e notificações se perdem enquanto o app está fechado.',
+    allowBattery: 'Permitir em segundo plano',
+    batteryBrandTip: {
+      samsung:
+        'Samsung: Configurações > Bateria > Limites de uso em segundo plano > Apps que nunca ficam inativos > adicione o Kustho.',
+      xiaomi:
+        'Xiaomi, Redmi e Poco: Configurações > Apps > Kustho > Economia de bateria > Sem restrições; e ative "Início automático".',
+      motorola:
+        'Motorola: Configurações > Bateria > Uso da bateria do app > Kustho > Sem restrições.',
+      oppo: 'Oppo, Realme e OnePlus: Configurações > Bateria > Kustho > permita atividade em segundo plano e início automático.',
+      huawei:
+        'Huawei e Honor: Configurações > Bateria > Iniciar apps > Kustho > Gerenciar manualmente, com as três opções ligadas.',
+      other: 'Se ainda assim parar: Configurações > Apps > Kustho > Bateria > Sem restrições.',
+    },
+    status: {
+      ok: 'Pronto',
+      pending: 'Falta',
+    },
+    done: 'Tudo pronto: as próximas notificações dos bancos aparecem em Pendentes.',
+    diagnostics: 'Ver diagnóstico',
+  },
+  captureDiagnostics: {
+    health: {
+      unavailable: 'Indisponível neste app',
+      no_permission: 'Acesso às notificações desligado',
+      no_banks: 'Nenhum banco escolhido',
+      battery: 'Funcionando, mas o Android pode pausar em segundo plano',
+      ok: 'Funcionando',
+    },
+    access: 'Acesso às notificações',
+    battery: 'Segundo plano liberado',
+    apps: 'Apps lidos',
+    yes: 'Sim',
+    no: 'Não',
+    setup: 'Configurar',
+    fetchNow: 'Buscar notificações agora',
+    fetched: (n: number) =>
+      n === 0
+        ? 'Nenhuma notificação nova'
+        : n === 1
+          ? '1 notificação nova'
+          : `${n} notificações novas`,
+    recentTitle: 'Últimas notificações por app',
+    recentEmpty: 'Nenhuma notificação lida ainda.',
+    packageRow: (total: number, unparsed: number) =>
+      `${total} lida${total === 1 ? '' : 's'}${unparsed > 0 ? ` · ${unparsed} não interpretada${unparsed === 1 ? '' : 's'}` : ''}`,
+    lastAt: (when: string) => `Última: ${when}`,
+    exportTitle: 'Ajudar a melhorar a leitura',
+    exportHint:
+      'Exporta as últimas notificações no formato de testes dos parsers, com nomes, estabelecimentos, finais de cartão e documentos trocados. Confira o texto antes de mandar para o grupo.',
+    export: 'Exportar anonimizado',
+    shareTitle: 'Notificações anonimizadas do Kustho',
+  },
+  captureNotice: {
+    inviteTitle: 'Lance sem digitar',
+    invite: 'Ative a leitura de notificações e o Kustho sugere cada Pix e compra dos seus bancos.',
+    inviteAction: 'Ativar',
+    dismiss: 'Agora não',
+    brokenTitle: 'A leitura de notificações parou',
+    broken: {
+      no_permission:
+        'O acesso às notificações foi desligado. Novos Pix e compras não aparecem em Pendentes.',
+      no_banks: 'Nenhum banco está escolhido para leitura.',
+    },
+    fix: 'Resolver',
+  },
   pending: {
     emptyTitle: 'Nada para confirmar',
     emptyText:
       'Quando um banco permitido notificar um Pix ou uma compra, a sugestão aparece aqui. Nada entra no saldo sem você confirmar.',
+    setupAction: 'Configurar leitura',
     unparsed: 'Não interpretada',
     unparsedHint: 'Toque em Completar para informar valor, tipo e origem.',
     noOrigin: 'Sem origem',

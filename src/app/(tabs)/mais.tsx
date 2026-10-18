@@ -1,12 +1,14 @@
 import { type Href, Link } from 'expo-router';
 import {
   ArrowLeftRight,
+  BellRing,
   ChevronRight,
   Download,
   type LucideIcon,
   Palette,
   Settings,
   Sparkles,
+  Stethoscope,
   Tags,
   Wallet,
 } from 'lucide-react-native';
@@ -23,6 +25,12 @@ const items: MenuItem[] = [
   { href: '/contas', label: strings.screens.accounts.title, icon: Wallet },
   { href: '/transferencia', label: strings.screens.transfer.title, icon: ArrowLeftRight },
   { href: '/categorias', label: strings.screens.categories.title, icon: Tags },
+  { href: '/captura/permissao', label: strings.screens.captureSetup.title, icon: BellRing },
+  {
+    href: '/captura/diagnostico',
+    label: strings.screens.captureDiagnostics.title,
+    icon: Stethoscope,
+  },
   { href: '/exportar', label: strings.screens.export.title, icon: Download },
   { href: '/configuracoes', label: strings.screens.settings.title, icon: Settings },
 ];
