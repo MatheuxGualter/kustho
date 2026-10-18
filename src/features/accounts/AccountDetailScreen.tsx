@@ -87,6 +87,7 @@ export function AccountDetailScreen() {
                 institution={data.account.institution}
                 color={data.account.color}
                 icon={data.account.icon}
+                accountType={data.account.type}
               />
               <View className="flex-1">
                 <AppText variant="caption" tone="muted">

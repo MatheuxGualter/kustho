@@ -2,12 +2,14 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
+import { View } from 'react-native';
 import { z } from 'zod';
 
 import { errorMessage } from '@/features/shared/errorMessage';
 import { accountTypes } from '@/domain/types';
 import { strings } from '@/lib/strings';
 import { useServices } from '@/services';
+import { AppText } from '@/ui/components/AppText';
 import { Button } from '@/ui/components/Button';
 import { ColorPicker } from '@/ui/components/ColorPicker';
 import { InstitutionAvatar, suggestInitials } from '@/ui/components/InstitutionAvatar';
@@ -53,11 +55,15 @@ export function AccountFormScreen() {
   const [loaded, setLoaded] = useState(!id);
   const form = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: defaults });
   const { control, handleSubmit, setValue, getValues, formState } = form;
-  const [institution, icon, color] = useWatch({ control, name: ['institution', 'icon', 'color'] });
-  const bank = resolveBank(institution, icon);
+  const [institution, icon, color, type] = useWatch({
+    control,
+    name: ['institution', 'icon', 'color', 'type'],
+  });
+  const isCash = type === 'cash';
+  const bank = isCash ? undefined : resolveBank(institution, icon);
   // "Outro" escolhido, ou instituição digitada que não é do catálogo (ex.: ao editar).
   const [other, setOther] = useState(false);
-  const otherBank = other || (!bank && institution.trim() !== '');
+  const otherBank = !isCash && (other || (!bank && institution.trim() !== ''));
 
   useEffect(() => {
     if (!id) return;
@@ -87,25 +93,64 @@ export function AccountFormScreen() {
           <SkeletonRows />
         ) : (
           <>
-            <BankPicker
-              value={bank?.id ?? (otherBank ? 'other' : null)}
-              onChange={(picked) => {
-                if (picked) {
-                  setOther(false);
-                  setValue('institution', picked.name, { shouldValidate: true });
-                  setValue('icon', bankIcon(picked.id), { shouldValidate: true });
-                  if (!getValues('name').trim()) {
-                    setValue('name', picked.name, { shouldValidate: true });
-                  }
-                } else {
-                  setOther(true);
-                  if (bank) {
-                    setValue('institution', '');
-                    setValue('icon', '');
-                  }
-                }
-              }}
+            <Controller
+              control={control}
+              name="type"
+              render={({ field }) => (
+                <SegmentedControl
+                  accessibilityLabel={strings.accounts.form.type}
+                  options={typeOptions}
+                  value={field.value}
+                  onChange={(next) => {
+                    field.onChange(next);
+                    if (next === 'cash') {
+                      // Dinheiro não tem banco: instituição e nome padrão, ícone de carteira.
+                      setOther(false);
+                      setValue('institution', strings.accounts.cash.institution, {
+                        shouldValidate: true,
+                      });
+                      setValue('icon', suggestInitials(strings.accounts.cash.institution), {
+                        shouldValidate: true,
+                      });
+                      if (!getValues('name').trim()) {
+                        setValue('name', strings.accounts.cash.name, { shouldValidate: true });
+                      }
+                    } else if (getValues('institution') === strings.accounts.cash.institution) {
+                      setValue('institution', '');
+                      setValue('icon', '');
+                    }
+                  }}
+                />
+              )}
             />
+            {isCash ? (
+              <View className="flex-row items-center gap-3">
+                <InstitutionAvatar institution={institution} color={color} accountType="cash" />
+                <AppText tone="muted" className="flex-1">
+                  {strings.accounts.cash.hint}
+                </AppText>
+              </View>
+            ) : (
+              <BankPicker
+                value={bank?.id ?? (otherBank ? 'other' : null)}
+                onChange={(picked) => {
+                  if (picked) {
+                    setOther(false);
+                    setValue('institution', picked.name, { shouldValidate: true });
+                    setValue('icon', bankIcon(picked.id), { shouldValidate: true });
+                    if (!getValues('name').trim()) {
+                      setValue('name', picked.name, { shouldValidate: true });
+                    }
+                  } else {
+                    setOther(true);
+                    if (bank) {
+                      setValue('institution', '');
+                      setValue('icon', '');
+                    }
+                  }
+                }}
+              />
+            )}
             <Controller
               control={control}
               name="name"
@@ -117,18 +162,6 @@ export function AccountFormScreen() {
                   onChangeText={field.onChange}
                   onBlur={field.onBlur}
                   error={fieldState.error?.message}
-                />
-              )}
-            />
-            <Controller
-              control={control}
-              name="type"
-              render={({ field }) => (
-                <SegmentedControl
-                  accessibilityLabel={strings.accounts.form.type}
-                  options={typeOptions}
-                  value={field.value}
-                  onChange={field.onChange}
                 />
               )}
             />
