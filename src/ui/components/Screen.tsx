@@ -27,7 +27,9 @@ export function Screen({ title, children, edges = ['top'], scroll = true }: Scre
   return (
     <SafeAreaView edges={edges} className="flex-1 bg-bg">
       {scroll ? (
-        <ScrollView contentInsetAdjustmentBehavior="automatic">{content}</ScrollView>
+        <ScrollView contentInsetAdjustmentBehavior="automatic" keyboardShouldPersistTaps="handled">
+          {content}
+        </ScrollView>
       ) : (
         content
       )}

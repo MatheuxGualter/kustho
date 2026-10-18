@@ -104,6 +104,7 @@
           "<rootDir>/src/test/setup.ui.ts"
         ],
         "moduleNameMapper": {
+          "^expo-crypto$": "<rootDir>/src/test/expo-crypto.node.ts",
           "^lucide-react-native$": "<rootDir>/node_modules/lucide-react-native/dist/cjs/lucide-react-native.js"
         }
       }

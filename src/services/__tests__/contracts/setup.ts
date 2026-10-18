@@ -4,6 +4,7 @@
  * igual nos dois, garantindo que trocar o fake pelo real não muda o comportamento.
  */
 import { createAccountsService } from '@/domain/accounts/service';
+import { createTransactionsService } from '@/domain/transactions/service';
 import type { Services } from '@/domain/contracts';
 import type { DevSeed } from '@/db/devSeed';
 import { runDevSeed } from '@/db/devSeed';
@@ -46,6 +47,7 @@ export const realEnv: EnvFactory = {
       services: {
         ...createFakeServices(createFakeStore(TODAY)),
         accounts: createAccountsService(db),
+        transactions: createTransactionsService(db),
       },
       seed,
     };
