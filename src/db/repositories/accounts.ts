@@ -1,13 +1,14 @@
 import { and, asc, eq, isNull } from 'drizzle-orm';
 
 import type { Account } from '@/domain/types';
+import type { AccountInput } from '@/domain/contracts';
 import { nowTimestamp } from '@/lib/id';
 
 import type { AppDatabase } from '../database';
 import { accounts } from '../schema';
-import { type EntityKeys, newEntity } from './common';
+import { newEntity } from './common';
 
-export type AccountInput = Omit<Account, EntityKeys | 'archivedAt'>;
+export type { AccountInput };
 
 export async function listAccounts(
   db: AppDatabase,

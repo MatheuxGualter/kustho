@@ -3,6 +3,10 @@
  */
 export const strings = {
   appName: 'Kustho',
+  placeholder: {
+    owner: (track: string) => `Trilha ${track} · Fase 1`,
+    param: (id: string) => `ID: ${id}`,
+  },
   common: {
     loading: 'Carregando…',
     cancel: 'Cancelar',
@@ -28,9 +32,33 @@ export const strings = {
       title: 'Mais',
       placeholder: 'Contas, categorias, exportação e configurações.',
       devCatalog: 'Catálogo de componentes',
+      devOnboarding: 'Ver boas-vindas',
     },
     newTransaction: { title: 'Novo lançamento' },
     editTransaction: { title: 'Editar lançamento' },
+    accounts: { title: 'Contas', placeholder: 'Lista de contas com saldo, arquivadas no fim.' },
+    newAccount: {
+      title: 'Nova conta',
+      placeholder: 'Nome, tipo, instituição, cor e saldo inicial.',
+    },
+    account: { title: 'Conta', placeholder: 'Saldo, lançamentos da conta e ajuste de saldo.' },
+    transfer: { title: 'Transferência', placeholder: 'De qual conta, para qual, valor e data.' },
+    newCard: { title: 'Novo cartão', placeholder: 'Nome, limite, fechamento, vencimento e conta.' },
+    card: { title: 'Cartão', placeholder: 'Limite disponível, fatura atual e faturas anteriores.' },
+    invoice: { title: 'Fatura', placeholder: 'Compras, estornos, pagamentos e total da fatura.' },
+    payInvoice: {
+      title: 'Pagar fatura',
+      placeholder: 'Conta de origem e valor (total ou parcial).',
+    },
+    categories: { title: 'Categorias', placeholder: 'Categorias de despesa e de receita.' },
+    newCategory: { title: 'Nova categoria', placeholder: 'Nome, tipo, ícone e cor.' },
+    category: { title: 'Categoria', placeholder: 'Editar ou excluir, movendo os lançamentos.' },
+    settings: {
+      title: 'Configurações',
+      placeholder: 'Tema, ocultar valores e bloqueio por biometria ou PIN.',
+    },
+    export: { title: 'Exportar dados', placeholder: 'Exportar tudo em CSV ou JSON.' },
+    onboarding: { title: 'Boas-vindas', placeholder: 'Primeira conta, primeiro cartão e pronto.' },
   },
   money: {
     hidden: 'Valor oculto',

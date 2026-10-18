@@ -1,13 +1,14 @@
 import { and, asc, eq, isNull } from 'drizzle-orm';
 
 import type { Category, CategoryKind } from '@/domain/types';
+import type { CategoryInput } from '@/domain/contracts';
 import { nowTimestamp } from '@/lib/id';
 
 import type { AppDatabase } from '../database';
 import { categories } from '../schema';
-import { type EntityKeys, newEntity } from './common';
+import { newEntity } from './common';
 
-export type CategoryInput = Omit<Category, EntityKeys>;
+export type { CategoryInput };
 
 export async function listCategories(db: AppDatabase, kind?: CategoryKind): Promise<Category[]> {
   return db

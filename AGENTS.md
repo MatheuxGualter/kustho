@@ -53,7 +53,8 @@ src/
     repositories/         # CRUD básico por tabela (recebem AppDatabase)
     devSeed.ts            # dados de exemplo (catálogo dev/ui → "Popular dados de exemplo")
     test/testDb.ts        # SQLite real em memória para testes (node:sqlite + migrações)
-  domain/                 # types.ts (contratos) + regras puras por domínio
+  domain/                 # types.ts e contracts.ts (contratos) + regras e serviços por domínio
+  services/               # registro dos serviços (useServices), useServiceQuery e fakes
   features/<domínio>/     # telas e seções compostas (HomeAccountsSection…)
   ui/                     # tokens.ts, theme.tsx, components/
   lib/                    # money.ts, dates.ts, strings.ts, id.ts, preferences.ts
@@ -76,8 +77,11 @@ Import com alias `@/` → `src/`.
   Contas e cartões com lançamentos só são arquivados (`archivedAt`).
 - **Regras de negócio** em funções puras em `src/domain/<domínio>/`, testadas sem React.
   Escreva os testes primeiro, a partir das regras de `docs/plano.md`.
-- **Telas** leem e escrevem só pelo domínio; o SQLite (Drizzle) é a fonte de verdade.
-  Consultas reativas com `useLiveQuery`.
+- **Telas** leem e escrevem só pelos serviços (`useServices()`, contratos em
+  `src/domain/contracts.ts`), nunca importam `@/db`. Leitura reativa com
+  `useServiceQuery(() => service.metodo(), [deps])`: recarrega sozinha após qualquer
+  escrita. Até a trilha entregar o serviço real, o registro usa o fake em memória
+  (`src/services/fakes/`). Ver `docs/fase-1.md`.
 - **Acesso ao banco**: repositórios e serviços recebem `db: AppDatabase`
   (`src/db/database.ts`) e sempre usam `await`; assim o mesmo código roda no app
   (expo-sqlite) e nos testes. Teste regra que toca o banco com `createTestDb()`
@@ -130,8 +134,9 @@ Cada fase tem trilhas A–D que só se comunicam por contratos em TypeScript
 o que depende de outra trilha usa um fake que respeita o contrato.
 
 - Arquivos de alto conflito — `src/db/schema.ts`, `src/ui/tokens.ts`,
-  `src/app/(tabs)/_layout.tsx`, `src/domain/types.ts` — só mudam no kickoff ou pelo
-  responsável definido nele.
+  `src/app/(tabs)/_layout.tsx`, `src/domain/types.ts`, `src/domain/contracts.ts`,
+  `src/services/index.tsx` — só mudam no kickoff ou pelo responsável definido nele
+  (exceção: cada trilha troca a própria linha do fake em `src/services/index.tsx`).
 - Início e Mais são montadas por seções: cada trilha entrega a sua em
   `src/features/<domínio>/`; só o dono da tela edita a rota.
 - Branches por trilha (`fase-1/a-contas`), Conventional Commits (`feat:`, `fix:`,

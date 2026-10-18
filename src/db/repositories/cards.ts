@@ -1,13 +1,14 @@
 import { and, asc, eq, isNull } from 'drizzle-orm';
 
 import type { CreditCard } from '@/domain/types';
+import type { CreditCardInput } from '@/domain/contracts';
 import { nowTimestamp } from '@/lib/id';
 
 import type { AppDatabase } from '../database';
 import { creditCards } from '../schema';
-import { type EntityKeys, newEntity } from './common';
+import { newEntity } from './common';
 
-export type CreditCardInput = Omit<CreditCard, EntityKeys | 'archivedAt'>;
+export type { CreditCardInput };
 
 export async function listCards(
   db: AppDatabase,
