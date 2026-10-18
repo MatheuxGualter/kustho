@@ -2,11 +2,11 @@ import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import type { BottomTabBarProps } from 'expo-router/js-tabs';
 import {
+  ArrowDownUp,
+  Bell,
   CreditCard,
   Ellipsis,
   House,
-  Inbox,
-  List,
   type LucideIcon,
   Plus,
   Wallet,
@@ -22,16 +22,22 @@ import { AppText } from './AppText';
 
 const icons: Record<string, LucideIcon> = {
   index: House,
-  lancamentos: List,
-  pendentes: Inbox,
+  // Entradas e saídas.
+  lancamentos: ArrowDownUp,
+  // Sugestões vindas das notificações dos bancos.
+  pendentes: Bell,
   cartoes: CreditCard,
   contas: Wallet,
   mais: Ellipsis,
 };
 
-const ICON_SIZE = 22;
+const ICON_SIZE = 24;
 
-/** Barra de abas com o botão central que abre o novo lançamento (metade das abas de cada lado). */
+/**
+ * Barra de abas só com ícones (o nome fica no rótulo de acessibilidade) e o botão central
+ * que abre o novo lançamento, com metade das abas de cada lado. A aba atual ganha cor e um
+ * traço embaixo, para não depender só da cor.
+ */
 export function TabBar({ state, descriptors, emitter, navigateToTab }: BottomTabBarProps) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
@@ -68,16 +74,7 @@ export function TabBar({ state, descriptors, emitter, navigateToTab }: BottomTab
             </View>
           ) : null}
         </View>
-        <AppText
-          variant="caption"
-          tone={focused ? 'brand' : 'muted'}
-          numberOfLines={1}
-          adjustsFontSizeToFit
-          minimumFontScale={0.65}
-          maxFontSizeMultiplier={1.3}
-        >
-          {label}
-        </AppText>
+        <View className={`h-1 w-4 rounded-full ${focused ? 'bg-brand' : 'bg-transparent'}`} />
       </Pressable>
     );
   });
