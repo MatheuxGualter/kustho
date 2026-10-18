@@ -4,6 +4,9 @@
  */
 import type { Capture } from '@/domain/types';
 
+import { parsers } from './parsers';
+import { parseNotification } from './rules';
+
 export type PackageSummary = {
   packageName: string;
   total: number;
@@ -52,11 +55,17 @@ const PERSON = new RegExp(
  */
 export function anonymizeText(
   text: string,
-  known: { merchant?: string | null; cardLastDigits?: string | null } = {},
+  known: {
+    merchant?: string | null;
+    cardLastDigits?: string | null;
+    /** Em entradas o "estabelecimento" é quem mandou o dinheiro: vira pessoa. */
+    kind?: Capture['kind'];
+  } = {},
 ): string {
   let out = text;
   if (known.merchant && known.merchant.trim().length > 1) {
-    out = out.replace(new RegExp(escapeRegExp(known.merchant.trim()), 'gi'), ANON.merchant);
+    const placeholder = known.kind === 'income' ? ANON.person : ANON.merchant;
+    out = out.replace(new RegExp(escapeRegExp(known.merchant.trim()), 'gi'), placeholder);
   }
   if (known.cardLastDigits) {
     out = out.replace(
@@ -64,15 +73,21 @@ export function anonymizeText(
       ANON.cardDigits,
     );
   }
-  return out
-    .replace(/[\w.+-]+@[\w-]+(\.[\w-]+)+/g, 'email@exemplo.com')
-    .replace(/\b\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}\b/g, '00.000.000/0000-00')
-    .replace(/\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b/g, '000.000.000-00')
-    .replace(/(?:\+?55\s?)?\(?\d{2}\)?\s?9?\d{4}-?\d{4}\b/g, '(00) 00000-0000')
-    .replace(/((?:final|cart[aã]o)\D{0,12})\d{4}\b/gi, `$1${ANON.cardDigits}`)
-    .replace(/[*•xX]{2,}\s?\d{4}\b/g, `****${ANON.cardDigits}`)
-    .replace(/\b\d{6,}\b/g, (digits) => '0'.repeat(digits.length))
-    .replace(PERSON, (_match, prep: string) => `${prep} ${ANON.person}`);
+  return (
+    out
+      .replace(/[\w.+-]+@[\w-]+(\.[\w-]+)+/g, 'email@exemplo.com')
+      .replace(/\b\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}\b/g, '00.000.000/0000-00')
+      .replace(/\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b/g, '000.000.000-00')
+      // CPF mascarado pelo banco ("XXX.468.266-XX", "***.468.266-**"): os do meio também saem.
+      .replace(/[X*•\d]{3}\.[X*•\d]{3}\.[X*•\d]{3}-[X*•\d]{2}/gi, (cpf) =>
+        /[X*•]/i.test(cpf) ? 'XXX.000.000-XX' : cpf,
+      )
+      .replace(/(?:\+?55\s?)?\(?\d{2}\)?\s?9?\d{4}-?\d{4}\b/g, '(00) 00000-0000')
+      .replace(/((?:final|cart[aã]o)\D{0,12})\d{4}\b/gi, `$1${ANON.cardDigits}`)
+      .replace(/[*•xX]{2,}\s?\d{4}\b/g, `****${ANON.cardDigits}`)
+      .replace(/\b\d{6,}\b/g, (digits) => '0'.repeat(digits.length))
+      .replace(PERSON, (_match, prep: string) => `${prep} ${ANON.person}`)
+  );
 }
 
 export type FixtureCase = {
@@ -94,21 +109,32 @@ export function toFixtureExport(captures: readonly Capture[]): {
   cases: FixtureCase[];
 } {
   const cases = captures.map((c, i): FixtureCase => {
-    const known = { merchant: c.merchant, cardLastDigits: c.cardLastDigits };
+    const known = { merchant: c.merchant, cardLastDigits: c.cardLastDigits, kind: c.kind };
     const anon = (text: string | null) => (text === null ? null : anonymizeText(text, known));
+    const notification = { packageName: c.packageName, title: anon(c.title), text: anon(c.text) };
+    // O esperado sai do texto já anonimizado: assim a fixture bate com o que o parser lê nela.
+    const again =
+      c.parser === null
+        ? null
+        : parseNotification(parsers, {
+            ...notification,
+            id: c.rawId,
+            key: c.rawId,
+            postedAtMs: Date.parse(c.postedAt),
+            capturedAtMs: Date.parse(c.postedAt),
+          });
     return {
       name: `${c.packageName} #${i + 1}${c.parser === null ? ' (não interpretada)' : ''}`,
-      notification: { packageName: c.packageName, title: anon(c.title), text: anon(c.text) },
-      expected:
-        c.parser === null
-          ? FILL_EXPECTED
-          : {
-              parser: c.parser,
-              amountCents: c.amountCents,
-              kind: c.kind,
-              merchant: c.merchant ? ANON.merchant : null,
-              cardLastDigits: c.cardLastDigits ? ANON.cardDigits : null,
-            },
+      notification,
+      expected: again
+        ? {
+            parser: again.parser,
+            amountCents: again.parsed.amountCents,
+            kind: again.parsed.kind,
+            merchant: again.parsed.merchant,
+            cardLastDigits: again.parsed.cardLastDigits,
+          }
+        : FILL_EXPECTED,
     };
   });
   return {
