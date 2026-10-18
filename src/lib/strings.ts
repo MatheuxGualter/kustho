@@ -469,6 +469,7 @@ export const strings = {
     seed: 'Popular dados de exemplo',
     clear: 'Apagar contas, cartões e lançamentos',
     seedDone: (count: number) => `${count} lançamentos criados.`,
+    seedReady: 'Dados de exemplo prontos',
     clearDone: 'Dados apagados.',
     capture: 'Captura de notificações',
     captureUnavailable: 'Módulo nativo ausente. Recompile o app (pnpm android).',

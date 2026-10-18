@@ -1,0 +1,11 @@
+# Subfluxo: abre o app com os dados de exemplo (3 contas, 2 cartões, 3 meses).
+appId: app.kustho
+---
+- launchApp
+- openLink: kustho://dev/seed
+- extendedWaitUntil:
+    visible: 'Dados de exemplo prontos'
+    timeout: 30000
+- tapOn:
+    id: seed-home
+- assertVisible: 'Início'

@@ -1,0 +1,37 @@
+# Compra em 3x no cartão: uma parcela em cada mês (cada uma na sua fatura).
+appId: app.kustho
+name: Compra em 3x aparece em 3 faturas
+---
+- runFlow: _preparar.yaml
+- tapOn: 'Novo lançamento'
+- tapOn: { id: keypad-3 }
+- tapOn: { id: keypad-0 }
+- tapOn: { id: keypad-00 }
+- tapOn: { id: keypad-00 }
+- tapOn: 'Ex.: Almoço'
+- inputText: 'Fone E2E'
+- hideKeyboard
+- tapOn: 'Inter Gold · cartão'
+- tapOn: 'Mais opções'
+- scrollUntilVisible:
+    element: '3x'
+    direction: DOWN
+- tapOn: '3x'
+- scrollUntilVisible:
+    element: 'Salvar'
+    direction: DOWN
+- tapOn: 'Salvar'
+- assertVisible: 'Lançamento salvo'
+- tapOn: 'Lançamentos'
+- assertVisible: 'Fone E2E'
+- assertVisible: '.*1/3.*'
+- tapOn: 'Próximo mês'
+- assertVisible: 'Fone E2E'
+- assertVisible: '.*2/3.*'
+- tapOn: 'Próximo mês'
+- assertVisible: 'Fone E2E'
+- assertVisible: '.*3/3.*'
+# O cartão passa a ter faturas futuras com as parcelas.
+- tapOn: 'Cartões'
+- tapOn: 'Inter Gold'
+- assertVisible: 'Próximas faturas'

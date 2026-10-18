@@ -120,8 +120,9 @@ pendência de outra trilha.
 ## Integração
 
 - [x] Todos os fakes trocados pelos serviços reais (`src/services/app.ts`).
-- [ ] Testes ponta a ponta com Maestro: lançar despesa; compra em 3x aparece em 3 faturas;
-      pagar fatura reduz o saldo.
+- [x] Fluxos Maestro escritos (`.maestro/`): lançar despesa; compra em 3x aparece em 3
+      faturas; pagar fatura reduz o saldo. Começam de `kustho://dev/seed`.
+- [ ] Rodar os fluxos do Maestro num aparelho e ajustar o que falhar (ainda não rodados).
 - [ ] **Teste de uso:** cada membro lança os próprios gastos reais por um período combinado.
       Cronometrem 10 lançamentos (meta: menos de 5 s cada) e registrem os atritos.
 - [ ] Revisar os logos dos bancos antes de qualquer publicação na Play Store.

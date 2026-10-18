@@ -34,3 +34,19 @@ jobs:
           git diff --exit-code -- src/db/migrations || (echo "Rode 'pnpm db:generate' e faça o commit da migração." && exit 1)
       - name: CLAUDE.md e AGENTS.md iguais
         run: cmp CLAUDE.md AGENTS.md
+
+  kotlin:
+    # Testes JUnit das regras puras do módulo de captura (Fase 2), sem Android SDK.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.14.3'
+      - name: JUnit do módulo de captura
+        working-directory: modules/notification-capture/jvm-tests
+        run: gradle test --no-daemon

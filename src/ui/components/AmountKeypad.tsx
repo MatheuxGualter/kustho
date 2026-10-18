@@ -50,6 +50,7 @@ export function AmountKeypad({ value, onChange }: AmountKeypadProps) {
           {row.map((key) => (
             <Pressable
               key={key}
+              testID={`keypad-${key}`}
               accessibilityRole="button"
               accessibilityLabel={
                 key === 'backspace'
