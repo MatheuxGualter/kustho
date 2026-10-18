@@ -87,6 +87,7 @@
           "<rootDir>/src/**/*.test.ts"
         ],
         "moduleNameMapper": {
+          "^expo-crypto$": "<rootDir>/src/test/expo-crypto.node.ts",
           "^@/(.*)$": "<rootDir>/src/$1"
         }
       },

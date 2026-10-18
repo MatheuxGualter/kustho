@@ -49,6 +49,9 @@ src/
     lancamento/[id].tsx   # editar
     dev/ui.tsx            # catálogo de componentes (só __DEV__)
   db/                     # schema.ts, migrations/ (geradas), client.ts, seed.ts, setup.ts
+    repositories/         # CRUD básico por tabela (recebem AppDatabase)
+    devSeed.ts            # dados de exemplo (catálogo dev/ui → "Popular dados de exemplo")
+    test/testDb.ts        # SQLite real em memória para testes (node:sqlite + migrações)
   domain/                 # types.ts (contratos) + regras puras por domínio
   features/<domínio>/     # telas e seções compostas (HomeAccountsSection…)
   ui/                     # tokens.ts, theme.tsx, components/
@@ -74,6 +77,10 @@ Import com alias `@/` → `src/`.
   Escreva os testes primeiro, a partir das regras de `docs/plano.md`.
 - **Telas** leem e escrevem só pelo domínio; o SQLite (Drizzle) é a fonte de verdade.
   Consultas reativas com `useLiveQuery`.
+- **Acesso ao banco**: repositórios e serviços recebem `db: AppDatabase`
+  (`src/db/database.ts`) e sempre usam `await`; assim o mesmo código roda no app
+  (expo-sqlite) e nos testes. Teste regra que toca o banco com `createTestDb()`
+  (`src/db/test/testDb.ts`): SQLite real com as migrações e as restrições CHECK.
 - **Textos** só em `src/lib/strings.ts` (pt-BR). Moeda única BRL.
 - **Visual** só a partir de `src/ui/tokens.ts`: classes do Tailwind (`bg-surface`,
   `text-text-muted`, `p-4`, `rounded-card`, `font-semibold`, `text-lg`) ou `useTheme()`

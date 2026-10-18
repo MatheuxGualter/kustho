@@ -1,26 +1,9 @@
 /**
  * Aplica as migrações num SQLite real (node:sqlite) e confere as restrições do schema.
  */
-import { readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { DatabaseSync } from 'node:sqlite';
+import type { DatabaseSync } from 'node:sqlite';
 
-const migrationsDir = join(__dirname, '..', 'migrations');
-
-function migratedDb() {
-  const db = new DatabaseSync(':memory:');
-  db.exec('PRAGMA foreign_keys = ON');
-  for (const file of readdirSync(migrationsDir)
-    .filter((f) => f.endsWith('.sql'))
-    .sort()) {
-    for (const statement of readFileSync(join(migrationsDir, file), 'utf8').split(
-      '--> statement-breakpoint',
-    )) {
-      db.exec(statement);
-    }
-  }
-  return db;
-}
+import { createMigratedSqlite as migratedDb } from '../test/testDb';
 
 const now = '2026-10-17T12:00:00.000Z';
 

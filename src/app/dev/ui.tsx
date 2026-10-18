@@ -1,7 +1,10 @@
 import { Redirect } from 'expo-router';
-import type { ReactNode } from 'react';
-import { View } from 'react-native';
+import { type ReactNode, useState } from 'react';
+import { Pressable, View } from 'react-native';
 
+import { db } from '@/db/client';
+import { clearDevData, runDevSeed } from '@/db/devSeed';
+import { today } from '@/lib/dates';
 import { formatBRL } from '@/lib/money';
 import { strings } from '@/lib/strings';
 import { AppText, type AppTextVariant } from '@/ui/components/AppText';
@@ -23,6 +26,8 @@ export default function DevCatalogScreen() {
   return (
     <Screen edges={['bottom']}>
       <ThemeSelector />
+
+      <DevDataSection />
 
       <Section title={strings.devCatalog.colors}>
         <View className="flex-row flex-wrap gap-2">
@@ -84,6 +89,55 @@ export default function DevCatalogScreen() {
           ))}
       </Section>
     </Screen>
+  );
+}
+
+function DevDataSection() {
+  const [status, setStatus] = useState<string | null>(null);
+  const run = (action: () => Promise<string>) => {
+    action()
+      .then(setStatus)
+      .catch((e: unknown) => setStatus(String(e)));
+  };
+  return (
+    <Section title={strings.devCatalog.devData}>
+      <AppText variant="caption" tone="muted">
+        {strings.devCatalog.devDataHint}
+      </AppText>
+      <DevButton
+        label={strings.devCatalog.seed}
+        onPress={() =>
+          run(async () =>
+            strings.devCatalog.seedDone((await runDevSeed(db, today())).transactions.length),
+          )
+        }
+      />
+      <DevButton
+        label={strings.devCatalog.clear}
+        onPress={() =>
+          run(async () => {
+            await clearDevData(db);
+            return strings.devCatalog.clearDone;
+          })
+        }
+      />
+      {status ? <AppText variant="caption">{status}</AppText> : null}
+    </Section>
+  );
+}
+
+// Provisório: o Button do catálogo (trilha D) substitui este.
+function DevButton({ label, onPress }: { label: string; onPress: () => void }) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      className="min-h-touch justify-center rounded-input border border-border px-4 active:opacity-70"
+    >
+      <AppText variant="label" tone="brand">
+        {label}
+      </AppText>
+    </Pressable>
   );
 }
 

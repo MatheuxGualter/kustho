@@ -45,6 +45,12 @@ export const strings = {
     spacing: 'Espaçamento',
     accents: 'Cores de conta e cartão',
     sample: 'Kustho organiza suas finanças',
+    devData: 'Dados de exemplo',
+    devDataHint: '3 contas, 2 cartões e 3 meses de lançamentos. Substitui os dados atuais.',
+    seed: 'Popular dados de exemplo',
+    clear: 'Apagar contas, cartões e lançamentos',
+    seedDone: (count: number) => `${count} lançamentos criados.`,
+    clearDone: 'Dados apagados.',
   },
   errors: {
     database: 'Não foi possível abrir os dados do aparelho.',
