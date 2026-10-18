@@ -10,7 +10,11 @@ import { strings } from '@/lib/strings';
 import { useServiceQuery, useServices } from '@/services';
 import { AppText } from '@/ui/components/AppText';
 import { Button } from '@/ui/components/Button';
-import { CategoryIcon, categoryIcons } from '@/ui/components/CategoryIcon';
+import {
+  CategoryIcon,
+  type CategoryIconGroup,
+  categoryIconGroups,
+} from '@/ui/components/CategoryIcon';
 import { ChipSelect } from '@/ui/components/ChipSelect';
 import { ColorPicker } from '@/ui/components/ColorPicker';
 import { Screen } from '@/ui/components/Screen';
@@ -20,10 +24,10 @@ import { TextField } from '@/ui/components/TextField';
 import { showToast } from '@/ui/components/Toast';
 import { accentPalette } from '@/ui/tokens';
 
-/** Ícones que fazem sentido para categorias (os de tipo de lançamento ficam de fora). */
-const pickableIcons = Object.keys(categoryIcons).filter(
-  (name) => !['arrow-left-right', 'credit-card', 'sliders-horizontal'].includes(name),
-);
+const iconGroups = Object.entries(categoryIconGroups).map(([group, icons]) => ({
+  group: group as CategoryIconGroup,
+  icons: Object.keys(icons),
+}));
 
 /** Nova categoria (`/categoria/nova?kind=`) ou editar/excluir (`/categoria/[id]`). */
 export function CategoryFormScreen() {
@@ -140,27 +144,34 @@ function CategoryForm({
             onChange={setKind}
           />
         ) : null}
-        <View className="gap-2">
+        <View className="gap-3">
           <AppText variant="label" tone="muted">
             {strings.categories.form.icon}
           </AppText>
-          <View className="flex-row flex-wrap gap-2" accessibilityRole="radiogroup">
-            {pickableIcons.map((option) => (
-              <Pressable
-                key={option}
-                accessibilityRole="radio"
-                accessibilityLabel={strings.categories.form.iconOption(option)}
-                accessibilityState={{ selected: option === icon }}
-                onPress={() => {
-                  void Haptics.selectionAsync();
-                  setIcon(option);
-                }}
-                className={`rounded-full border-2 ${option === icon ? 'border-brand' : 'border-transparent'}`}
-              >
-                <CategoryIcon icon={option} color={color} />
-              </Pressable>
-            ))}
-          </View>
+          {iconGroups.map(({ group, icons }) => (
+            <View key={group} className="gap-2">
+              <AppText variant="caption" tone="muted">
+                {strings.categories.iconGroups[group]}
+              </AppText>
+              <View className="flex-row flex-wrap gap-2" accessibilityRole="radiogroup">
+                {icons.map((option) => (
+                  <Pressable
+                    key={option}
+                    accessibilityRole="radio"
+                    accessibilityLabel={strings.categories.form.iconOption(option)}
+                    accessibilityState={{ selected: option === icon }}
+                    onPress={() => {
+                      void Haptics.selectionAsync();
+                      setIcon(option);
+                    }}
+                    className={`rounded-full border-2 ${option === icon ? 'border-brand' : 'border-transparent'}`}
+                  >
+                    <CategoryIcon icon={option} color={color} />
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+          ))}
         </View>
         <ColorPicker value={color} onChange={setColor} />
         <Button
