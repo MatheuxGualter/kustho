@@ -1,10 +1,24 @@
-/** Fake da trilha C. Aproximação em memória; as regras oficiais ficam no serviço real. */
+/**
+ * Fake da trilha C em memória. Usa as mesmas regras puras do serviço real
+ * (`src/domain/cards/rules.ts`); só o armazenamento é diferente.
+ */
+import {
+  availableLimit,
+  buildCardPurchase,
+  invoiceStatus,
+  invoiceTotals,
+  refundReferenceMonth,
+} from '@/domain/cards/rules';
 import type { CardsService, InvoiceWithTotals } from '@/domain/contracts';
-import { cycleForPurchase, installmentCycles, type InvoiceCycle } from '@/domain/invoices/cycle';
+import { DomainError } from '@/domain/errors';
+import {
+  cycleForPurchase,
+  cycleForReferenceMonth,
+  type InvoiceCycle,
+} from '@/domain/invoices/cycle';
 import type { Invoice, Transaction } from '@/domain/types';
-import { addMonths, compareDates, dateInMonth, monthOf, parseISODate, today } from '@/lib/dates';
+import { today } from '@/lib/dates';
 import { newId, nowTimestamp } from '@/lib/id';
-import { splitInstallments, sumCents } from '@/lib/money';
 
 import { notifyDataChanged } from '../dataVersion';
 import { blankTransaction, entity } from './common';
@@ -22,51 +36,38 @@ export function createFakeCardsService(store: FakeStore): CardsService {
     return invoice;
   };
 
-  const withTotals = (invoice: Invoice): InvoiceWithTotals => {
-    const rows = alive(store.transactions).filter((t) => t.invoiceId === invoice.id);
-    const totalCents = sumCents(
-      rows.map((t) =>
-        t.kind === 'card_purchase'
-          ? t.amountCents
-          : t.kind === 'adjustment'
-            ? t.direction === 'in'
-              ? -t.amountCents
-              : t.amountCents
-            : 0,
-      ),
-    );
-    const paidCents = sumCents(
-      rows.filter((t) => t.kind === 'invoice_payment').map((t) => t.amountCents),
-    );
-    return {
-      ...invoice,
-      totalCents,
-      paidCents,
-      remainingCents: Math.max(0, totalCents - paidCents),
-    };
+  const withTotals = (invoice: Invoice, day = today()): InvoiceWithTotals => {
+    const totals = invoiceTotals(invoice.id, store.transactions);
+    return { ...invoice, ...totals, status: invoiceStatus(invoice, totals, day) };
   };
 
-  const availableLimit = (cardId: string) => {
-    const card = findOrThrow(store.cards, cardId, 'Cartão');
-    const owed = alive(store.invoices)
-      .filter((i) => i.cardId === cardId && i.status !== 'paid')
-      .map((i) => withTotals(i).remainingCents);
-    return card.limitCents - sumCents(owed);
+  const cardInvoices = (cardId: string, day = today()) =>
+    alive(store.invoices)
+      .filter((i) => i.cardId === cardId)
+      .map((i) => withTotals(i, day));
+
+  const requireCard = (id: string) => {
+    const card = alive(store.cards).find((c) => c.id === id);
+    if (!card) throw new DomainError('not_found');
+    return card;
+  };
+  const assertAmount = (amountCents: number) => {
+    if (!Number.isSafeInteger(amountCents) || amountCents <= 0)
+      throw new DomainError('invalid_amount');
   };
 
-  const service: CardsService = {
+  return {
     async listCardsWithSummary({ includeArchived = false, today: day = today() } = {}) {
       return alive(store.cards)
         .filter((c) => includeArchived || c.archivedAt === null)
+        .sort((a, b) => a.name.localeCompare(b.name))
         .map((card) => {
-          const cycle = cycleForPurchase(card, day);
-          const invoice = store.invoices.find(
-            (i) => i.cardId === card.id && i.referenceMonth === cycle.referenceMonth,
-          );
+          const invoices = cardInvoices(card.id, day);
+          const current = cycleForPurchase(card, day).referenceMonth;
           return {
             ...card,
-            currentInvoice: invoice ? withTotals(invoice) : null,
-            availableLimitCents: availableLimit(card.id),
+            currentInvoice: invoices.find((i) => i.referenceMonth === current) ?? null,
+            availableLimitCents: availableLimit(card.limitCents, invoices),
           };
         });
     },
@@ -80,23 +81,27 @@ export function createFakeCardsService(store: FakeStore): CardsService {
       return card;
     },
     async updateCard(id, patch) {
-      Object.assign(findOrThrow(store.cards, id, 'Cartão'), patch, { updatedAt: nowTimestamp() });
+      Object.assign(requireCard(id), patch, { updatedAt: nowTimestamp() });
       notifyDataChanged();
     },
     async setCardArchived(id, archived) {
-      findOrThrow(store.cards, id, 'Cartão').archivedAt = archived ? nowTimestamp() : null;
+      requireCard(id).archivedAt = archived ? nowTimestamp() : null;
       notifyDataChanged();
     },
     async deleteCard(id) {
+      requireCard(id);
       if (alive(store.transactions).some((t) => t.cardId === id)) {
-        throw new Error('Cartão com lançamentos só pode ser arquivado');
+        throw new DomainError('card_has_transactions');
       }
       findOrThrow(store.cards, id, 'Cartão').deletedAt = nowTimestamp();
       notifyDataChanged();
     },
+    async restoreCard(id) {
+      findOrThrow(store.cards, id, 'Cartão').deletedAt = null;
+      notifyDataChanged();
+    },
     async resolveInvoice(cardId, purchaseDate) {
-      const card = findOrThrow(store.cards, cardId, 'Cartão');
-      return invoiceFor(cardId, cycleForPurchase(card, purchaseDate));
+      return invoiceFor(cardId, cycleForPurchase(requireCard(cardId), purchaseDate));
     },
     async createCardPurchase({
       cardId,
@@ -107,36 +112,38 @@ export function createFakeCardsService(store: FakeStore): CardsService {
       categoryId,
       notes = null,
     }) {
-      const card = findOrThrow(store.cards, cardId, 'Cartão');
-      const amounts = splitInstallments(amountCents, installments);
+      const card = requireCard(cardId);
       const groupId = installments > 1 ? newId() : null;
-      const { day } = parseISODate(date);
-      const rows = installmentCycles(card, date, installments).map((cycle, i): Transaction => ({
-        ...blankTransaction(),
-        kind: 'card_purchase',
-        amountCents: amounts[i],
-        date: i === 0 ? date : dateInMonth(addMonths(monthOf(date), i), day),
-        description,
-        categoryId,
-        notes,
-        cardId,
-        invoiceId: invoiceFor(cardId, cycle).id,
-        installmentGroupId: groupId,
-        installmentNumber: groupId ? i + 1 : null,
-        installmentTotal: groupId ? installments : null,
-      }));
+      const rows = buildCardPurchase(card, { amountCents, installments, date }).map(
+        (row): Transaction => ({
+          ...blankTransaction(),
+          kind: 'card_purchase',
+          amountCents: row.amountCents,
+          date: row.date,
+          description,
+          categoryId,
+          notes,
+          cardId,
+          invoiceId: invoiceFor(cardId, row.cycle).id,
+          installmentGroupId: groupId,
+          installmentNumber: row.installmentNumber,
+          installmentTotal: groupId ? installments : null,
+        }),
+      );
       store.transactions.push(...rows);
       notifyDataChanged();
       return rows;
     },
     async refundCardPurchase(transactionId, amountCents, date) {
-      const purchase = findOrThrow(store.transactions, transactionId, 'Lançamento');
-      const card = findOrThrow(store.cards, purchase.cardId ?? '', 'Cartão');
-      const original = store.invoices.find((i) => i.id === purchase.invoiceId);
-      const invoice =
-        original && original.status === 'open'
-          ? original
-          : invoiceFor(card.id, cycleForPurchase(card, date));
+      const purchase = alive(store.transactions).find((t) => t.id === transactionId);
+      if (!purchase || purchase.kind !== 'card_purchase' || !purchase.cardId) {
+        throw new DomainError('not_found');
+      }
+      if (amountCents > purchase.amountCents) throw new DomainError('invalid_amount');
+      assertAmount(amountCents);
+      const card = requireCard(purchase.cardId);
+      const original = findOrThrow(store.invoices, purchase.invoiceId ?? '', 'Fatura');
+      const month = refundReferenceMonth(card, original, date);
       const refund: Transaction = {
         ...blankTransaction(),
         kind: 'adjustment',
@@ -146,17 +153,14 @@ export function createFakeCardsService(store: FakeStore): CardsService {
         description: `Estorno ${purchase.description}`,
         categoryId: purchase.categoryId,
         cardId: card.id,
-        invoiceId: invoice.id,
+        invoiceId: invoiceFor(card.id, cycleForReferenceMonth(card, month)).id,
       };
       store.transactions.push(refund);
       notifyDataChanged();
       return refund;
     },
     async listInvoices(cardId) {
-      return alive(store.invoices)
-        .filter((i) => i.cardId === cardId)
-        .sort((a, b) => compareDates(b.dueDate, a.dueDate))
-        .map(withTotals);
+      return cardInvoices(cardId).sort((a, b) => b.referenceMonth.localeCompare(a.referenceMonth));
     },
     async getInvoice(invoiceId) {
       const invoice = alive(store.invoices).find((i) => i.id === invoiceId);
@@ -165,28 +169,33 @@ export function createFakeCardsService(store: FakeStore): CardsService {
     async listInvoiceTransactions(invoiceId) {
       return alive(store.transactions)
         .filter((t) => t.invoiceId === invoiceId)
-        .sort((a, b) => compareDates(b.date, a.date));
+        .sort((a, b) => b.date.localeCompare(a.date));
     },
     async payInvoice(invoiceId, accountId, amountCents, date) {
-      const invoice = findOrThrow(store.invoices, invoiceId, 'Fatura');
+      assertAmount(amountCents);
+      const invoice = alive(store.invoices).find((i) => i.id === invoiceId);
+      if (!invoice || !alive(store.accounts).some((a) => a.id === accountId)) {
+        throw new DomainError('not_found');
+      }
+      const card = findOrThrow(store.cards, invoice.cardId, 'Cartão');
       const payment: Transaction = {
         ...blankTransaction(),
         kind: 'invoice_payment',
         amountCents,
         date,
-        description: 'Pagamento de fatura',
+        description: `Pagamento fatura ${card.name}`,
         accountId,
-        cardId: invoice.cardId,
+        cardId: card.id,
         invoiceId,
       };
       store.transactions.push(payment);
-      invoice.status = withTotals(invoice).remainingCents === 0 ? 'paid' : 'partial';
+      invoice.status = withTotals(invoice, date).status;
       notifyDataChanged();
       return payment;
     },
     async getAvailableLimit(cardId) {
-      return availableLimit(cardId);
+      const card = requireCard(cardId);
+      return availableLimit(card.limitCents, cardInvoices(cardId));
     },
   };
-  return service;
 }

@@ -119,6 +119,7 @@ export interface TransactionsService {
 
 // ─── Trilha C · Cartões e faturas ────────────────────────────────────────────
 
+/** Fatura com totais; `status` é recalculado na leitura (regra 6). */
 export type InvoiceWithTotals = Invoice & {
   /** Compras − estornos da fatura. */
   totalCents: Cents;
@@ -145,6 +146,8 @@ export interface CardsService {
   setCardArchived(id: Id, archived: boolean): Promise<void>;
   /** Só exclui cartão sem lançamentos; com lançamentos, lança erro (deve ser arquivado). */
   deleteCard(id: Id): Promise<void>;
+  /** Desfaz `deleteCard`. */
+  restoreCard(id: Id): Promise<void>;
   /** Regra 3: fatura em que cai uma compra nessa data (cria se ainda não existir). */
   resolveInvoice(cardId: Id, purchaseDate: ISODate): Promise<Invoice>;
   /** Regra 4: N transações ligadas por `installmentGroupId`, uma em cada fatura seguinte. */
