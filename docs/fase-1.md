@@ -91,7 +91,7 @@ pendência de outra trilha.
       "pagar fatura reduz o saldo".
 - [x] Telas: aba Cartões, novo/editar cartão, detalhe com faturas, fatura com compras e
       estorno, pagar fatura (total ou parcial). `HomeCardsSection` na Início.
-- [ ] Estorno parcial pela interface (o serviço já aceita; a tela estorna o valor total).
+- [x] Estorno total ou parcial pela interface (`/fatura/[id]/estorno`, com valor e data).
 
 ### D · Categorias e visão geral
 
@@ -104,8 +104,10 @@ pendência de outra trilha.
       rosca clicável por categoria.
 - [x] Configurações (tema, ocultar valores, bloqueio por biometria ou PIN), bloqueio ao
       voltar de segundo plano, exportar CSV e JSON, boas-vindas.
-- [ ] `FLAG_SECURE` na tela de apps recentes (`expo-screen-capture`: recompilar).
-- [ ] Exportar como arquivo (hoje vai como texto; `expo-sharing`: recompilar).
+- [x] `FLAG_SECURE` com o bloqueio ligado: tela em branco nos apps recentes e sem prints
+      (`expo-screen-capture`). Bloqueio desligado libera prints para reportar bugs.
+- [x] Exportar como arquivo `.csv`/`.json` (`expo-sharing` + `expo-file-system`; sem o
+      módulo, cai no compartilhamento de texto).
 
 ## Checklist de polimento
 
@@ -115,7 +117,8 @@ pendência de outra trilha.
       teclado (`Screen`), faixas horizontais com degradê (`ChipSelect`)
 - [ ] Lista + detalhe na faixa expandida (tablet e dobrável)
 - [ ] Conferência completa com fonte em 130%, leitor de tela e contraste AA nos dois temas
-- [ ] Paleta final (trilha B da Fase 0): contraste do verde de receita no tema claro
+- [x] Contraste do verde de receita no tema claro: `#15803D` (AA ≥ 4.5; o teste de
+      contraste agora cobre `income`)
 
 ## Integração
 

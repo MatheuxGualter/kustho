@@ -114,7 +114,7 @@ O visual é calmo e confiável: base neutra, verde como cor de marca, um verde s
 | --- | --- | --- |
 | Cor neutra | `bg`, `surface`, `surface-raised`, `border`, `text`, `text-muted` | Toda tela é montada só com esses tons |
 | Marca | Verde-petróleo: #0F766E no tema claro, #2DD4BF no escuro | Botão principal, aba ativa, foco |
-| Semântica | `income` (#16A34A claro, #4ADE80 escuro), `expense` (#DC2626 claro, #F87171 escuro), `warning`, `info` | O verde de entradas precisa ter tom distinto do verde da marca e sempre vem com sinal + ou ícone; vermelho só em saídas |
+| Semântica | `income` (#15803D claro, #4ADE80 escuro; o #16A34A original não passava AA no claro), `expense` (#DC2626 claro, #F87171 escuro), `warning`, `info` | O verde de entradas precisa ter tom distinto do verde da marca e sempre vem com sinal + ou ícone; vermelho só em saídas |
 | Cor de conta/cartão | Paleta de 10 cores escolhidas pelo usuário | Identifica origem em listas e gráficos |
 | Tipografia | Inter; escala 12 / 14 / 16 / 20 / 28 / 36 | 36 só para o saldo; valores com `tabular-nums` |
 | Espaçamento | Grade de 4: 4, 8, 12, 16, 24, 32 | Nada fora da grade |
