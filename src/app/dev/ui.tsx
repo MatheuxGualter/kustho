@@ -1,9 +1,20 @@
 import { Redirect } from 'expo-router';
-import { Database, Eye, Inbox, Plus, Trash2 } from 'lucide-react-native';
-import { type ReactNode, useState } from 'react';
-import { View } from 'react-native';
+import {
+  BatteryCharging,
+  Bell,
+  Check,
+  Database,
+  Eye,
+  Inbox,
+  Plus,
+  RefreshCw,
+  Trash2,
+} from 'lucide-react-native';
+import { type ReactNode, useCallback, useEffect, useState } from 'react';
+import { AppState, View } from 'react-native';
 
 import { db } from '@/db/client';
+import { NotificationCapture, type RawNotification } from '../../../modules/notification-capture';
 import { clearDevData, runDevSeed } from '@/db/devSeed';
 import { today } from '@/lib/dates';
 import { formatBRL } from '@/lib/money';
@@ -89,6 +100,8 @@ export default function DevCatalogScreen() {
       <ThemeSelector />
 
       <DevDataSection />
+
+      <DevCaptureSection />
 
       <Section title={strings.devCatalog.money}>
         <MoneyText cents={1234567} variant="display" />
@@ -278,6 +291,131 @@ function DevDataSection() {
         }
       />
       {status ? <AppText variant="caption">{status}</AppText> : null}
+    </Section>
+  );
+}
+
+/** Teste manual do módulo de captura (Fase 2). A tela de verdade é da trilha B. */
+function DevCaptureSection() {
+  const capture = NotificationCapture;
+  const [granted, setGranted] = useState(() => capture?.isPermissionGranted() ?? false);
+  const [ignoringBattery, setIgnoringBattery] = useState(
+    () => capture?.isIgnoringBatteryOptimizations() ?? false,
+  );
+  const [packages, setPackages] = useState(() => capture?.getAllowedPackages().join(', ') ?? '');
+  const [pending, setPending] = useState<RawNotification[]>([]);
+
+  const refresh = useCallback(async () => {
+    if (!capture) return;
+    const next = await capture.getPending(50);
+    setPending(next);
+    setGranted(capture.isPermissionGranted());
+    setIgnoringBattery(capture.isIgnoringBatteryOptimizations());
+  }, [capture]);
+
+  useEffect(() => {
+    if (!capture) return;
+    if (capture.isPermissionGranted()) capture.requestRebind();
+    void capture.getPending(50).then(setPending);
+    // Ao voltar das configurações do sistema, e a cada notificação gravada.
+    const appState = AppState.addEventListener('change', (state) => {
+      if (state === 'active') void refresh();
+    });
+    const captured = capture.addListener('onCaptured', () => void refresh());
+    return () => {
+      appState.remove();
+      captured.remove();
+    };
+  }, [capture, refresh]);
+
+  if (!capture) {
+    return (
+      <Section title={strings.devCatalog.capture}>
+        <AppText variant="caption" tone="muted">
+          {strings.devCatalog.captureUnavailable}
+        </AppText>
+      </Section>
+    );
+  }
+
+  return (
+    <Section title={strings.devCatalog.capture}>
+      <AppText variant="caption">{strings.devCatalog.capturePermission(granted)}</AppText>
+      <AppText variant="caption">{strings.devCatalog.captureBattery(ignoringBattery)}</AppText>
+      <Button
+        label={strings.devCatalog.captureOpenPermission}
+        icon={Bell}
+        variant="secondary"
+        block
+        onPress={() => capture.openPermissionSettings()}
+      />
+      <Button
+        label={strings.devCatalog.captureOpenBattery}
+        icon={BatteryCharging}
+        variant="secondary"
+        block
+        onPress={() => capture.requestIgnoreBatteryOptimizations()}
+      />
+      <TextField
+        label={strings.devCatalog.capturePackages}
+        hint={strings.devCatalog.capturePackagesHint}
+        autoCapitalize="none"
+        autoCorrect={false}
+        value={packages}
+        onChangeText={setPackages}
+      />
+      <Button
+        label={strings.devCatalog.captureSavePackages}
+        icon={Check}
+        block
+        onPress={() => {
+          const list = packages
+            .split(/[\s,]+/)
+            .map((p) => p.trim())
+            .filter(Boolean);
+          capture.setAllowedPackages(list);
+          setPackages(list.join(', '));
+        }}
+      />
+      <View className="flex-row items-center justify-between">
+        <AppText variant="label">{strings.devCatalog.capturePending(pending.length)}</AppText>
+        <Button
+          label={strings.devCatalog.captureRefresh}
+          icon={RefreshCw}
+          variant="ghost"
+          onPress={() => void refresh()}
+        />
+      </View>
+      {pending.length === 0 ? (
+        <AppText variant="caption" tone="muted">
+          {strings.devCatalog.captureEmpty}
+        </AppText>
+      ) : (
+        pending
+          .slice()
+          .reverse()
+          .map((n) => (
+            <View key={n.id} className="gap-1 rounded-input border border-border p-2">
+              <AppText variant="caption" tone="muted">
+                {`${n.packageName} · ${new Date(n.postedAtMs).toLocaleString('pt-BR')}`}
+              </AppText>
+              {n.title ? <AppText variant="label">{n.title}</AppText> : null}
+              {n.text ? <AppText variant="caption">{n.text}</AppText> : null}
+            </View>
+          ))
+      )}
+      {pending.length > 0 ? (
+        <Button
+          label={strings.devCatalog.captureMarkProcessed}
+          icon={Trash2}
+          variant="danger"
+          block
+          onPress={async () => {
+            await capture.markProcessed(pending.map((n) => n.id));
+            await refresh();
+          }}
+        />
+      ) : null}
     </Section>
   );
 }

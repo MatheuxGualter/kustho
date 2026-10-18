@@ -446,6 +446,23 @@ export const strings = {
     clear: 'Apagar contas, cartões e lançamentos',
     seedDone: (count: number) => `${count} lançamentos criados.`,
     clearDone: 'Dados apagados.',
+    capture: 'Captura de notificações',
+    captureUnavailable: 'Módulo nativo ausente. Recompile o app (pnpm android).',
+    capturePermission: (granted: boolean) =>
+      `Acesso a notificações: ${granted ? 'liberado' : 'não liberado'}`,
+    captureBattery: (ignoring: boolean) =>
+      `Otimização de bateria: ${ignoring ? 'desligada (bom)' : 'ligada (o sistema pode parar a captura)'}`,
+    captureOpenPermission: 'Abrir acesso a notificações',
+    captureOpenBattery: 'Liberar da otimização de bateria',
+    capturePackages: 'Pacotes permitidos',
+    capturePackagesHint:
+      'Separados por vírgula. Descubra o pacote com: adb shell pm list packages | grep -i <banco>',
+    captureSavePackages: 'Salvar pacotes',
+    capturePending: (count: number) => `Pendentes (${count})`,
+    captureEmpty:
+      'Nada capturado ainda. Faça um Pix ou uma compra, ou rode o simulate-notification.',
+    captureRefresh: 'Atualizar',
+    captureMarkProcessed: 'Marcar todas como processadas',
   },
   errors: {
     database: 'Não foi possível abrir os dados do aparelho.',
