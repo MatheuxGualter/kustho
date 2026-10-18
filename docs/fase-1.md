@@ -12,17 +12,17 @@ regras" em [`plano.md`](plano.md).
 Todas as telas da fase existem e usam os serviços reais (SQLite). Falta o que depende de
 gente (teste de uso, Maestro) e alguns itens nativos (exigem recompilar).
 
-| Peça                       | Onde                                                                                                     |
-| -------------------------- | -------------------------------------------------------------------------------------------------------- |
-| Contratos dos serviços     | `src/domain/contracts.ts` (`AccountsService`, `TransactionsService`, `CardsService`, `CategoriesService`) |
-| Serviços reais             | `src/domain/<domínio>/service.ts`, registrados em `src/services/app.ts`                                  |
-| Fakes em memória           | `src/services/fakes/` (testes de tela; começam com as categorias padrão)                                 |
-| Suítes de contrato         | `src/services/__tests__/contracts/` (o mesmo teste roda no fake e no real)                               |
-| Regras puras               | `src/domain/**/rules.ts`, `balance.ts`, `cycle.ts`, `display.ts`                                         |
-| Banco                      | `src/db/` (schema, migrações, repositórios, seed de categorias, `devSeed.ts`)                            |
-| Componentes base           | `src/ui/components/` e catálogo `dev/ui` (Mais → Catálogo, só em build de desenvolvimento)               |
-| Logos dos bancos           | `src/ui/banks/` (20 bancos; gerados por `scripts/bank-logos.mjs`)                                        |
-| Ícone e splash             | `assets/images/` (ver "Ícone do app" em [`como-rodar.md`](como-rodar.md))                                |
+| Peça                   | Onde                                                                                                      |
+| ---------------------- | --------------------------------------------------------------------------------------------------------- |
+| Contratos dos serviços | `src/domain/contracts.ts` (`AccountsService`, `TransactionsService`, `CardsService`, `CategoriesService`) |
+| Serviços reais         | `src/domain/<domínio>/service.ts`, registrados em `src/services/app.ts`                                   |
+| Fakes em memória       | `src/services/fakes/` (testes de tela; começam com as categorias padrão)                                  |
+| Suítes de contrato     | `src/services/__tests__/contracts/` (o mesmo teste roda no fake e no real)                                |
+| Regras puras           | `src/domain/**/rules.ts`, `balance.ts`, `cycle.ts`, `display.ts`                                          |
+| Banco                  | `src/db/` (schema, migrações, repositórios, seed de categorias, `devSeed.ts`)                             |
+| Componentes base       | `src/ui/components/` e catálogo `dev/ui` (Mais → Catálogo, só em build de desenvolvimento)                |
+| Logos dos bancos       | `src/ui/banks/` (20 bancos; gerados por `scripts/bank-logos.mjs`)                                         |
+| Ícone e splash         | `assets/images/` (ver "Ícone do app" em [`como-rodar.md`](como-rodar.md))                                 |
 
 ## Como uma tela lê e escreve
 
@@ -128,12 +128,12 @@ pendência de outra trilha.
 
 ## Histórico de entregas
 
-| PR      | O que entrou                                                                   |
-| ------- | ------------------------------------------------------------------------------ |
-| #1–#10  | Fase 0 (base, tema, banco, componentes) e as quatro trilhas da Fase 1          |
-| #11     | Correções de usabilidade: teclado, máscara de valor, cortes de texto, degradês |
-| #12     | Logos oficiais dos 20 bancos mais usados                                       |
-| #13     | Ícone de carteira para contas de dinheiro                                      |
-| #14     | Ações de deslizar não aparecem por cima da lista; títulos de mês               |
-| #15     | Mais ícones e categorias padrão; nomes de categoria sem corte                  |
-| #16     | Ícone do app (capivara) e splash                                               |
+| PR     | O que entrou                                                                   |
+| ------ | ------------------------------------------------------------------------------ |
+| #1–#10 | Fase 0 (base, tema, banco, componentes) e as quatro trilhas da Fase 1          |
+| #11    | Correções de usabilidade: teclado, máscara de valor, cortes de texto, degradês |
+| #12    | Logos oficiais dos 20 bancos mais usados                                       |
+| #13    | Ícone de carteira para contas de dinheiro                                      |
+| #14    | Ações de deslizar não aparecem por cima da lista; títulos de mês               |
+| #15    | Mais ícones e categorias padrão; nomes de categoria sem corte                  |
+| #16    | Ícone do app (capivara) e splash                                               |

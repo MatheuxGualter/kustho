@@ -63,19 +63,19 @@ parou"_.
 
 Coisas que custaram tempo e que o Claude (e você) deve saber de cara:
 
-| Situação                                                     | O que fazer                                                                                                                   |
-| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
-| API do Expo/React Native "não existe" ou mudou               | O projeto está no Expo SDK 58. Confira os tipos em `node_modules` ou a doc versionada, não a memória.                         |
-| Mudou ícone, splash, nome ou plugin no `app.json`            | `npx expo prebuild --clean --platform android` e `pnpm android`. Só recompilar não basta.                                     |
-| Dependência nova                                             | `npx expo install <pacote>`. Se for nativa, o PR avisa que precisa recompilar.                                                |
-| Teste de componente travando ou "não encontrou o elemento"   | RNTL 14: `render`, `fireEvent` e `act` são assíncronos; sempre `await`. Use `renderWithTheme`.                                |
-| Módulo nativo quebra o Jest                                  | Mock em `src/test/setup.ui.ts` (já há Reanimated, deslizar, SQLite, kv-store).                                                |
-| Regra que toca o banco                                       | `createTestDb()`: SQLite real com as migrações e as restrições CHECK. Não use mock de banco.                                    |
-| ESLint reclama de cor                                        | Hex só em `src/ui/tokens.ts` (e logos em `src/ui/banks/`). Use classes do Tailwind ou `useTheme()`.                           |
-| `watch()` do react-hook-form dá erro de lint                 | Use `useWatch` (o React Compiler não aceita `watch`).                                                                         |
-| Data de lançamento errada em um dia                          | Nunca `toISOString()` para data de competência; use `today()` e `src/lib/dates.ts`.                                          |
-| Algo de trás aparece "vazando" num item com opacidade        | No Android a opacidade do pai vale filho a filho. Dê feedback de toque com cor, não com opacidade (ex.: `TransactionRow`).     |
-| Texto cortado em telas pequenas                              | `numberOfLines` + `adjustsFontSizeToFit` com `minimumFontScale`; nomes com espaço podem quebrar em duas linhas.                 |
+| Situação                                                   | O que fazer                                                                                                                |
+| ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| API do Expo/React Native "não existe" ou mudou             | O projeto está no Expo SDK 58. Confira os tipos em `node_modules` ou a doc versionada, não a memória.                      |
+| Mudou ícone, splash, nome ou plugin no `app.json`          | `npx expo prebuild --clean --platform android` e `pnpm android`. Só recompilar não basta.                                  |
+| Dependência nova                                           | `npx expo install <pacote>`. Se for nativa, o PR avisa que precisa recompilar.                                             |
+| Teste de componente travando ou "não encontrou o elemento" | RNTL 14: `render`, `fireEvent` e `act` são assíncronos; sempre `await`. Use `renderWithTheme`.                             |
+| Módulo nativo quebra o Jest                                | Mock em `src/test/setup.ui.ts` (já há Reanimated, deslizar, SQLite, kv-store).                                             |
+| Regra que toca o banco                                     | `createTestDb()`: SQLite real com as migrações e as restrições CHECK. Não use mock de banco.                               |
+| ESLint reclama de cor                                      | Hex só em `src/ui/tokens.ts` (e logos em `src/ui/banks/`). Use classes do Tailwind ou `useTheme()`.                        |
+| `watch()` do react-hook-form dá erro de lint               | Use `useWatch` (o React Compiler não aceita `watch`).                                                                      |
+| Data de lançamento errada em um dia                        | Nunca `toISOString()` para data de competência; use `today()` e `src/lib/dates.ts`.                                        |
+| Algo de trás aparece "vazando" num item com opacidade      | No Android a opacidade do pai vale filho a filho. Dê feedback de toque com cor, não com opacidade (ex.: `TransactionRow`). |
+| Texto cortado em telas pequenas                            | `numberOfLines` + `adjustsFontSizeToFit` com `minimumFontScale`; nomes com espaço podem quebrar em duas linhas.            |
 
 ## 6. O que o Claude pode e não pode fazer sozinho
 

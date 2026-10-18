@@ -4,6 +4,8 @@ Gerenciador financeiro Android-first e offline-first: contas, cartões, faturas,
 saídas, com captura de notificações dos bancos nas próximas fases.
 
 - **Primeira vez? Configure a máquina com [`docs/como-rodar.md`](docs/como-rodar.md)**
+- Índice da documentação: [`docs/README.md`](docs/README.md)
+- Trabalhando com o Claude Code: [`docs/trabalhando-com-claude.md`](docs/trabalhando-com-claude.md)
 - Plano de desenvolvimento: [`docs/plano.md`](docs/plano.md)
 - Convenções para o time e para IAs: [`CLAUDE.md`](CLAUDE.md) (cópia em `AGENTS.md`)
 
@@ -34,4 +36,6 @@ APK para testes internos: `npx eas-cli@latest build --profile preview --platform
 
 ## Status
 
-Fase 0 concluída; Fase 1 (CRUD financeiro) em andamento — ver [`docs/fase-1.md`](docs/fase-1.md) e o roteiro em `docs/plano.md`.
+Fase 0 concluída. Fase 1 (CRUD financeiro) com todas as telas prontas sobre o banco real;
+faltam o teste de uso, os testes ponta a ponta e alguns itens nativos. Andamento em
+[`docs/fase-1.md`](docs/fase-1.md).
