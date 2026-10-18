@@ -57,9 +57,21 @@ Decisões do kickoff:
 
 ### A · Módulo nativo
 
-- [ ] `BankListener` (`NotificationListenerService`) e `RawStore` (SQLite próprio do
-      módulo); dedupe por `sbn.key` + hash do conteúdo; lista de pacotes permitidos;
-      `com.android.shell` só em build de depuração.
-- [ ] Ponte para o TS com a interface do kickoff.
-- [ ] Testes JUnit (dedupe e filtro por pacote).
-- [ ] `scripts/simulate-notification.sh` com `adb`.
+- [x] `BankListener` (`NotificationListenerService`) e `RawStore` (SQLite próprio do
+      módulo, `kustho_notification_capture.db`); dedupe por `sbn.key` + hash do conteúdo;
+      lista de pacotes permitidos; `com.android.shell` só em build de depuração. Resumos de
+      grupo são ignorados; ao conectar, o serviço grava o que já está na bandeja.
+- [x] Ponte para o TS (`modules/notification-capture/index.ts`, API v2 do Expo 58).
+- [x] Testes JUnit das regras puras (`CaptureRules`: filtro, texto, hash do dedupe):
+      `cd android && ./gradlew :notification-capture:testDebugUnitTest`.
+- [x] `scripts/simulate-notification.sh` com `adb` (`--exemplos` posta três casos).
+- [ ] Job de JUnit no CI (precisa de JDK e Android SDK no runner).
+- [ ] Conferir a ponte pelo JS no aparelho (`getPending`, `onCaptured`): entra com a tela
+      de diagnóstico da trilha B.
+- [ ] Teste de reinício do celular e de um período sem abrir o app (portão da fase).
+- [ ] Revisão humana do Kotlin (obrigatória).
+
+Para testar no aparelho: `pnpm android`, liberar o acesso a notificações do Kustho
+(ou `adb shell cmd notification allow_listener app.kustho/app.kustho.notificationcapture.BankListener`)
+e rodar `scripts/simulate-notification.sh --exemplos`. Para ler o que foi gravado:
+`adb exec-out run-as app.kustho cat databases/kustho_notification_capture.db > cap.db`.
