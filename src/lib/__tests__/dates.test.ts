@@ -1,0 +1,100 @@
+import {
+  addDays,
+  addMonths,
+  compareDates,
+  dateInMonth,
+  daysBetween,
+  daysInMonth,
+  isISODate,
+  isYearMonth,
+  monthOf,
+  parseISODate,
+  toISODate,
+} from '../dates';
+
+describe('validação', () => {
+  it.each(['2026-10-17', '2024-02-29', '2026-12-31'])('%s é data válida', (d) => {
+    expect(isISODate(d)).toBe(true);
+  });
+
+  it.each(['2026-02-29', '2026-13-01', '2026-00-10', '2026-1-1', '17/10/2026', '2026-04-31'])(
+    '%s não é data válida',
+    (d) => {
+      expect(isISODate(d)).toBe(false);
+    },
+  );
+
+  it('valida mês de referência', () => {
+    expect(isYearMonth('2026-10')).toBe(true);
+    expect(isYearMonth('2026-13')).toBe(false);
+    expect(isYearMonth('2026-1')).toBe(false);
+  });
+});
+
+describe('toISODate', () => {
+  it('usa o fuso local, nunca UTC', () => {
+    // 23:30 local do dia 17 continua sendo dia 17, mesmo que em UTC já seja 18.
+    expect(toISODate(new Date(2026, 9, 17, 23, 30))).toBe('2026-10-17');
+    expect(toISODate(new Date(2026, 0, 1, 0, 0))).toBe('2026-01-01');
+  });
+});
+
+describe('daysInMonth', () => {
+  it('considera anos bissextos', () => {
+    expect(daysInMonth(2024, 2)).toBe(29);
+    expect(daysInMonth(2026, 2)).toBe(28);
+    expect(daysInMonth(2100, 2)).toBe(28);
+    expect(daysInMonth(2000, 2)).toBe(29);
+    expect(daysInMonth(2026, 4)).toBe(30);
+    expect(daysInMonth(2026, 12)).toBe(31);
+  });
+});
+
+describe('dateInMonth (dia inexistente cai no último dia do mês)', () => {
+  it.each([
+    ['2026-02', 31, '2026-02-28'],
+    ['2024-02', 30, '2024-02-29'],
+    ['2026-04', 31, '2026-04-30'],
+    ['2026-10', 31, '2026-10-31'],
+    ['2026-10', 5, '2026-10-05'],
+  ])('%s dia %i → %s', (ym, day, expected) => {
+    expect(dateInMonth(ym, day)).toBe(expected);
+  });
+
+  it('rejeita dia fora de 1–31', () => {
+    expect(() => dateInMonth('2026-10', 0)).toThrow();
+    expect(() => dateInMonth('2026-10', 32)).toThrow();
+  });
+});
+
+describe('aritmética', () => {
+  it('addMonths atravessa anos', () => {
+    expect(addMonths('2026-11', 1)).toBe('2026-12');
+    expect(addMonths('2026-12', 1)).toBe('2027-01');
+    expect(addMonths('2026-01', -1)).toBe('2025-12');
+    expect(addMonths('2026-10', 24)).toBe('2028-10');
+  });
+
+  it('addDays atravessa meses e anos', () => {
+    expect(addDays('2026-10-31', 1)).toBe('2026-11-01');
+    expect(addDays('2026-12-31', 1)).toBe('2027-01-01');
+    expect(addDays('2024-03-01', -1)).toBe('2024-02-29');
+  });
+
+  it('daysBetween ignora horário de verão', () => {
+    expect(daysBetween('2026-10-17', '2026-10-19')).toBe(2);
+    expect(daysBetween('2026-10-19', '2026-10-17')).toBe(-2);
+    expect(daysBetween('2026-02-27', '2026-03-02')).toBe(3);
+  });
+
+  it('monthOf e parseISODate', () => {
+    expect(monthOf('2026-10-17')).toBe('2026-10');
+    expect(parseISODate('2026-10-17')).toEqual({ year: 2026, month: 10, day: 17 });
+  });
+
+  it('compareDates ordena', () => {
+    expect(compareDates('2026-10-17', '2026-10-18')).toBeLessThan(0);
+    expect(compareDates('2026-10-18', '2026-10-17')).toBeGreaterThan(0);
+    expect(compareDates('2026-10-17', '2026-10-17')).toBe(0);
+  });
+});

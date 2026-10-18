@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Lint
+        run: pnpm lint
+      - name: Formatação
+        run: pnpm format:check
+      - name: Testes
+        run: pnpm test --ci
+      - name: Migrações em dia com o schema
+        run: |
+          pnpm db:generate
+          git diff --exit-code -- src/db/migrations || (echo "Rode 'pnpm db:generate' e faça o commit da migração." && exit 1)
+      - name: CLAUDE.md e AGENTS.md iguais
+        run: cmp CLAUDE.md AGENTS.md

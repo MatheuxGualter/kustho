@@ -1,0 +1,6 @@
+pnpm-lock.yaml
+src/db/migrations/
+android/
+ios/
+.expo/
+docs/plano.md
