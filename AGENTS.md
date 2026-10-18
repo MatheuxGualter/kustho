@@ -80,8 +80,8 @@ Import com alias `@/` → `src/`.
 - **Telas** leem e escrevem só pelos serviços (`useServices()`, contratos em
   `src/domain/contracts.ts`), nunca importam `@/db`. Leitura reativa com
   `useServiceQuery(() => service.metodo(), [deps])`: recarrega sozinha após qualquer
-  escrita. Até a trilha entregar o serviço real, o registro usa o fake em memória
-  (`src/services/fakes/`). Ver `docs/fase-1.md`.
+  escrita. O app usa os serviços reais (`src/services/app.ts`); os fakes em memória
+  (`src/services/fakes/`) servem para testes de tela. Ver `docs/fase-1.md`.
 - **Acesso ao banco**: repositórios e serviços recebem `db: AppDatabase`
   (`src/db/database.ts`) e sempre usam `await`; assim o mesmo código roda no app
   (expo-sqlite) e nos testes. Teste regra que toca o banco com `createTestDb()`
@@ -90,8 +90,16 @@ Import com alias `@/` → `src/`.
   (`src/test/render.tsx`). No RNTL 14, `render`, `fireEvent` e `act` são assíncronos:
   sempre `await`. Mocks de módulos nativos ficam em `src/test/setup.ui.ts`.
 - **Componentes base** em `src/ui/components/` (veja todos no catálogo `dev/ui`):
-  `AppText`, `MoneyText` (todo valor), `Button`, `TextField`, `Card`, `CategoryIcon`,
-  `TransactionRow`, `AmountKeypad`, `EmptyState`, `Screen`. Use-os antes de criar outro.
+  `AppText`, `MoneyText` (todo valor), `Button`, `TextField`, `MoneyField`, `DateField`,
+  `SegmentedControl`, `ChipSelect`, `ColorPicker`, `MonthSwitcher`, `Card`, `InstitutionAvatar`,
+  `CategoryIcon`, `TransactionRow`, `AmountKeypad`, `EmptyState`, `Skeleton`, `Screen` e
+  `showToast(msg, onUndo?)` (aviso com "Desfazer"). Use-os antes de criar outro.
+- **Erros de regra**: serviços lançam `DomainError` (`src/domain/errors.ts`); a tela mostra
+  `errorMessage(e)` (`src/features/shared/errorMessage.ts`), com textos em
+  `strings.errors.domain`.
+- **Suítes de contrato** (`src/services/__tests__/contracts/`): o mesmo teste roda contra o
+  fake e o serviço real, com os mesmos dados de exemplo. Ao entregar um serviço real,
+  mova os testes do fake para uma suíte de contrato.
 - **Textos** só em `src/lib/strings.ts` (pt-BR). Moeda única BRL.
 - **Visual** só a partir de `src/ui/tokens.ts`: classes do Tailwind (`bg-surface`,
   `text-text-muted`, `p-4`, `rounded-card`, `font-semibold`, `text-lg`) ou `useTheme()`
@@ -135,8 +143,7 @@ o que depende de outra trilha usa um fake que respeita o contrato.
 
 - Arquivos de alto conflito — `src/db/schema.ts`, `src/ui/tokens.ts`,
   `src/app/(tabs)/_layout.tsx`, `src/domain/types.ts`, `src/domain/contracts.ts`,
-  `src/services/index.tsx` — só mudam no kickoff ou pelo responsável definido nele
-  (exceção: cada trilha troca a própria linha do fake em `src/services/index.tsx`).
+  `src/services/app.ts` — só mudam no kickoff ou pelo responsável definido nele.
 - Início e Mais são montadas por seções: cada trilha entrega a sua em
   `src/features/<domínio>/`; só o dono da tela edita a rota.
 - Branches por trilha (`fase-1/a-contas`), Conventional Commits (`feat:`, `fix:`,

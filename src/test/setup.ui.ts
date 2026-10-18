@@ -21,3 +21,22 @@ jest.mock('react-native-gesture-handler/ReanimatedSwipeable', () => ({
 jest.mock('expo-sqlite', () => ({
   addDatabaseChangeListener: jest.fn(() => ({ remove: jest.fn() })),
 }));
+
+// Mock mínimo do Reanimated (o oficial não carrega no Jest com Reanimated 4.7):
+// animações viram valores estáticos e "reduzir movimento" fica ligado.
+jest.mock('react-native-reanimated', () => {
+  const { View } = jest.requireActual('react-native');
+  const passthrough = (value: unknown) => value;
+  return {
+    __esModule: true,
+    default: { View },
+    useSharedValue: (value: unknown) => ({ value }),
+    useAnimatedStyle: () => ({}),
+    useReducedMotion: () => true,
+    withTiming: passthrough,
+    withSpring: passthrough,
+    withRepeat: passthrough,
+    FadeInDown: {},
+    FadeOutDown: {},
+  };
+});

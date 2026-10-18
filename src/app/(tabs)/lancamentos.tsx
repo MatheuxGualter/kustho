@@ -1,11 +1,4 @@
-import { strings } from '@/lib/strings';
-import { Placeholder } from '@/ui/components/Placeholder';
-import { Screen } from '@/ui/components/Screen';
+import { TransactionsScreen } from '@/features/transactions/TransactionsScreen';
 
-export default function TransactionsScreen() {
-  return (
-    <Screen title={strings.screens.transactions.title}>
-      <Placeholder description={strings.screens.transactions.placeholder} />
-    </Screen>
-  );
-}
+// Trilha B da Fase 1.
+export default TransactionsScreen;

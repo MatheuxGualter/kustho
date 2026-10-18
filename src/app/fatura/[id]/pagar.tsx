@@ -1,17 +1,4 @@
-import { useLocalSearchParams } from 'expo-router';
-
-import { RoutePlaceholder } from '@/features/shared/RoutePlaceholder';
-import { strings } from '@/lib/strings';
+import { PayInvoiceScreen } from '@/features/cards/PayInvoiceScreen';
 
 // Trilha C da Fase 1.
-export default function Route() {
-  const { id } = useLocalSearchParams<{ id: string }>();
-  return (
-    <RoutePlaceholder
-      title={strings.screens.payInvoice.title}
-      description={strings.screens.payInvoice.placeholder}
-      track="C"
-      param={id}
-    />
-  );
-}
+export default PayInvoiceScreen;
