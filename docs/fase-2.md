@@ -76,6 +76,29 @@ Para testar no aparelho: `pnpm android`, liberar o acesso a notificações do Ku
 e rodar `scripts/simulate-notification.sh --exemplos`. Para ler o que foi gravado:
 `adb exec-out run-as app.kustho cat databases/kustho_notification_capture.db > cap.db`.
 
+### B · Permissão e saúde
+
+- [x] Tela `/captura/permissao` (`src/features/capture-setup/CaptureSetupScreen.tsx`): o que
+      é lido e a privacidade; escolher os bancos (já marca os das contas e cartões; outros
+      apps por nome de pacote); liberar o acesso com o passo guiado de "Permitir
+      configurações restritas" (abre as informações do app); bateria com o pedido do
+      sistema e o caminho por fabricante (Samsung, Xiaomi, Motorola, Oppo, Huawei). Relê o
+      estado ao voltar das configurações.
+- [x] Pacotes dos apps de banco em `src/domain/captures/bankApps.ts` (12 bancos do
+      catálogo; os demais entram à mão até alguém conferir o pacote).
+- [x] Saúde em regras puras (`src/domain/captures/health.ts`): sem módulo, sem acesso, sem
+      bancos, bateria, ok.
+- [x] Aviso na Início (`HomeCaptureNotice`): convite para quem nunca configurou (pode
+      dispensar) e alerta quando a leitura configurada para. Pendentes vazia oferece
+      "Configurar leitura".
+- [x] Diagnóstico `/captura/diagnostico`: estado, apps lidos, resumo por app (lidas e não
+      interpretadas), "Buscar notificações agora" e exportação anonimizada no formato das
+      fixtures (`src/domain/captures/diagnostics.ts`; nomes, estabelecimentos, finais de
+      cartão, documentos e contatos trocados). `listRecent` entrou no `CapturesService`.
+- [x] Entradas no menu Mais.
+- [ ] Conferir no aparelho os passos de bateria por fabricante e o de configurações
+      restritas (Android 13+ instalado por APK).
+
 ### C · Parsers
 
 - [x] Parser genérico de reserva (`src/domain/captures/parsers/generic.ts`): valor com R$,
@@ -85,7 +108,8 @@ e rodar `scripts/simulate-notification.sh --exemplos`. Para ler o que foi gravad
 - [x] Fixtures rodadas por `parsers/__tests__/fixtures.test.ts` (17 casos **sintéticos** em
       `__fixtures__/generic.json`).
 - [ ] Pelo menos 30 notificações **reais** de 3 ou mais bancos, anonimizadas, em
-      `__fixtures__/<banco>.json`.
+      `__fixtures__/<banco>.json`. Mais → Diagnóstico da captura → Exportar anonimizado gera
+      o JSON nesse formato; confira o texto antes do commit.
 - [ ] Parsers por banco (`parsers/<banco>.ts`, registrados em `parsers/index.ts`) quando
       as fixtures reais mostrarem formatos que o genérico erra.
 

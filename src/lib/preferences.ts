@@ -17,6 +17,12 @@ type PreferencesState = {
   setLockEnabled: (enabled: boolean) => void;
   onboardingDone: boolean;
   finishOnboarding: () => void;
+  /** O usuário passou pela configuração da leitura de notificações (Fase 2). */
+  captureSetupDone: boolean;
+  setCaptureSetupDone: (done: boolean) => void;
+  /** Dispensou o convite da Início para ativar a leitura de notificações. */
+  captureInviteDismissed: boolean;
+  dismissCaptureInvite: () => void;
   setTheme: (theme: ThemePreference) => void;
   toggleHideValues: () => void;
 };
@@ -33,18 +39,32 @@ export const usePreferences = create<PreferencesState>()(
       setLockEnabled: (lockEnabled) => set({ lockEnabled }),
       onboardingDone: false,
       finishOnboarding: () => set({ onboardingDone: true }),
+      captureSetupDone: false,
+      setCaptureSetupDone: (captureSetupDone) => set({ captureSetupDone }),
+      captureInviteDismissed: false,
+      dismissCaptureInvite: () => set({ captureInviteDismissed: true }),
       setTheme: (theme) => set({ theme }),
       toggleHideValues: () => set((s) => ({ hideValues: !s.hideValues })),
     }),
     {
       name: 'kustho.preferences',
       storage: createJSONStorage(() => Storage),
-      partialize: ({ theme, hideValues, lastOrigin, lockEnabled, onboardingDone }) => ({
+      partialize: ({
         theme,
         hideValues,
         lastOrigin,
         lockEnabled,
         onboardingDone,
+        captureSetupDone,
+        captureInviteDismissed,
+      }) => ({
+        theme,
+        hideValues,
+        lastOrigin,
+        lockEnabled,
+        onboardingDone,
+        captureSetupDone,
+        captureInviteDismissed,
       }),
     },
   ),

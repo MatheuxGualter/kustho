@@ -19,9 +19,12 @@ import { Screen } from '@/ui/components/Screen';
 import { SkeletonRows } from '@/ui/components/Skeleton';
 import { showToast } from '@/ui/components/Toast';
 
+import { useCaptureDevice } from '@/features/capture-setup/useCaptureDevice';
+
 /** Caixa de Pendentes (Fase 2, trilha D): sugestões das notificações para confirmar. */
 export function PendingScreen() {
   const services = useServices();
+  const { health: captureHealth } = useCaptureDevice();
   const query = useServiceQuery(async () => {
     // Ao abrir a aba, traz o que o módulo gravou desde a última leitura.
     await services.captures.ingest();
@@ -80,6 +83,14 @@ export function PendingScreen() {
           icon={Inbox}
           title={strings.pending.emptyTitle}
           description={strings.pending.emptyText}
+          action={
+            captureHealth === 'ok' || captureHealth === 'unavailable'
+              ? undefined
+              : {
+                  label: strings.pending.setupAction,
+                  onPress: () => router.push('/captura/permissao'),
+                }
+          }
         />
       ) : null}
 

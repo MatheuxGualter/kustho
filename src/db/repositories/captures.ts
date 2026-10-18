@@ -28,6 +28,15 @@ export async function listByStatus(db: AppDatabase, status: CaptureStatus): Prom
     .orderBy(desc(captures.postedAt), desc(captures.createdAt));
 }
 
+export async function listRecent(db: AppDatabase, limit: number): Promise<Capture[]> {
+  return db
+    .select()
+    .from(captures)
+    .where(isNull(captures.deletedAt))
+    .orderBy(desc(captures.postedAt), desc(captures.createdAt))
+    .limit(limit);
+}
+
 export async function countByStatus(db: AppDatabase, status: CaptureStatus): Promise<number> {
   const [row] = await db
     .select({ count: sql<number>`count(*)` })

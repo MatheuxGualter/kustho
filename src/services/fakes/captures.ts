@@ -88,6 +88,13 @@ export function createFakeCapturesService(
       return pending().length;
     },
 
+    async listRecent(limit) {
+      return store.captures
+        .filter((c) => c.deletedAt === null)
+        .sort((a, b) => b.postedAt.localeCompare(a.postedAt))
+        .slice(0, limit);
+    },
+
     async getCapture(id) {
       return store.captures.find((c) => c.id === id && c.deletedAt === null);
     },

@@ -66,6 +66,7 @@ export function createCapturesService(
 
     listPending: () => repo.listByStatus(db, 'pending'),
     countPending: () => repo.countByStatus(db, 'pending'),
+    listRecent: (limit) => repo.listRecent(db, limit),
     getCapture: (id) => repo.getCapture(db, id),
 
     async confirmCapture(id, input = {}) {

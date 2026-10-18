@@ -5,6 +5,9 @@ import { environments, NUBANK_PACKAGE, TODAY } from './setup';
 
 jest.mock('expo-sqlite', () => ({ addDatabaseChangeListener: jest.fn() }));
 
+/** Depois de qualquer captura dos dados de exemplo. */
+const FUTURE = Date.UTC(2100, 0, 1);
+
 describe.each(environments)('CapturesService ($name)', ({ create }) => {
   it('ingest grava cada notificação uma vez e tira da fila do módulo', async () => {
     const { services, notifications } = await create();
@@ -15,6 +18,21 @@ describe.each(environments)('CapturesService ($name)', ({ create }) => {
     expect(await services.captures.ingest()).toBe(0);
     expect(await notifications.getPending(10)).toEqual([]);
     expect(await services.captures.countPending()).toBe(before + 1);
+  });
+
+  it('listRecent traz todas as situações, da mais recente, com limite', async () => {
+    const { services, notifications } = await create();
+    notifications.post({ packageName: NUBANK_PACKAGE, text: 'Primeira', postedAtMs: FUTURE + 1 });
+    notifications.post({ packageName: NUBANK_PACKAGE, text: 'Segunda', postedAtMs: FUTURE + 2 });
+    notifications.post({ packageName: NUBANK_PACKAGE, text: 'Terceira', postedAtMs: FUTURE + 3 });
+    await services.captures.ingest();
+    const [third] = await services.captures.listRecent(1);
+    expect(third.text).toBe('Terceira');
+    await services.captures.discardCapture(third.id);
+
+    const recent = await services.captures.listRecent(2);
+    expect(recent.map((c) => c.text)).toEqual(['Terceira', 'Segunda']);
+    expect(recent[0].status).toBe('discarded');
   });
 
   it('duas leituras ao mesmo tempo não duplicam capturas', async () => {

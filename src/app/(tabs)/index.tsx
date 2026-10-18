@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { useEffect } from 'react';
 
 import { HomeAccountsSection } from '@/features/accounts/HomeAccountsSection';
+import { HomeCaptureNotice } from '@/features/capture-setup/HomeCaptureNotice';
 import { HomeCardsSection } from '@/features/cards/HomeCardsSection';
 import { HomeMonthSummary } from '@/features/overview/HomeMonthSummary';
 import { usePreferences } from '@/lib/preferences';
@@ -18,6 +19,7 @@ export default function HomeScreen() {
 
   return (
     <Screen title={strings.screens.home.title}>
+      <HomeCaptureNotice />
       <HomeAccountsSection />
       <HomeCardsSection />
       <HomeMonthSummary />
