@@ -30,9 +30,8 @@ marca o `[x]` **no mesmo PR**. Escopo e trilhas: "Fase 2" em [`plano.md`](plano.
 - [x] `NewTransaction` e `NewCardPurchase` aceitam `source` (padrão `manual`).
 - [x] Aba Pendentes com selo (`tabBarBadge` na `TabBar`) e rotas vazias
       `/captura/permissao` e `/captura/diagnostico`.
-- [ ] Decidir a barra com 5 abas: o botão + saiu do centro (3 à esquerda, 2 à direita) e
-      "Lançamentos" encolhe. Opções: Pendentes no lugar de Cartões dentro de Início, ou
-      ícones sem rótulo na faixa compacta.
+- [x] Barra de abas: Contas saiu do menu Mais e virou aba à direita, e o + voltou ao
+      centro (Início, Lançamentos, Pendentes | + | Cartões, Contas, Mais). Decisão de out/2026.
 - [ ] Cada membro junta notificações reais dos próprios bancos (anonimizar antes do
       commit: nomes, finais de cartão e estabelecimentos).
 
@@ -69,7 +68,8 @@ Decisões do kickoff:
       `modules/notification-capture/jvm-tests/` roda os testes das regras puras sem Android SDK.
 - [x] Ponte conferida pelo JS no aparelho (`getPending`, `onCaptured`, pacotes permitidos)
       pela seção "Captura de notificações" do catálogo dev. Registrada em `src/services/app.ts`.
-- [ ] Teste de reinício do celular e de um período sem abrir o app (portão da fase).
+- [x] Teste de reinício do celular e de um período sem abrir o app (portão da fase):
+      capturou nos dois casos (teste no aparelho, out/2026).
 - [ ] Revisão humana do Kotlin (obrigatória).
 
 Para testar no aparelho: `pnpm android`, liberar o acesso a notificações do Kustho
@@ -97,8 +97,9 @@ e rodar `scripts/simulate-notification.sh --exemplos`. Para ler o que foi gravad
       fixtures (`src/domain/captures/diagnostics.ts`; nomes, estabelecimentos, finais de
       cartão, documentos e contatos trocados). `listRecent` entrou no `CapturesService`.
 - [x] Entradas no menu Mais.
-- [ ] Conferir no aparelho os passos de bateria por fabricante e o de configurações
-      restritas (Android 13+ instalado por APK).
+- [x] Configuração conferida no aparelho (bancos, acesso, bateria, aviso na Início,
+      diagnóstico). Pacotes conferidos: Itaú, Nubank e Mercado Pago; os demais de
+      `bankApps.ts` ainda sem conferência.
 
 ### C · Parsers
 

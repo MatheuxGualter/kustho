@@ -9,6 +9,7 @@ import {
   List,
   type LucideIcon,
   Plus,
+  Wallet,
 } from 'lucide-react-native';
 import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -24,12 +25,13 @@ const icons: Record<string, LucideIcon> = {
   lancamentos: List,
   pendentes: Inbox,
   cartoes: CreditCard,
+  contas: Wallet,
   mais: Ellipsis,
 };
 
 const ICON_SIZE = 22;
 
-/** Barra de abas com o botão central que abre o novo lançamento. */
+/** Barra de abas com o botão central que abre o novo lançamento (metade das abas de cada lado). */
 export function TabBar({ state, descriptors, emitter, navigateToTab }: BottomTabBarProps) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
@@ -71,7 +73,7 @@ export function TabBar({ state, descriptors, emitter, navigateToTab }: BottomTab
           tone={focused ? 'brand' : 'muted'}
           numberOfLines={1}
           adjustsFontSizeToFit
-          minimumFontScale={0.7}
+          minimumFontScale={0.65}
           maxFontSizeMultiplier={1.3}
         >
           {label}

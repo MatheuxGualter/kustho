@@ -9,7 +9,8 @@ const MAX_BADGE = 99;
 
 /**
  * Arquivo de alto conflito: as abas só mudam no kickoff da fase.
- * Fase 2: aba Pendentes (trilha D), com selo de contagem.
+ * Fase 2: aba Pendentes (trilha D), com selo de contagem. Contas virou aba (decisão de
+ * out/2026) para o botão + voltar ao centro: três abas de cada lado.
  */
 export default function TabsLayout() {
   const { captures } = useServices();
@@ -21,6 +22,7 @@ export default function TabsLayout() {
       <Tabs.Screen name="lancamentos" options={{ title: strings.tabs.transactions }} />
       <Tabs.Screen name="pendentes" options={{ title: strings.tabs.pending, tabBarBadge: badge }} />
       <Tabs.Screen name="cartoes" options={{ title: strings.tabs.cards }} />
+      <Tabs.Screen name="contas" options={{ title: strings.tabs.accounts }} />
       <Tabs.Screen name="mais" options={{ title: strings.tabs.more }} />
     </Tabs>
   );

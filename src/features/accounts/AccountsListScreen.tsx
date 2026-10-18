@@ -1,4 +1,4 @@
-import { router, Stack } from 'expo-router';
+import { router } from 'expo-router';
 import { Plus, Wallet } from 'lucide-react-native';
 import { View } from 'react-native';
 
@@ -24,8 +24,7 @@ export function AccountsListScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: strings.screens.accounts.title }} />
-      <Screen edges={['bottom']}>
+      <Screen title={strings.screens.accounts.title}>
         <Button
           label={strings.accounts.newAccount}
           icon={Plus}

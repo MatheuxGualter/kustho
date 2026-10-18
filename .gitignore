@@ -48,3 +48,4 @@ example
 # Saídas de build dos módulos nativos locais
 modules/*/android/build/
 modules/*/android/.gradle/
+maestro-debug/

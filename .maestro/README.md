@@ -6,10 +6,15 @@ as boas-vindas).
 
 ```bash
 curl -fsSL "https://get.maestro.mobile.dev" | bash   # instala o Maestro (uma vez)
-pnpm android                                         # app de desenvolvimento no celular
+pnpm start                                           # Metro rodando (outro terminal)
 maestro test .maestro/                               # roda todos os fluxos
 maestro test .maestro/lancar-despesa.yaml            # um só
+maestro test --debug-output maestro-debug .maestro/  # guarda prints e logs de cada passo
 ```
+
+Antes: app de desenvolvimento instalado (`pnpm android`), celular desbloqueado e **bloqueio
+do Kustho desligado** (Maestro não passa pela biometria). Falhou? Mande o print do passo que
+está em `maestro-debug/`.
 
 A rota `dev/seed` só existe em build de desenvolvimento ou com `EXPO_PUBLIC_E2E=1` (para
 rodar contra um APK de release: `EXPO_PUBLIC_E2E=1 npx expo run:android --variant release`).
