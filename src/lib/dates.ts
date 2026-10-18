@@ -3,6 +3,8 @@
  * Nada aqui converte para UTC: a aritmética é feita sobre ano/mês/dia inteiros.
  */
 
+import { strings } from './strings';
+
 /** Data de competência local: `YYYY-MM-DD`. */
 export type ISODate = string;
 /** Mês de referência: `YYYY-MM`. */
@@ -127,4 +129,37 @@ export function daysBetween(from: ISODate, to: ISODate): number {
 /** Datas ISO ordenam lexicograficamente. */
 export function compareDates(a: ISODate, b: ISODate): number {
   return a < b ? -1 : a > b ? 1 : 0;
+}
+
+/** `2026-10-17` → `17/10/2026`. */
+export function formatDateBR(date: ISODate): string {
+  const { year, month, day } = parseISODate(date);
+  return `${pad(day)}/${pad(month)}/${pad(year, 4)}`;
+}
+
+/** `17/10/2026` (ou `17/10/26`) → `2026-10-17`; `null` se não for uma data válida. */
+export function parseDateBR(text: string): ISODate | null {
+  const match = /^(\d{1,2})\/(\d{1,2})\/(\d{2}|\d{4})$/.exec(text.trim());
+  if (!match) return null;
+  const [day, month] = [Number(match[1]), Number(match[2])];
+  const year = match[3].length === 2 ? 2000 + Number(match[3]) : Number(match[3]);
+  const date = formatISODate(year, month, day);
+  return isISODate(date) ? date : null;
+}
+
+/** `2026-10` → `outubro de 2026`. */
+export function formatMonthLong(ym: YearMonth): string {
+  const { year, month } = parseYearMonth(ym);
+  return `${strings.months[month - 1]} de ${year}`;
+}
+
+/** Último dia do mês: `2026-02` → `2026-02-28`. */
+export function lastDayOfMonth(ym: YearMonth): ISODate {
+  return dateInMonth(ym, 31);
+}
+
+/** `2026-10-17` → `17 de outubro`. */
+export function formatDayMonth(date: ISODate): string {
+  const { month, day } = parseISODate(date);
+  return `${day} de ${strings.months[month - 1]}`;
 }

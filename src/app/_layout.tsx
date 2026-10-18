@@ -20,6 +20,7 @@ import { strings } from '@/lib/strings';
 import { ServicesProvider } from '@/services';
 import { subscribeToDatabaseChanges } from '@/services/dataVersion';
 import { AppText } from '@/ui/components/AppText';
+import { ToastHost } from '@/ui/components/Toast';
 import { ThemeProvider, useTheme } from '@/ui/theme';
 import { fontFamily } from '@/ui/tokens';
 
@@ -54,6 +55,7 @@ export default function RootLayout() {
           ) : (
             <ServicesProvider>
               <RootStack />
+              <ToastHost />
             </ServicesProvider>
           )}
         </BottomSheetModalProvider>

@@ -5,9 +5,13 @@ import {
   dateInMonth,
   daysBetween,
   daysInMonth,
+  formatDateBR,
+  formatMonthLong,
   isISODate,
   isYearMonth,
+  lastDayOfMonth,
   monthOf,
+  parseDateBR,
   parseISODate,
   toISODate,
 } from '../dates';
@@ -96,5 +100,33 @@ describe('aritmética', () => {
     expect(compareDates('2026-10-17', '2026-10-18')).toBeLessThan(0);
     expect(compareDates('2026-10-18', '2026-10-17')).toBeGreaterThan(0);
     expect(compareDates('2026-10-17', '2026-10-17')).toBe(0);
+  });
+});
+
+describe('datas no formato brasileiro', () => {
+  it('formatDateBR', () => {
+    expect(formatDateBR('2026-10-07')).toBe('07/10/2026');
+  });
+
+  it.each([
+    ['17/10/2026', '2026-10-17'],
+    ['7/1/2026', '2026-01-07'],
+    ['17/10/26', '2026-10-17'],
+    [' 29/02/2024 ', '2024-02-29'],
+  ])('parseDateBR(%p) → %s', (text, expected) => {
+    expect(parseDateBR(text)).toBe(expected);
+  });
+
+  it.each(['31/04/2026', '29/02/2026', '2026-10-17', '17-10-2026', ''])(
+    'parseDateBR(%p) → null',
+    (text) => {
+      expect(parseDateBR(text)).toBeNull();
+    },
+  );
+
+  it('formatMonthLong e lastDayOfMonth', () => {
+    expect(formatMonthLong('2026-03')).toBe('março de 2026');
+    expect(lastDayOfMonth('2026-02')).toBe('2026-02-28');
+    expect(lastDayOfMonth('2024-02')).toBe('2024-02-29');
   });
 });

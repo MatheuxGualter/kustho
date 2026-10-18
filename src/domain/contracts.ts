@@ -64,6 +64,8 @@ export interface AccountsService {
   setAccountArchived(id: Id, archived: boolean): Promise<void>;
   /** Só exclui conta sem lançamentos; com lançamentos, lança erro (deve ser arquivada). */
   deleteAccount(id: Id): Promise<void>;
+  /** Desfaz `deleteAccount`. */
+  restoreAccount(id: Id): Promise<void>;
   /** Regra 7: duas pernas ligadas por `transferPeerId` (`out` na origem, `in` no destino). */
   createTransfer(input: NewTransfer): Promise<[outLeg: Transaction, inLeg: Transaction]>;
   /**
