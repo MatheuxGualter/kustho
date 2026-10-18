@@ -9,6 +9,7 @@ import { compareDates, today } from '@/lib/dates';
 import { formatBRL, splitInstallments } from '@/lib/money';
 import { usePreferences } from '@/lib/preferences';
 import { strings } from '@/lib/strings';
+import { CategoryPicker } from '@/features/categories/CategoryPicker';
 import { useServiceQuery, useServices } from '@/services';
 import { AmountKeypad } from '@/ui/components/AmountKeypad';
 import { AppText } from '@/ui/components/AppText';
@@ -31,7 +32,6 @@ const installmentOptions = Array.from({ length: MAX_INSTALLMENTS }, (_, i) => ({
   value: String(i + 1),
   label: strings.transactions.form.installmentOption(i + 1),
 }));
-const NO_CATEGORY = 'none';
 
 /**
  * Novo lançamento. Meta: menos de 5 s — valor, descrição e origem visíveis de cara;
@@ -55,7 +55,7 @@ export function NewTransactionScreen() {
   const [amount, setAmount] = useState(0);
   const [description, setDescription] = useState('');
   const [origin, setOrigin] = useState<string | null>(null);
-  const [categoryId, setCategoryId] = useState<string>(NO_CATEGORY);
+  const [categoryId, setCategoryId] = useState<string | null>(null);
   const [date, setDate] = useState(today());
   const [installments, setInstallments] = useState(1);
   const [notes, setNotes] = useState('');
@@ -86,12 +86,7 @@ export function NewTransactionScreen() {
     null;
   const decoded = decodeOrigin(chosen);
   const isCard = decoded?.kind === 'card';
-  const categoryOptions = [
-    { value: NO_CATEGORY, label: strings.transactions.form.noCategory },
-    ...(data?.categories ?? [])
-      .filter((c) => c.kind === kind)
-      .map((c) => ({ value: c.id, label: c.name, color: c.color })),
-  ];
+  const kindCategories = (data?.categories ?? []).filter((c) => c.kind === kind);
 
   const missing =
     amount <= 0
@@ -109,7 +104,7 @@ export function NewTransactionScreen() {
       amountCents: amount,
       date,
       description: description.trim(),
-      categoryId: categoryId === NO_CATEGORY ? null : categoryId,
+      categoryId,
       notes: notes.trim() || null,
     };
     try {
@@ -158,7 +153,7 @@ export function NewTransactionScreen() {
         value={kind}
         onChange={(next) => {
           setKind(next);
-          setCategoryId(NO_CATEGORY);
+          setCategoryId(null);
           setInstallments(1);
         }}
       />
@@ -198,9 +193,9 @@ export function NewTransactionScreen() {
       />
       {more ? (
         <View className="gap-4">
-          <ChipSelect
+          <CategoryPicker
             label={strings.transactions.form.category}
-            options={categoryOptions}
+            categories={kindCategories}
             value={categoryId}
             onChange={setCategoryId}
           />

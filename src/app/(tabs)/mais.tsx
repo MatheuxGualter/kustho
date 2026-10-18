@@ -15,7 +15,6 @@ import { Pressable, View } from 'react-native';
 import { strings } from '@/lib/strings';
 import { AppText } from '@/ui/components/AppText';
 import { Screen } from '@/ui/components/Screen';
-import { ThemeSelector } from '@/ui/components/ThemeSelector';
 import { useTheme } from '@/ui/theme';
 
 type MenuItem = { href: Href; label: string; icon: LucideIcon };
@@ -40,7 +39,6 @@ export default function MoreScreen() {
   return (
     <Screen title={strings.screens.more.title}>
       <Menu items={items} />
-      <ThemeSelector />
       {__DEV__ ? <Menu items={devItems} /> : null}
     </Screen>
   );
