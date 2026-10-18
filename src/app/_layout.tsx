@@ -20,6 +20,7 @@ import { AppLockGate } from '@/features/security/AppLockGate';
 import { usePreferencesHydrated } from '@/lib/preferences';
 import { strings } from '@/lib/strings';
 import { ServicesProvider } from '@/services';
+import { appServices } from '@/services/app';
 import { subscribeToDatabaseChanges } from '@/services/dataVersion';
 import { AppText } from '@/ui/components/AppText';
 import { ToastHost } from '@/ui/components/Toast';
@@ -59,7 +60,7 @@ export default function RootLayout() {
           {database.error ? (
             <DatabaseError />
           ) : (
-            <ServicesProvider>
+            <ServicesProvider services={appServices}>
               <AppLockGate>
                 <RootStack />
                 <ToastHost />
