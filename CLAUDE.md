@@ -22,6 +22,7 @@ pnpm db:generate          # gera migração do Drizzle após mudar src/db/schema
 ```
 
 Rode `pnpm typecheck && pnpm lint && pnpm test` antes de declarar uma tarefa pronta.
+Configurar a máquina e rodar no celular: [`docs/como-rodar.md`](docs/como-rodar.md).
 Expo Go não serve: o app usa `expo-dev-client` (módulo nativo na Fase 2). APK do MVP:
 perfil `preview` do EAS (`eas.json`).
 

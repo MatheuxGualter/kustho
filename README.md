@@ -3,6 +3,7 @@
 Gerenciador financeiro Android-first e offline-first: contas, cartões, faturas, entradas e
 saídas, com captura de notificações dos bancos nas próximas fases.
 
+- **Primeira vez? Configure a máquina com [`docs/como-rodar.md`](docs/como-rodar.md)**
 - Plano de desenvolvimento: [`docs/plano.md`](docs/plano.md)
 - Convenções para o time e para IAs: [`CLAUDE.md`](CLAUDE.md) (cópia em `AGENTS.md`)
 
