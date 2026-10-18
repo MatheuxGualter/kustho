@@ -85,7 +85,8 @@
         "displayName": "unit",
         "testEnvironment": "node",
         "testMatch": [
-          "<rootDir>/src/**/*.test.ts"
+          "<rootDir>/src/**/*.test.ts",
+          "<rootDir>/modules/**/*.test.ts"
         ],
         "moduleNameMapper": {
           "^expo-crypto$": "<rootDir>/src/test/expo-crypto.node.ts",
