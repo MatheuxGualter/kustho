@@ -1,0 +1,50 @@
+{
+  "_sobre": "Notificações REAIS do Nubank, anonimizadas (nomes trocados).",
+  "cases": [
+    {
+      "name": "NuPay no crédito, estabelecimento depois das parcelas",
+      "notification": {
+        "packageName": "com.nu.production",
+        "title": "Pagamento com NuPay aprovado",
+        "text": "R$ 80,69 em 1x no crédito sem juros com NuPay APROVADO em iFood."
+      },
+      "expected": {
+        "parser": "generic",
+        "amountCents": 8069,
+        "kind": "card_purchase",
+        "merchant": "iFood",
+        "cardLastDigits": null
+      }
+    },
+    {
+      "name": "transferência recebida",
+      "notification": {
+        "packageName": "com.nu.production",
+        "title": "Transferência recebida",
+        "text": "Você recebeu uma transferência de R$ 10,00 de FULANO DE TAL."
+      },
+      "expected": {
+        "parser": "generic",
+        "amountCents": 1000,
+        "kind": "income",
+        "merchant": "FULANO DE TAL",
+        "cardLastDigits": null
+      }
+    },
+    {
+      "name": "transferência recebida de centavos",
+      "notification": {
+        "packageName": "com.nu.production",
+        "title": "Transferência recebida",
+        "text": "Você recebeu uma transferência de R$ 0,03 de FULANO DE TAL."
+      },
+      "expected": {
+        "parser": "generic",
+        "amountCents": 3,
+        "kind": "income",
+        "merchant": "FULANO DE TAL",
+        "cardLastDigits": null
+      }
+    }
+  ]
+}

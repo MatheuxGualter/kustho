@@ -110,7 +110,12 @@ e rodar `scripts/simulate-notification.sh --exemplos`. Para ler o que foi gravad
       `__fixtures__/generic.json`).
 - [ ] Pelo menos 30 notificações **reais** de 3 ou mais bancos, anonimizadas, em
       `__fixtures__/<banco>.json`. Mais → Diagnóstico da captura → Exportar anonimizado gera
-      o JSON nesse formato; confira o texto antes do commit.
+      o JSON nesse formato; confira o texto antes do commit. **5 de 30** (Itaú, Nubank,
+      Mercado Pago), do teste de out/2026.
+- [x] Genérico ajustado às reais: estabelecimento depois das parcelas ("em 1x … em
+      iFood"), valor sem centavos ("R$ 10") e "depositou" como entrada.
+- [x] Exportação anonimizada troca também os dígitos de CPF já mascarados pelo banco
+      (`XXX.468.266-XX`) e o esperado sai do texto anonimizado.
 - [ ] Parsers por banco (`parsers/<banco>.ts`, registrados em `parsers/index.ts`) quando
       as fixtures reais mostrarem formatos que o genérico erra.
 

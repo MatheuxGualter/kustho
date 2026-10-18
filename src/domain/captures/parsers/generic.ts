@@ -14,13 +14,14 @@ const NOT_A_TRANSACTION =
 
 /** Ordem importa: "crédito em conta" é entrada; "débito" vence "compra". */
 const KIND_RULES: [RegExp, CaptureKind][] = [
-  [/recebid|recebeu|recebimento|deposito|caiu na|credito em conta|creditad/, 'income'],
+  [/recebid|recebeu|recebimento|deposit|caiu na|credito em conta|creditad/, 'income'],
   [/debito/, 'expense'],
   [/compra|cartao|credito/, 'card_purchase'],
   [/enviad|enviou|pagou|pagamento|transferiu|transferencia realizada|saque|sacou/, 'expense'],
 ];
 
-const AMOUNT = /R\$\s*(\d{1,3}(?:\.\d{3})+,\d{2}|\d+,\d{2})/i;
+/** "R$ 1.234,56", "R$ 45,90" ou, sem centavos, "R$ 10" (Mercado Pago). */
+const AMOUNT = /R\$\s*(\d{1,3}(?:\.\d{3})+(?:,\d{2})?|\d+,\d{2}|\d+)(?![\d,.]\d)/i;
 const CARD_DIGITS = /(?:final|terminad[oa] em|\*{2,}|x{2,})\s*(\d{4})\b/;
 /** Onde o nome do estabelecimento ou da pessoa termina. */
 const NAME_END =
@@ -30,15 +31,18 @@ const MAX_NAME = 60;
 
 export const normalize = (text: string) => text.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
-/** Nome depois de "em", "para" ou "de", a partir do valor. */
+/**
+ * Nome depois de "em", "para" ou "de", a partir do valor. Tenta cada ocorrência: em
+ * "R$ 80,69 em 1x no crédito ... APROVADO em iFood" o primeiro "em" é das parcelas.
+ */
 function extractName(afterAmount: string, kind: CaptureKind): string | null {
   const prepositions = kind === 'income' ? ['de'] : ['em', 'para'];
   for (const prep of prepositions) {
-    const match = new RegExp(`\\b${prep}\\s+(.+)`, 'i').exec(afterAmount);
-    if (!match) continue;
-    const name = match[1].split(NAME_END)[0].replace(/\s+/g, ' ').trim();
-    if (!name || /^(\d|r\$|sua |seu )/i.test(name)) continue;
-    return name.slice(0, MAX_NAME);
+    for (const match of afterAmount.matchAll(new RegExp(`\\b${prep}\\s+(?=(.+))`, 'gi'))) {
+      const name = match[1].split(NAME_END)[0].replace(/\s+/g, ' ').trim();
+      if (!name || /^(\d|r\$|sua |seu )/i.test(name)) continue;
+      return name.slice(0, MAX_NAME);
+    }
   }
   return null;
 }

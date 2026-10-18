@@ -1,0 +1,20 @@
+{
+  "_sobre": "Notificações REAIS do Itaú, anonimizadas (nomes e CPF trocados).",
+  "cases": [
+    {
+      "name": "Pix recebido com CPF mascarado",
+      "notification": {
+        "packageName": "com.itau",
+        "title": "Pix recebido",
+        "text": "Você recebeu R$ 0,01 de FULANO DE TAL, CPF XXX.000.000-XX."
+      },
+      "expected": {
+        "parser": "generic",
+        "amountCents": 1,
+        "kind": "income",
+        "merchant": "FULANO DE TAL",
+        "cardLastDigits": null
+      }
+    }
+  ]
+}

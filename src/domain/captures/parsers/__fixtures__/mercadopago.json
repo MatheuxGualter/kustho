@@ -1,0 +1,20 @@
+{
+  "_sobre": "Notificações REAIS do Mercado Pago, anonimizadas.",
+  "cases": [
+    {
+      "name": "depósito via Pix com valor sem centavos",
+      "notification": {
+        "packageName": "com.mercadopago.wallet",
+        "title": "Seu dinheiro já está disponível",
+        "text": "Você depositou R$ 10 via Pix e o valor já está rendendo na sua conta."
+      },
+      "expected": {
+        "parser": "generic",
+        "amountCents": 1000,
+        "kind": "income",
+        "merchant": null,
+        "cardLastDigits": null
+      }
+    }
+  ]
+}

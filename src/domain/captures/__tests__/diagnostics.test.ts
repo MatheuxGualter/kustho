@@ -79,6 +79,13 @@ describe('anonymizeText', () => {
     expect(anonymizeText('autorização 98765432')).toBe('autorização 00000000');
   });
 
+  it('troca também os dígitos do CPF que o banco já mascarou', () => {
+    expect(anonymizeText('de Maria Souza, CPF XXX.468.266-XX.')).toBe(
+      `de ${ANON.person}, CPF XXX.000.000-XX.`,
+    );
+    expect(anonymizeText('CPF ***.468.266-**')).toBe('CPF XXX.000.000-XX');
+  });
+
   it('não mexe em valores, datas e horas', () => {
     const text = 'Compra de R$ 1.234,56 em 18/10/2026 às 14:32';
     expect(anonymizeText(text)).toBe(text);
@@ -130,7 +137,35 @@ describe('toFixtureExport', () => {
     });
 
     expect(unparsed.name).toContain('não interpretada');
+    expect(unparsed.notification.text).not.toContain('Maria');
     expect(unparsed.expected).toBe(FILL_EXPECTED);
     expect(unparsed.notification.text).toBe(`Algo novo de ${ANON.person}`);
   });
+});
+
+it('o esperado bate com o texto anonimizado (Pix do Itaú com nome e CPF)', () => {
+  const text = 'Você recebeu R$ 0,01 de JOAO DA SILVA SAURO, CPF XXX.468.266-XX.';
+  const raw = {
+    id: 'x',
+    key: 'x',
+    packageName: 'com.itau',
+    title: 'Pix recebido',
+    text,
+    postedAtMs: 0,
+    capturedAtMs: 0,
+  };
+  const parsed = parseNotification(parsers, raw)!;
+  const [only] = toFixtureExport([
+    capture({
+      packageName: 'com.itau',
+      title: 'Pix recebido',
+      text,
+      parser: parsed.parser,
+      ...parsed.parsed,
+    }),
+  ]).cases;
+  expect(only.notification.text).toBe(
+    `Você recebeu R$ 0,01 de ${ANON.person}, CPF XXX.000.000-XX.`,
+  );
+  expect(only.expected).toMatchObject({ amountCents: 1, kind: 'income', merchant: ANON.person });
 });
