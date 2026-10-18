@@ -446,8 +446,12 @@ export const strings = {
       intro: (description: string) =>
         `Estorno de "${description}". Use um valor menor para estorno parcial; ele entra como crédito na fatura.`,
       amount: 'Valor estornado',
-      amountHint: (total: string) => `Compra de ${total}`,
-      tooHigh: (total: string) => `O estorno não pode passar de ${total}`,
+      amountHint: (total: string, left: string) =>
+        total === left
+          ? `Compra de ${total}`
+          : `Compra de ${total}; ainda dá para estornar ${left}`,
+      tooHigh: (left: string) => `O estorno não pode passar de ${left}`,
+      nothingLeft: 'Esta compra já foi estornada por inteiro.',
       confirm: 'Registrar estorno',
     },
     pay: {

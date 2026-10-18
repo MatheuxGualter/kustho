@@ -109,6 +109,7 @@ export const transactions = sqliteTable(
     invoiceId: text('invoice_id').references(() => invoices.id),
     transferPeerId: text('transfer_peer_id'),
     installmentGroupId: text('installment_group_id'),
+    refundOfId: text('refund_of_id'),
     installmentNumber: integer('installment_number'),
     installmentTotal: integer('installment_total'),
     status: text('status', { enum: transactionStatuses }).notNull().default('posted'),
@@ -121,6 +122,7 @@ export const transactions = sqliteTable(
     index('transactions_card_idx').on(t.cardId),
     index('transactions_invoice_idx').on(t.invoiceId),
     index('transactions_installment_group_idx').on(t.installmentGroupId),
+    index('transactions_refund_of_idx').on(t.refundOfId),
     check('transactions_amount_positive', sql`${t.amountCents} > 0`),
     // `direction` é obrigatório em transferências e ajustes, e proibido nos demais tipos.
     check(

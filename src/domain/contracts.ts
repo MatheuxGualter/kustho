@@ -175,8 +175,13 @@ export interface CardsService {
   resolveInvoice(cardId: Id, purchaseDate: ISODate): Promise<Invoice>;
   /** Regra 4: N transações ligadas por `installmentGroupId`, uma em cada fatura seguinte. */
   createCardPurchase(input: NewCardPurchase): Promise<Transaction[]>;
-  /** Estorno: crédito na fatura da compra, ou na aberta se aquela já fechou. */
+  /**
+   * Estorno: crédito na fatura da compra, ou na aberta se aquela já fechou. A soma dos
+   * estornos de uma compra não passa do valor dela (`invalid_amount`).
+   */
   refundCardPurchase(transactionId: Id, amountCents: Cents, date: ISODate): Promise<Transaction>;
+  /** Quanto da compra ainda pode ser estornado (valor − estornos não excluídos). */
+  getRefundableCents(transactionId: Id): Promise<Cents>;
   listInvoices(cardId: Id): Promise<InvoiceWithTotals[]>;
   getInvoice(invoiceId: Id): Promise<InvoiceWithTotals | undefined>;
   listInvoiceTransactions(invoiceId: Id): Promise<Transaction[]>;

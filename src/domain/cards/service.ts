@@ -23,12 +23,14 @@ import {
   invoiceStatus,
   invoiceTotals,
   refundReferenceMonth,
+  refundableCents,
 } from './rules';
 
 const emptyCardTx = {
   direction: null,
   accountId: null,
   transferPeerId: null,
+  refundOfId: null,
   installmentGroupId: null,
   installmentNumber: null,
   installmentTotal: null,
@@ -155,11 +157,8 @@ export function createCardsService(db: AppDatabase): CardsService {
       ) {
         throw new DomainError('not_found');
       }
-      if (
-        !Number.isSafeInteger(amountCents) ||
-        amountCents <= 0 ||
-        amountCents > purchase.amountCents
-      ) {
+      const refundable = refundableCents(purchase, await txRepo.listRefundsOf(db, purchase.id));
+      if (!Number.isSafeInteger(amountCents) || amountCents <= 0 || amountCents > refundable) {
         throw new DomainError('invalid_amount');
       }
       const card = await requireCard(purchase.cardId);
@@ -182,9 +181,16 @@ export function createCardsService(db: AppDatabase): CardsService {
           categoryId: purchase.categoryId,
           cardId: card.id,
           invoiceId: target.id,
+          refundOfId: purchase.id,
         },
       ]);
       return refund;
+    },
+
+    async getRefundableCents(transactionId) {
+      const purchase = await txRepo.getTransaction(db, transactionId);
+      if (!purchase || purchase.kind !== 'card_purchase') throw new DomainError('not_found');
+      return refundableCents(purchase, await txRepo.listRefundsOf(db, purchase.id));
     },
 
     listInvoices: async (cardId) =>

@@ -131,6 +131,8 @@ export type Transaction = Entity & {
   /** A outra perna de uma transferência. */
   transferPeerId: Id | null;
   installmentGroupId: Id | null;
+  /** Estorno (`adjustment` `in` no cartão): a compra estornada. */
+  refundOfId: Id | null;
   /** 1 a `installmentTotal`. */
   installmentNumber: number | null;
   installmentTotal: number | null;

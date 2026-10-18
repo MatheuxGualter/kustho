@@ -92,6 +92,8 @@ pendência de outra trilha.
 - [x] Telas: aba Cartões, novo/editar cartão, detalhe com faturas, fatura com compras e
       estorno, pagar fatura (total ou parcial). `HomeCardsSection` na Início.
 - [x] Estorno total ou parcial pela interface (`/fatura/[id]/estorno`, com valor e data).
+- [x] Estornos de uma compra somados não passam do valor dela (`refundOfId` liga o estorno
+      à compra; migração `0002_refund_of` liga os estornos antigos pela descrição).
 
 ### D · Categorias e visão geral
 

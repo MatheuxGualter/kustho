@@ -7,6 +7,7 @@ import {
   buildCardPurchase,
   invoiceStatus,
   invoiceTotals,
+  refundableCents,
   refundReferenceMonth,
 } from '@/domain/cards/rules';
 import type { CardsService, InvoiceWithTotals } from '@/domain/contracts';
@@ -46,6 +47,8 @@ export function createFakeCardsService(store: FakeStore): CardsService {
       .filter((i) => i.cardId === cardId)
       .map((i) => withTotals(i, day));
 
+  const refundsOf = (purchaseId: string) =>
+    alive(store.transactions).filter((t) => t.refundOfId === purchaseId);
   const requireCard = (id: string) => {
     const card = alive(store.cards).find((c) => c.id === id);
     if (!card) throw new DomainError('not_found');
@@ -141,7 +144,9 @@ export function createFakeCardsService(store: FakeStore): CardsService {
       if (!purchase || purchase.kind !== 'card_purchase' || !purchase.cardId) {
         throw new DomainError('not_found');
       }
-      if (amountCents > purchase.amountCents) throw new DomainError('invalid_amount');
+      if (amountCents > refundableCents(purchase, refundsOf(purchase.id))) {
+        throw new DomainError('invalid_amount');
+      }
       assertAmount(amountCents);
       const card = requireCard(purchase.cardId);
       const original = findOrThrow(store.invoices, purchase.invoiceId ?? '', 'Fatura');
@@ -156,10 +161,16 @@ export function createFakeCardsService(store: FakeStore): CardsService {
         categoryId: purchase.categoryId,
         cardId: card.id,
         invoiceId: invoiceFor(card.id, cycleForReferenceMonth(card, month)).id,
+        refundOfId: purchase.id,
       };
       store.transactions.push(refund);
       notifyDataChanged();
       return refund;
+    },
+    async getRefundableCents(transactionId) {
+      const purchase = alive(store.transactions).find((t) => t.id === transactionId);
+      if (!purchase || purchase.kind !== 'card_purchase') throw new DomainError('not_found');
+      return refundableCents(purchase, refundsOf(purchase.id));
     },
     async listInvoices(cardId) {
       return cardInvoices(cardId).sort((a, b) => b.referenceMonth.localeCompare(a.referenceMonth));

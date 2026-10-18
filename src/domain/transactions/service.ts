@@ -64,6 +64,7 @@ export function createTransactionsService(db: AppDatabase): TransactionsService 
           cardId: null,
           invoiceId: null,
           transferPeerId: null,
+          refundOfId: null,
           installmentGroupId: null,
           installmentNumber: null,
           installmentTotal: null,

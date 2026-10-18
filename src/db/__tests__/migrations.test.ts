@@ -1,7 +1,9 @@
 /**
  * Aplica as migrações num SQLite real (node:sqlite) e confere as restrições do schema.
  */
-import type { DatabaseSync } from 'node:sqlite';
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { DatabaseSync } from 'node:sqlite';
 
 import { createMigratedSqlite as migratedDb } from '../test/testDb';
 
@@ -108,5 +110,76 @@ describe('migrações', () => {
         )
         .run(now, now),
     ).toThrow(/CHECK/);
+  });
+});
+
+describe('0002_refund_of', () => {
+  /** Banco só com as migrações anteriores, para simular dados antigos. */
+  function upTo0001(): DatabaseSync {
+    const dir = join(__dirname, '..', 'migrations');
+    const db = new DatabaseSync(':memory:');
+    const run = (file: string) => {
+      for (const s of readFileSync(join(dir, file), 'utf8').split('--> statement-breakpoint')) {
+        db.exec(s);
+      }
+    };
+    for (const f of readdirSync(dir)
+      .filter((f) => f.endsWith('.sql'))
+      .sort()) {
+      if (f < '0002') run(f);
+    }
+    return Object.assign(db, { run0002: () => run('0002_refund_of.sql') });
+  }
+
+  it('liga estornos antigos à compra pela descrição e pelo cartão', () => {
+    const db = upTo0001() as DatabaseSync & { run0002: () => void };
+    db.exec(`INSERT INTO credit_cards (id, created_at, updated_at, name, institution, color, limit_cents, closing_day, due_day)
+             VALUES ('card', '${now}', '${now}', 'Nu', 'Nubank', '#820AD1', 100000, 7, 14)`);
+    const card = { account_id: null, card_id: 'card' };
+    insertTx(db, {
+      ...card,
+      id: 'p1',
+      kind: 'card_purchase',
+      amount_cents: 8069,
+      description: 'Ifood',
+      date: '2026-10-18',
+    });
+    insertTx(db, {
+      ...card,
+      id: 'p2',
+      kind: 'card_purchase',
+      amount_cents: 5000,
+      description: 'Uber',
+      date: '2026-10-18',
+    });
+    insertTx(db, {
+      ...card,
+      id: 'r1',
+      kind: 'adjustment',
+      direction: 'in',
+      amount_cents: 100,
+      description: 'Estorno Ifood',
+      date: '2026-10-18',
+    });
+    insertTx(db, {
+      ...card,
+      id: 'r2',
+      kind: 'adjustment',
+      direction: 'in',
+      amount_cents: 300,
+      description: 'Ajuste manual',
+      date: '2026-10-18',
+    });
+
+    db.run0002();
+    const link = (id: string) =>
+      (
+        db.prepare('SELECT refund_of_id AS r FROM transactions WHERE id = ?').get(id) as {
+          r: string | null;
+        }
+      ).r;
+    expect(link('r1')).toBe('p1');
+    expect(link('r2')).toBeNull();
+    expect(link('p1')).toBeNull();
   });
 });

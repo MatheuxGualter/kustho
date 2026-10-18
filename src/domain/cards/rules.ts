@@ -107,3 +107,11 @@ export function refundReferenceMonth(
     ? purchaseInvoice.referenceMonth
     : cycleForPurchase(card, refundDate).referenceMonth;
 }
+
+/** Quanto da compra ainda pode ser estornado: o valor menos os estornos já feitos. */
+export function refundableCents(
+  purchase: Pick<Transaction, 'amountCents'>,
+  refunds: readonly Pick<Transaction, 'amountCents'>[],
+): Cents {
+  return Math.max(0, purchase.amountCents - refunds.reduce((sum, r) => sum + r.amountCents, 0));
+}
