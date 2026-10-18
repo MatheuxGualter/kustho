@@ -1,9 +1,33 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="40 30 340 235">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="15 30 375 240">
+  <defs>
+    <rect id="back" x="190" y="76" width="84" height="56" rx="9" transform="rotate(-16 232 104)"/>
+    <rect id="front" x="240" y="78" width="84" height="56" rx="9" transform="rotate(8 282 106)"/>
+    <clipPath id="above"><path d="M0 0 H400 V140 H344 C292 162 220 162 166 140 H0 Z"/></clipPath>
+    <mask id="hideBody" maskUnits="userSpaceOnUse" x="0" y="0" width="400" height="300">
+      <rect width="400" height="300" fill="#FFFFFF"/>
+      <g clip-path="url(#above)" fill="#000000" stroke="#000000" stroke-width="11"><use href="#back"/><use href="#front"/></g>
+    </mask>
+    <mask id="hideBack" maskUnits="userSpaceOnUse" x="0" y="0" width="400" height="300">
+      <rect width="400" height="300" fill="#FFFFFF"/>
+      <use href="#front" fill="#000000" stroke="#000000" stroke-width="11"/>
+    </mask>
+  </defs>
   <g fill="none" stroke="#FFFFFF" stroke-width="11" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M75 205 C45 180 48 115 100 92 C150 70 205 74 236 88 C246 70 262 58 290 56 L332 58 C356 60 368 74 368 96 L366 148 C365 166 352 174 335 174 L302 174 C289 176 282 186 282 198 L282 245 Q282 252 275 252 L258 252 Q251 252 251 245 L250 216 C215 224 165 224 130 216 L130 245 Q130 252 123 252 L104 252 Q97 252 97 245 L96 224 C86 218 79 212 75 205 Z"/>
-    <path d="M262 62 C256 40 286 38 286 58"/>
-    <path d="M350 86 L357 91"/>
-    <path d="M340 156 L356 156"/>
+    <g mask="url(#hideBody)">
+      <path d="M70 170 C45 168 30 150 32 130 C34 108 50 92 75 82 C100 72 130 70 152 78 C176 86 190 98 206 100 C262 92 332 100 360 140 C380 168 378 205 360 222 L354 240 Q351 250 340 250 L310 250 Q300 250 302 241 L306 222 C264 230 200 230 164 222 L160 244 Q158 252 147 252 L121 252 Q111 252 113 243 L116 226 C108 205 95 180 70 170 Z"/>
+    </g>
+    <path d="M128 76 C124 56 152 54 154 74"/>
+    <path d="M47 147 Q56 155 67 150"/>
+    <g clip-path="url(#above)">
+      <use href="#back" mask="url(#hideBack)"/>
+      <g transform="rotate(8 282 106)">
+        <rect x="240" y="78" width="84" height="56" rx="9"/>
+        <path d="M240 98 L324 98"/>
+      </g>
+    </g>
+    <path d="M166 140 C220 162 292 162 344 140"/>
+    <path d="M182 160 C228 178 284 178 330 160" stroke-width="5" stroke-dasharray="1 12"/>
   </g>
-  <circle cx="306" cy="94" r="7.5" fill="#FFFFFF"/>
+  <circle cx="92" cy="108" r="7.5" fill="#FFFFFF"/>
+  <circle cx="44" cy="122" r="4.5" fill="#FFFFFF"/>
 </svg>
