@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 
 import { errorMessage } from '@/features/shared/errorMessage';
@@ -15,6 +15,8 @@ import { Screen } from '@/ui/components/Screen';
 import { SkeletonRows } from '@/ui/components/Skeleton';
 import { TextField } from '@/ui/components/TextField';
 import { showToast } from '@/ui/components/Toast';
+import { matchBank } from '@/ui/banks/banks';
+import { BankPicker } from '@/ui/banks/BankPicker';
 import { accentPalette } from '@/ui/tokens';
 
 const required = strings.fields.required;
@@ -55,7 +57,11 @@ export function CardFormScreen() {
       paymentAccountId: null,
     },
   });
-  const { control, handleSubmit, formState } = form;
+  const { control, handleSubmit, formState, setValue } = form;
+  const institution = useWatch({ control, name: 'institution' });
+  const bank = matchBank(institution);
+  const [other, setOther] = useState(false);
+  const otherBank = other || (!bank && institution.trim() !== '');
 
   useEffect(() => {
     if (!id) return;
@@ -85,6 +91,13 @@ export function CardFormScreen() {
           <SkeletonRows />
         ) : (
           <>
+            <BankPicker
+              value={bank?.id ?? (otherBank ? 'other' : null)}
+              onChange={(picked) => {
+                setOther(!picked);
+                setValue('institution', picked?.name ?? '', { shouldValidate: !!picked });
+              }}
+            />
             <Controller
               control={control}
               name="name"
@@ -96,24 +109,25 @@ export function CardFormScreen() {
                   onChangeText={field.onChange}
                   onBlur={field.onBlur}
                   error={fieldState.error?.message}
-                  autoFocus={!id}
                 />
               )}
             />
-            <Controller
-              control={control}
-              name="institution"
-              render={({ field, fieldState }) => (
-                <TextField
-                  label={strings.cards.form.institution}
-                  placeholder={strings.accounts.form.institutionPlaceholder}
-                  value={field.value}
-                  onChangeText={field.onChange}
-                  onBlur={field.onBlur}
-                  error={fieldState.error?.message}
-                />
-              )}
-            />
+            {otherBank ? (
+              <Controller
+                control={control}
+                name="institution"
+                render={({ field, fieldState }) => (
+                  <TextField
+                    label={strings.cards.form.institution}
+                    placeholder={strings.accounts.form.institutionPlaceholder}
+                    value={field.value}
+                    onChangeText={field.onChange}
+                    onBlur={field.onBlur}
+                    error={fieldState.error?.message}
+                  />
+                )}
+              />
+            ) : null}
             <Controller
               control={control}
               name="limitCents"

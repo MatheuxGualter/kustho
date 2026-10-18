@@ -9,6 +9,8 @@ import { today } from '@/lib/dates';
 import { formatBRL } from '@/lib/money';
 import { usePreferences } from '@/lib/preferences';
 import { strings } from '@/lib/strings';
+import { banks } from '@/ui/banks/banks';
+import { BankLogo } from '@/ui/banks/BankLogo';
 import { AmountKeypad } from '@/ui/components/AmountKeypad';
 import { AppText, type AppTextVariant } from '@/ui/components/AppText';
 import { Button } from '@/ui/components/Button';
@@ -186,6 +188,14 @@ export default function DevCatalogScreen() {
                 {colors[name]}
               </AppText>
             </View>
+          ))}
+        </View>
+      </Section>
+
+      <Section title={strings.devCatalog.banks}>
+        <View className="flex-row flex-wrap gap-2">
+          {banks.map((bank) => (
+            <BankLogo key={bank.id} bank={bank} />
           ))}
         </View>
       </Section>

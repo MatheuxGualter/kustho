@@ -7,7 +7,7 @@ import { usePreferences } from '@/lib/preferences';
 import { strings } from '@/lib/strings';
 import { AppText } from '@/ui/components/AppText';
 import { Card } from '@/ui/components/Card';
-import { InstitutionAvatar, suggestInitials } from '@/ui/components/InstitutionAvatar';
+import { InstitutionAvatar } from '@/ui/components/InstitutionAvatar';
 import { MoneyText } from '@/ui/components/MoneyText';
 
 /**
@@ -31,7 +31,7 @@ export function CreditCardVisual({
       <View className="h-2" style={{ backgroundColor: card.color }} />
       <View className="gap-3 p-4">
         <View className="flex-row items-center gap-3">
-          <InstitutionAvatar color={card.color} initials={suggestInitials(card.institution)} />
+          <InstitutionAvatar institution={card.institution} color={card.color} />
           <View className="flex-1">
             <AppText variant="label" className="text-base" numberOfLines={1}>
               {card.name}

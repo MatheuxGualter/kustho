@@ -59,6 +59,7 @@
     "jest-expo": "^58.0.11",
     "prettier": "^3.9.10",
     "prettier-plugin-tailwindcss": "^0.8.1",
+    "svgo": "^4.1.0",
     "typescript": "~6.0.3"
   },
   "scripts": {

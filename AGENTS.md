@@ -116,7 +116,11 @@ Import com alias `@/` → `src/`.
 - **Acessibilidade e layout**: alvos de toque ≥ 44 dp (`min-h-touch`), contraste AA,
   fonte do sistema em 130% sem cortar valores, safe areas, `useWindowDimensions` com as
   faixas de `breakpoints` (compacta < 360, expandida ≥ 600 → lista + detalhe).
-- **Instituições** com cor e iniciais escolhidas pelo usuário; nunca logos de bancos.
+- **Instituições**: os 20 bancos do catálogo (`src/ui/banks/`) aparecem com o logo
+  oficial num círculo padronizado (`InstitutionAvatar`, `BankPicker`); as demais, com cor e
+  iniciais. Para incluir um banco: acrescente o SVG em `scripts/bank-logos.mjs`, rode o
+  script e registre o banco em `banks.ts`. Logos são marcas de terceiros: revisar antes de
+  publicar na Play Store (ver riscos em `docs/plano.md`).
 
 ## Modelo de dados (Fase 1)
 

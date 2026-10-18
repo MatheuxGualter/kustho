@@ -18,7 +18,11 @@ export function AccountCard({ account }: { account: AccountWithBalance }) {
       className={archived ? 'opacity-50' : ''}
     >
       <View className="flex-row items-center gap-3">
-        <InstitutionAvatar color={account.color} initials={account.icon} />
+        <InstitutionAvatar
+          institution={account.institution}
+          color={account.color}
+          icon={account.icon}
+        />
         <View className="flex-1 gap-1">
           <AppText variant="label" className="text-base" numberOfLines={1}>
             {account.name}

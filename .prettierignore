@@ -4,3 +4,4 @@ android/
 ios/
 .expo/
 docs/plano.md
+src/ui/banks/logos.generated.ts
