@@ -54,3 +54,21 @@ it('não deixa estornar mais que a compra', async () => {
   expect(screen.getByText(/não pode passar de/)).toBeTruthy();
   expect(screen.getByRole('button', { name: 'Registrar estorno' })).toBeDisabled();
 });
+
+it('desconta os estornos anteriores', async () => {
+  const store = createFakeStore();
+  const services = createFakeServices(store);
+  const purchase = store.transactions.find(
+    (t) => t.kind === 'card_purchase' && t.deletedAt === null,
+  )!;
+  await services.cards.refundCardPurchase(purchase.id, purchase.amountCents - 50, '2026-10-18');
+  params.compra = purchase.id;
+  await renderWithTheme(
+    <ServicesProvider services={services}>
+      <RefundScreen />
+    </ServicesProvider>,
+  );
+  expect(await screen.findByText(/ainda dá para estornar R\$\s0,50/)).toBeTruthy();
+  await fireEvent.changeText(screen.getByLabelText('Valor estornado'), '51');
+  expect(screen.getByRole('button', { name: 'Registrar estorno' })).toBeDisabled();
+});

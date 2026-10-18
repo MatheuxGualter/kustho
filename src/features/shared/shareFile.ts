@@ -23,6 +23,8 @@ export async function shareTextFile({
   }
   const file = new File(Paths.cache, name);
   file.create({ overwrite: true });
-  await file.write(content);
+  // Bytes UTF-8 explícitos: assim o BOM do CSV chega ao arquivo e planilhas (Google
+  // Planilhas, Excel) leem os acentos certo em vez de "AlimentaÃ§Ã£o".
+  await file.write(new TextEncoder().encode(content));
   await Sharing.shareAsync(file.uri, { mimeType, dialogTitle: title });
 }

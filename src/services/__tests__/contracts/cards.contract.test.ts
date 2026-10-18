@@ -115,6 +115,32 @@ describe.each(environments)('CardsService ($name)', ({ create }) => {
     expect(isDomainError(error) && error.code).toBe('invalid_amount');
   });
 
+  it('estornos somados não passam da compra', async () => {
+    const { services, seed } = await create();
+    const purchase = seed.transactions.find((t) => t.kind === 'card_purchase')!;
+    expect(await services.cards.getRefundableCents(purchase.id)).toBe(purchase.amountCents);
+
+    const first = await services.cards.refundCardPurchase(purchase.id, 100, TODAY);
+    expect(first.refundOfId).toBe(purchase.id);
+    expect(await services.cards.getRefundableCents(purchase.id)).toBe(purchase.amountCents - 100);
+
+    const error = await services.cards
+      .refundCardPurchase(purchase.id, purchase.amountCents, TODAY)
+      .catch((e: unknown) => e);
+    expect(isDomainError(error) && error.code).toBe('invalid_amount');
+
+    await services.cards.refundCardPurchase(purchase.id, purchase.amountCents - 100, TODAY);
+    expect(await services.cards.getRefundableCents(purchase.id)).toBe(0);
+  });
+
+  it('excluir um estorno libera o valor de novo', async () => {
+    const { services, seed } = await create();
+    const purchase = seed.transactions.find((t) => t.kind === 'card_purchase')!;
+    const refund = await services.cards.refundCardPurchase(purchase.id, 100, TODAY);
+    await services.transactions.deleteTransaction(refund.id);
+    expect(await services.cards.getRefundableCents(purchase.id)).toBe(purchase.amountCents);
+  });
+
   it('cartão novo: criar, editar, arquivar, excluir e desfazer', async () => {
     const { services, seed } = await create();
     const card = await services.cards.createCard({

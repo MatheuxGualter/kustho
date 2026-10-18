@@ -44,6 +44,14 @@ export async function getTransaction(
   return row;
 }
 
+/** Estornos (não excluídos) de uma compra no cartão. */
+export async function listRefundsOf(db: AppDatabase, purchaseId: string): Promise<Transaction[]> {
+  return db
+    .select()
+    .from(transactions)
+    .where(and(eq(transactions.refundOfId, purchaseId), isNull(transactions.deletedAt)));
+}
+
 /**
  * Grava lançamentos já montados pelo domínio, num único INSERT (tudo ou nada). Regras
  * (parcelas, pernas de transferência, fatura) são responsabilidade de quem chama. Um `id`

@@ -17,6 +17,7 @@ const base: Transaction = {
   cardId: null,
   invoiceId: null,
   transferPeerId: null,
+  refundOfId: null,
   installmentGroupId: null,
   installmentNumber: null,
   installmentTotal: null,
