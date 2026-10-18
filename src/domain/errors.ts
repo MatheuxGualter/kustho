@@ -7,6 +7,7 @@ export const domainErrorCodes = [
   'same_account_transfer',
   'invalid_amount',
   'not_found',
+  'capture_incomplete',
 ] as const;
 
 export type DomainErrorCode = (typeof domainErrorCodes)[number];

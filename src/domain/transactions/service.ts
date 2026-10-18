@@ -52,7 +52,7 @@ export function createTransactionsService(db: AppDatabase): TransactionsService 
       );
 
   return {
-    async createTransaction({ status = 'posted', notes = null, ...input }) {
+    async createTransaction({ status = 'posted', notes = null, source = 'manual', ...input }) {
       assertAmount(input.amountCents);
       if (!(await getAccount(db, input.accountId))) throw new DomainError('not_found');
       const [saved] = await repo.insertTransactions(db, [
@@ -67,7 +67,7 @@ export function createTransactionsService(db: AppDatabase): TransactionsService 
           installmentGroupId: null,
           installmentNumber: null,
           installmentTotal: null,
-          source: 'manual',
+          source,
         },
       ]);
       return saved;

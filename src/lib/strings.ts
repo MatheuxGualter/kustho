@@ -33,10 +33,26 @@ export const strings = {
     transactions: 'Lançamentos',
     cards: 'Cartões',
     more: 'Mais',
+    pending: 'Pendentes',
     newTransaction: 'Novo lançamento',
+    withBadge: (label: string, badge: string | number) => `${label}, ${badge} novas`,
   },
   screens: {
     home: { title: 'Início', placeholder: 'O resumo do mês aparece aqui.' },
+    captureSetup: {
+      title: 'Leitura de notificações',
+      placeholder:
+        'O que é lido e por quê, liberar o acesso (com "Permitir configurações restritas") e a bateria.',
+    },
+    captureDiagnostics: {
+      title: 'Diagnóstico da captura',
+      placeholder: 'Estado do serviço e notificações recentes, com exportação anonimizada.',
+    },
+    pending: {
+      title: 'Pendentes',
+      placeholder:
+        'Notificações dos bancos para confirmar, editar ou descartar. Nada entra no saldo sem um toque seu.',
+    },
     transactions: {
       title: 'Lançamentos',
       placeholder: 'A lista do mês, agrupada por dia, aparece aqui.',
@@ -99,6 +115,30 @@ export const strings = {
     previous: 'Mês anterior',
     next: 'Próximo mês',
     current: 'Voltar para o mês atual',
+  },
+  pending: {
+    emptyTitle: 'Nada para confirmar',
+    emptyText:
+      'Quando um banco permitido notificar um Pix ou uma compra, a sugestão aparece aqui. Nada entra no saldo sem você confirmar.',
+    unparsed: 'Não interpretada',
+    unparsedHint: 'Toque em Completar para informar valor, tipo e origem.',
+    noOrigin: 'Sem origem',
+    confirm: 'Confirmar',
+    edit: 'Editar',
+    complete: 'Completar',
+    discard: 'Descartar',
+    confirmAll: (count: number) => `Confirmar ${count} prontas`,
+    confirmed: 'Lançamento criado',
+    confirmedMany: (count: number) => `${count} lançamentos criados`,
+    discarded: 'Notificação descartada',
+    kinds: { expense: 'Despesa', income: 'Receita', card_purchase: 'Cartão' },
+    original: 'Notificação original',
+    origin: 'Conta',
+    card: 'Cartão',
+    confirmTitle: 'Confirmar lançamento',
+    needAmount: 'Informe o valor',
+    needOrigin: 'Escolha a conta ou o cartão',
+    needDescription: 'Informe uma descrição',
   },
   transactions: {
     searchPlaceholder: 'Buscar lançamento',
@@ -430,6 +470,23 @@ export const strings = {
     clear: 'Apagar contas, cartões e lançamentos',
     seedDone: (count: number) => `${count} lançamentos criados.`,
     clearDone: 'Dados apagados.',
+    capture: 'Captura de notificações',
+    captureUnavailable: 'Módulo nativo ausente. Recompile o app (pnpm android).',
+    capturePermission: (granted: boolean) =>
+      `Acesso a notificações: ${granted ? 'liberado' : 'não liberado'}`,
+    captureBattery: (ignoring: boolean) =>
+      `Otimização de bateria: ${ignoring ? 'desligada (bom)' : 'ligada (o sistema pode parar a captura)'}`,
+    captureOpenPermission: 'Abrir acesso a notificações',
+    captureOpenBattery: 'Liberar da otimização de bateria',
+    capturePackages: 'Pacotes permitidos',
+    capturePackagesHint:
+      'Separados por vírgula. Descubra o pacote com: adb shell pm list packages | grep -i <banco>',
+    captureSavePackages: 'Salvar pacotes',
+    capturePending: (count: number) => `Pendentes (${count})`,
+    captureEmpty:
+      'Nada capturado ainda. Faça um Pix ou uma compra, ou rode o simulate-notification.',
+    captureRefresh: 'Atualizar',
+    captureMarkProcessed: 'Marcar todas como processadas',
   },
   errors: {
     database: 'Não foi possível abrir os dados do aparelho.',
@@ -443,6 +500,7 @@ export const strings = {
       same_account_transfer: 'Escolha contas diferentes para origem e destino.',
       invalid_amount: 'Informe um valor maior que zero.',
       not_found: 'Item não encontrado. Ele pode ter sido excluído.',
+      capture_incomplete: 'Falta o valor, o tipo ou a origem. Edite antes de confirmar.',
     },
   },
 } as const;

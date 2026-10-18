@@ -16,6 +16,7 @@ import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { useDatabaseSetup } from '@/db/setup';
+import { CaptureIngestor } from '@/features/pending/CaptureIngestor';
 import { AppLockGate } from '@/features/security/AppLockGate';
 import { usePreferencesHydrated } from '@/lib/preferences';
 import { strings } from '@/lib/strings';
@@ -63,6 +64,7 @@ export default function RootLayout() {
             <ServicesProvider services={appServices}>
               <AppLockGate>
                 <RootStack />
+                <CaptureIngestor />
                 <ToastHost />
               </AppLockGate>
             </ServicesProvider>
@@ -94,6 +96,7 @@ function RootStack() {
           name="lancamento/[id]"
           options={{ title: strings.screens.editTransaction.title }}
         />
+        <Stack.Screen name="pendente/[id]" options={{ title: strings.pending.confirmTitle }} />
         <Stack.Screen name="dev/ui" options={{ title: strings.devCatalog.title }} />
         <Stack.Screen name="onboarding" options={{ headerShown: false, presentation: 'modal' }} />
       </Stack>

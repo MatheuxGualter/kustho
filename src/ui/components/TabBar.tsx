@@ -1,7 +1,15 @@
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import type { BottomTabBarProps } from 'expo-router/js-tabs';
-import { CreditCard, Ellipsis, House, List, type LucideIcon, Plus } from 'lucide-react-native';
+import {
+  CreditCard,
+  Ellipsis,
+  House,
+  Inbox,
+  List,
+  type LucideIcon,
+  Plus,
+} from 'lucide-react-native';
 import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -14,6 +22,7 @@ import { AppText } from './AppText';
 const icons: Record<string, LucideIcon> = {
   index: House,
   lancamentos: List,
+  pendentes: Inbox,
   cartoes: CreditCard,
   mais: Ellipsis,
 };
@@ -31,6 +40,7 @@ export function TabBar({ state, descriptors, emitter, navigateToTab }: BottomTab
     const focused = state.index === index;
     const Icon = icons[route.name] ?? Ellipsis;
     const label = typeof options.title === 'string' ? options.title : route.name;
+    const badge = options.tabBarBadge;
 
     const onPress = () => {
       const event = emitter.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
@@ -43,10 +53,19 @@ export function TabBar({ state, descriptors, emitter, navigateToTab }: BottomTab
         onPress={onPress}
         accessibilityRole="tab"
         accessibilityState={{ selected: focused }}
-        accessibilityLabel={label}
+        accessibilityLabel={badge ? strings.tabs.withBadge(label, badge) : label}
         className="min-h-touch flex-1 items-center justify-center gap-1 py-2"
       >
-        <Icon size={ICON_SIZE} color={focused ? colors.brand : colors['text-muted']} />
+        <View>
+          <Icon size={ICON_SIZE} color={focused ? colors.brand : colors['text-muted']} />
+          {badge ? (
+            <View className="absolute -right-3 -top-2 min-w-6 items-center rounded-full bg-brand px-1">
+              <AppText variant="caption" tone="on-brand" numeric maxFontSizeMultiplier={1.3}>
+                {badge}
+              </AppText>
+            </View>
+          ) : null}
+        </View>
         <AppText
           variant="caption"
           tone={focused ? 'brand' : 'muted'}
