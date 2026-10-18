@@ -1,0 +1,18 @@
+# Lançar uma despesa na conta e vê-la na aba Lançamentos.
+appId: app.kustho
+name: Lançar despesa
+---
+- runFlow: _preparar.yaml
+- tapOn: 'Novo lançamento'
+- tapOn: { id: keypad-4 }
+- tapOn: { id: keypad-5 }
+- tapOn: { id: keypad-9 }
+- tapOn: { id: keypad-0 }
+- tapOn: 'Ex.: Almoço'
+- inputText: 'Cafe E2E'
+- hideKeyboard
+- tapOn: 'Carteira'
+- tapOn: 'Salvar'
+- assertVisible: 'Lançamento salvo'
+- tapOn: 'Lançamentos'
+- assertVisible: 'Cafe E2E'

@@ -1,0 +1,24 @@
+# Pagar a fatura atual reduz o saldo da conta que paga.
+appId: app.kustho
+name: Pagar fatura reduz o saldo
+---
+- runFlow: _preparar.yaml
+- tapOn: 'Cartões'
+- tapOn: 'Nubank Roxinho'
+- scrollUntilVisible:
+    element: 'Fatura atual'
+    direction: DOWN
+- tapOn:
+    below: 'Fatura atual'
+- tapOn: 'Pagar fatura'
+# Valor padrão: o restante da fatura. Conta: a Nubank.
+- tapOn: 'Nubank · .*'
+- tapOn: 'Pagar'
+- assertVisible: 'Pagamento registrado'
+# O pagamento aparece como saída da conta Nubank.
+- tapOn: 'Lançamentos'
+- assertVisible: '.*Pagamento.*'
+- tapOn: 'Mais'
+- tapOn: 'Contas'
+- tapOn: 'Nubank'
+- assertVisible: '.*Pagamento.*'

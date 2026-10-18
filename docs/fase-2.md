@@ -65,7 +65,8 @@ Decisões do kickoff:
 - [x] Testes JUnit das regras puras (`CaptureRules`: filtro, texto, hash do dedupe):
       `cd android && ./gradlew :notification-capture:testDebugUnitTest`.
 - [x] `scripts/simulate-notification.sh` com `adb` (`--exemplos` posta três casos).
-- [ ] Job de JUnit no CI (precisa de JDK e Android SDK no runner).
+- [x] Job de JUnit no CI (`kotlin` em `ci.yml`): projeto JVM mínimo em
+      `modules/notification-capture/jvm-tests/` roda os testes das regras puras sem Android SDK.
 - [x] Ponte conferida pelo JS no aparelho (`getPending`, `onCaptured`, pacotes permitidos)
       pela seção "Captura de notificações" do catálogo dev. Registrada em `src/services/app.ts`.
 - [ ] Teste de reinício do celular e de um período sem abrir o app (portão da fase).
