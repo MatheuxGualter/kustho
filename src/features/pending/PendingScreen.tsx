@@ -1,6 +1,6 @@
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
-import { Check, CheckCheck, Inbox, Pencil, X } from 'lucide-react-native';
+import { Bell, Check, CheckCheck, Pencil, X } from 'lucide-react-native';
 import { useState } from 'react';
 import { View } from 'react-native';
 
@@ -80,7 +80,7 @@ export function PendingScreen() {
     <Screen title={strings.screens.pending.title}>
       {data.pending.length === 0 ? (
         <EmptyState
-          icon={Inbox}
+          icon={Bell}
           title={strings.pending.emptyTitle}
           description={strings.pending.emptyText}
           action={
