@@ -38,7 +38,7 @@ await accounts.createTransfer({ ... }); // todas as consultas abertas recarregam
 1. Implemente `createXxxService(db: AppDatabase): XxxService` em `src/domain/<domínio>/service.ts`.
 2. Regras em funções puras ao lado (`balance.ts`, `installments.ts`…), com testes escritos
    **antes**. Testes que tocam o banco usam `createTestDb()`.
-3. Troque a linha da sua trilha em `createAppServices()` (`src/services/index.tsx`).
+3. Registre o serviço em `src/services/app.ts`.
 4. Rode os testes de fumaça dos fakes contra o real, se quiser: eles usam só o contrato.
 
 ## Trilhas
@@ -58,28 +58,56 @@ await accounts.createTransfer({ ... }); // todas as consultas abertas recarregam
 
 ### B · Lançamentos
 
-- Sheet de novo lançamento com `AmountKeypad`: valor, descrição e origem visíveis de cara;
-  o resto em "mais opções". Meta: lançar em menos de 5 s.
-- A origem pode ser conta ou cartão: com cartão, o sheet usa
-  `CardsService.createCardPurchase` (campos de parcelas entregues pela C).
-- Lista do mês agrupada por dia (FlashList), filtros e busca, editar, excluir com desfazer.
-- Lançamentos previstos: perguntar se foram efetivados quando a data chega.
+- [x] Regras puras: agrupar por dia, resumo do mês, filtros, o que é excluído junto
+      (`src/domain/transactions/rules.ts`).
+- [x] Serviço real `createTransactionsService(db)` com suíte de contrato (fake e real).
+      Editar uma perna da transferência ajusta a outra.
+- [x] Novo lançamento: tipo, valor no `AmountKeypad`, descrição e origem visíveis de cara
+      (lembra a última origem); categoria, data, parcelas (cartão) e observações em "Mais
+      opções". Data futura vira previsto.
+- [x] Aba Lançamentos: `MonthSwitcher` (setas, deslize, toque volta ao mês atual), busca
+      sem acentos, filtro por tipo, lista por dia (FlashList), deslizar para editar ou excluir
+      com "Desfazer".
+- [x] Previstos vencidos: aviso no topo da lista para confirmar.
+- [x] Editar e excluir lançamento.
+- [x] Trocar o fake pelo real no registro (integração).
+- [ ] Medir os 10 lançamentos cronometrados (meta < 5 s) no teste de uso.
 
 ### C · Cartões e faturas
 
-- Regras 3 a 6 (fatura, parcelas, limite, pagamento) e estorno, com testes de datas-limite,
-  parcelas com resto e pagamento parcial.
-- CRUD de cartões, tela da fatura, pagar fatura (total ou parcial).
-- `CreditCardVisual` e `HomeCardsSection` (fatura atual) para a Início.
-- Campos de compra no cartão (parcelas) que a B encaixa no sheet.
+- [x] Regras 3 a 6 e estorno com testes (`src/domain/cards/rules.ts`): totais da fatura,
+      situação (aberta, fechada, parcial, paga, recalculada na leitura), limite disponível
+      com parcelas futuras, parcelas com resto na 1ª, estorno na fatura certa.
+- [x] Serviço real `createCardsService(db)` com suíte de contrato (fake e real), incluindo
+      "compra em 3x aparece em 3 faturas" e "pagar fatura reduz o saldo".
+- [x] Telas: aba Cartões (`CreditCardVisual`), novo/editar cartão, detalhe com faturas
+      atual, próximas e anteriores, fatura com compras e estorno, pagar fatura (total ou
+      parcial).
+- [x] `HomeCardsSection` na Início.
+- [x] Campo de parcelas no novo lançamento (entregue junto com a B).
+- [ ] Estorno parcial pela interface (o serviço já aceita; a tela estorna o valor total).
+- [x] Trocar o fake pelo real no registro (integração).
 
 ### D · Categorias e visão geral
 
-- CRUD de categorias e `CategoryPicker` (grade com busca); `MonthSwitcher`.
-- `HomeMonthSummary` (resumo do mês e rosca por categoria) e montagem da Início e da Mais.
-- Onboarding, exportar CSV e JSON, modo ocultar valores.
-- Bloqueio por biometria ou PIN (`expo-local-authentication`), com bloqueio automático em
-  segundo plano e conteúdo oculto na tela de apps recentes.
+- [x] Serviço real `createCategoriesService(db)` com suíte de contrato: nome repetido no
+      mesmo tipo recusado, excluir em uso exige mover os lançamentos, "Desfazer" quando não
+      há lançamentos (`restoreCategory` e `countUsage` entraram no contrato).
+- [x] `CategoryPicker` (grade com ícones e busca), usado no novo lançamento e na edição.
+- [x] Telas de categorias: lista por tipo com uso, nova/editar com ícone e cor, excluir
+      movendo os lançamentos.
+- [x] `HomeMonthSummary`: entradas, saídas, resultado, previsto e rosca por categoria
+      (SVG; top 4 + "Outros").
+- [x] Configurações: tema, ocultar valores, bloqueio por biometria ou PIN do aparelho.
+- [x] Bloqueio ao abrir e ao voltar de segundo plano; conteúdo coberto fora de primeiro
+      plano.
+- [x] Exportar CSV (pt-BR, `;`, BOM) e JSON pelo compartilhamento do sistema
+      (`listAllTransactions` entrou no contrato).
+- [x] Boas-vindas em 3 passos, mostradas uma vez.
+- [ ] `FLAG_SECURE` para a tela de apps recentes não mostrar nada (precisa de
+      `expo-screen-capture`, módulo nativo: exige recompilar).
+- [ ] Exportar como arquivo (hoje vai como texto no compartilhamento; arquivo precisa de
+      `expo-sharing`, módulo nativo).
 
 ## Checklist de polimento (cada trilha nas suas telas)
 
@@ -90,7 +118,7 @@ await accounts.createTransfer({ ... }); // todas as consultas abertas recarregam
 
 ## Integração
 
-- Trocar todos os fakes pelos serviços reais.
+- [x] Trocar todos os fakes pelos serviços reais (`src/services/app.ts`).
 - Testes ponta a ponta com Maestro: lançar despesa; compra em 3x aparece em 3 faturas;
   pagar fatura reduz o saldo.
 - **Teste de uso:** cada membro lança os próprios gastos reais por um período combinado.

@@ -1,13 +1,4 @@
-import { RoutePlaceholder } from '@/features/shared/RoutePlaceholder';
-import { strings } from '@/lib/strings';
+import { CardFormScreen } from '@/features/cards/CardFormScreen';
 
 // Trilha C da Fase 1.
-export default function Route() {
-  return (
-    <RoutePlaceholder
-      title={strings.screens.newCard.title}
-      description={strings.screens.newCard.placeholder}
-      track="C"
-    />
-  );
-}
+export default CardFormScreen;

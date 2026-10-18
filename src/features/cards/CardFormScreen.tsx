@@ -1,0 +1,180 @@
+import { zodResolver } from '@hookform/resolvers/zod';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { z } from 'zod';
+
+import { errorMessage } from '@/features/shared/errorMessage';
+import { strings } from '@/lib/strings';
+import { useServiceQuery, useServices } from '@/services';
+import { Button } from '@/ui/components/Button';
+import { ChipSelect } from '@/ui/components/ChipSelect';
+import { ColorPicker } from '@/ui/components/ColorPicker';
+import { MoneyField } from '@/ui/components/MoneyField';
+import { Screen } from '@/ui/components/Screen';
+import { SkeletonRows } from '@/ui/components/Skeleton';
+import { TextField } from '@/ui/components/TextField';
+import { showToast } from '@/ui/components/Toast';
+import { accentPalette } from '@/ui/tokens';
+
+const required = strings.fields.required;
+const day = z.coerce
+  .number({ error: strings.cards.form.invalidDay })
+  .int(strings.cards.form.invalidDay)
+  .min(1, strings.cards.form.invalidDay)
+  .max(31, strings.cards.form.invalidDay);
+
+const schema = z.object({
+  name: z.string().trim().min(1, required),
+  institution: z.string().trim().min(1, required),
+  color: z.string(),
+  limitCents: z.number({ error: strings.fields.invalidAmount }).int().min(0),
+  closingDay: day,
+  dueDay: day,
+  paymentAccountId: z.string().nullable(),
+});
+
+type FormInput = z.input<typeof schema>;
+type FormValues = z.output<typeof schema>;
+
+/** Criar cartão (`/cartao/novo`) ou editar (`/cartao/novo?id=…`). */
+export function CardFormScreen() {
+  const { id } = useLocalSearchParams<{ id?: string }>();
+  const { cards, accounts } = useServices();
+  const accountsQuery = useServiceQuery(() => accounts.listAccountsWithBalance(), []);
+  const [loaded, setLoaded] = useState(!id);
+  const form = useForm<FormInput, unknown, FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      name: '',
+      institution: '',
+      color: accentPalette[1],
+      limitCents: 0,
+      closingDay: '',
+      dueDay: '',
+      paymentAccountId: null,
+    },
+  });
+  const { control, handleSubmit, formState } = form;
+
+  useEffect(() => {
+    if (!id) return;
+    void cards.getCard(id).then((card) => {
+      if (card) form.reset(card);
+      setLoaded(true);
+    });
+  }, [id, cards, form]);
+
+  const submit = handleSubmit(async (values) => {
+    try {
+      if (id) await cards.updateCard(id, values);
+      else await cards.createCard(values);
+      router.back();
+    } catch (e) {
+      showToast(errorMessage(e));
+    }
+  });
+
+  return (
+    <>
+      <Stack.Screen
+        options={{ title: id ? strings.cards.form.editTitle : strings.screens.newCard.title }}
+      />
+      <Screen edges={['bottom']}>
+        {!loaded ? (
+          <SkeletonRows />
+        ) : (
+          <>
+            <Controller
+              control={control}
+              name="name"
+              render={({ field, fieldState }) => (
+                <TextField
+                  label={strings.cards.form.name}
+                  placeholder={strings.cards.form.namePlaceholder}
+                  value={field.value}
+                  onChangeText={field.onChange}
+                  onBlur={field.onBlur}
+                  error={fieldState.error?.message}
+                  autoFocus={!id}
+                />
+              )}
+            />
+            <Controller
+              control={control}
+              name="institution"
+              render={({ field, fieldState }) => (
+                <TextField
+                  label={strings.cards.form.institution}
+                  placeholder={strings.accounts.form.institutionPlaceholder}
+                  value={field.value}
+                  onChangeText={field.onChange}
+                  onBlur={field.onBlur}
+                  error={fieldState.error?.message}
+                />
+              )}
+            />
+            <Controller
+              control={control}
+              name="limitCents"
+              render={({ field, fieldState }) => (
+                <MoneyField
+                  label={strings.cards.form.limit}
+                  value={field.value}
+                  onChange={(cents) => field.onChange(cents ?? Number.NaN)}
+                  error={fieldState.error?.message}
+                />
+              )}
+            />
+            {(['closingDay', 'dueDay'] as const).map((name) => (
+              <Controller
+                key={name}
+                control={control}
+                name={name}
+                render={({ field, fieldState }) => (
+                  <TextField
+                    label={strings.cards.form[name]}
+                    hint={strings.cards.form.dayHint}
+                    keyboardType="number-pad"
+                    maxLength={2}
+                    value={field.value === undefined ? '' : String(field.value)}
+                    onChangeText={field.onChange}
+                    onBlur={field.onBlur}
+                    error={fieldState.error?.message}
+                  />
+                )}
+              />
+            ))}
+            <Controller
+              control={control}
+              name="paymentAccountId"
+              render={({ field }) => (
+                <ChipSelect
+                  label={strings.cards.form.paymentAccount}
+                  options={(accountsQuery.data ?? []).map((a) => ({
+                    value: a.id,
+                    label: a.name,
+                    color: a.color,
+                  }))}
+                  value={field.value}
+                  onChange={field.onChange}
+                />
+              )}
+            />
+            <Controller
+              control={control}
+              name="color"
+              render={({ field }) => <ColorPicker value={field.value} onChange={field.onChange} />}
+            />
+            <Button
+              label={id ? strings.common.save : strings.cards.form.create}
+              block
+              loading={formState.isSubmitting}
+              onPress={() => void submit()}
+            />
+          </>
+        )}
+      </Screen>
+    </>
+  );
+}

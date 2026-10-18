@@ -1,4 +1,4 @@
-import { and, asc, between, desc, eq, isNull } from 'drizzle-orm';
+import { and, asc, between, desc, eq, inArray, isNull } from 'drizzle-orm';
 
 import type { ISODate, Transaction } from '@/domain/types';
 import { nowTimestamp } from '@/lib/id';
@@ -45,12 +45,13 @@ export async function getTransaction(
 }
 
 /**
- * Grava lançamentos já montados pelo domínio. Regras (parcelas, pernas de transferência,
- * fatura) são responsabilidade de quem chama.
+ * Grava lançamentos já montados pelo domínio, num único INSERT (tudo ou nada). Regras
+ * (parcelas, pernas de transferência, fatura) são responsabilidade de quem chama. Um `id`
+ * pode vir pronto quando as linhas se referenciam (ex.: `transferPeerId`).
  */
 export async function insertTransactions(
   db: AppDatabase,
-  inputs: readonly TransactionInput[],
+  inputs: readonly (TransactionInput & { id?: string })[],
 ): Promise<Transaction[]> {
   if (inputs.length === 0) return [];
   const rows: Transaction[] = inputs.map((input) => ({ ...newEntity(), ...input }));
@@ -76,4 +77,18 @@ export async function setTransactionDeleted(db: AppDatabase, id: string, deleted
     .update(transactions)
     .set({ deletedAt: deleted ? now : null, updatedAt: now })
     .where(eq(transactions.id, id));
+}
+
+/** Exclusão lógica (ou desfazer) de vários lançamentos de uma vez. */
+export async function setTransactionsDeleted(
+  db: AppDatabase,
+  ids: readonly string[],
+  deleted: boolean,
+) {
+  if (ids.length === 0) return;
+  const now = nowTimestamp();
+  await db
+    .update(transactions)
+    .set({ deletedAt: deleted ? now : null, updatedAt: now })
+    .where(inArray(transactions.id, [...ids]));
 }

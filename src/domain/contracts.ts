@@ -64,6 +64,8 @@ export interface AccountsService {
   setAccountArchived(id: Id, archived: boolean): Promise<void>;
   /** Só exclui conta sem lançamentos; com lançamentos, lança erro (deve ser arquivada). */
   deleteAccount(id: Id): Promise<void>;
+  /** Desfaz `deleteAccount`. */
+  restoreAccount(id: Id): Promise<void>;
   /** Regra 7: duas pernas ligadas por `transferPeerId` (`out` na origem, `in` no destino). */
   createTransfer(input: NewTransfer): Promise<[outLeg: Transaction, inLeg: Transaction]>;
   /**
@@ -113,10 +115,13 @@ export interface TransactionsService {
   listDueScheduled(today: ISODate): Promise<Transaction[]>;
   /** Marca um lançamento previsto como efetivado (`posted`). */
   confirmScheduled(id: Id): Promise<void>;
+  /** Todos os lançamentos não excluídos, do mais antigo ao mais recente (exportação). */
+  listAllTransactions(): Promise<Transaction[]>;
 }
 
 // ─── Trilha C · Cartões e faturas ────────────────────────────────────────────
 
+/** Fatura com totais; `status` é recalculado na leitura (regra 6). */
 export type InvoiceWithTotals = Invoice & {
   /** Compras − estornos da fatura. */
   totalCents: Cents;
@@ -143,6 +148,8 @@ export interface CardsService {
   setCardArchived(id: Id, archived: boolean): Promise<void>;
   /** Só exclui cartão sem lançamentos; com lançamentos, lança erro (deve ser arquivado). */
   deleteCard(id: Id): Promise<void>;
+  /** Desfaz `deleteCard`. */
+  restoreCard(id: Id): Promise<void>;
   /** Regra 3: fatura em que cai uma compra nessa data (cria se ainda não existir). */
   resolveInvoice(cardId: Id, purchaseDate: ISODate): Promise<Invoice>;
   /** Regra 4: N transações ligadas por `installmentGroupId`, uma em cada fatura seguinte. */
@@ -166,6 +173,10 @@ export interface CategoriesService {
   updateCategory(id: Id, patch: Partial<CategoryInput>): Promise<void>;
   /** Categoria com lançamentos exige `moveTo`: os lançamentos passam para ela antes. */
   deleteCategory(id: Id, moveTo?: Id): Promise<void>;
+  /** Desfaz `deleteCategory` (os lançamentos movidos continuam na nova categoria). */
+  restoreCategory(id: Id): Promise<void>;
+  /** Quantos lançamentos não excluídos usam a categoria. */
+  countUsage(id: Id): Promise<number>;
 }
 
 export type Services = {

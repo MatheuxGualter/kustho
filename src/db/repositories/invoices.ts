@@ -35,3 +35,11 @@ export async function getOrCreateInvoice(
 export async function setInvoiceStatus(db: AppDatabase, id: string, status: InvoiceStatus) {
   await db.update(invoices).set({ status, updatedAt: nowTimestamp() }).where(eq(invoices.id, id));
 }
+
+export async function getInvoice(db: AppDatabase, id: string): Promise<Invoice | undefined> {
+  const [row] = await db
+    .select()
+    .from(invoices)
+    .where(and(eq(invoices.id, id), isNull(invoices.deletedAt)));
+  return row;
+}
