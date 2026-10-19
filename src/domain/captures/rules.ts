@@ -39,6 +39,18 @@ export function suggestOrigin(
     : { accountId: null, cardId: null };
 }
 
+/** Campos da Fase 3 numa captura nova, antes de matcher, regras e confirmação mexerem. */
+export const captureExtrasDefaults = {
+  channel: 'notification',
+  suggestedCategoryId: null,
+  installments: null,
+  matchTransactionId: null,
+  matchScore: 0,
+  duplicateOfId: null,
+  editedOnConfirm: false,
+  autoConfirmed: false,
+} as const satisfies Partial<Capture>;
+
 /** Campos da captura a partir da notificação crua e do que o parser entendeu. */
 export function buildCapture(
   raw: RawNotification,
@@ -65,6 +77,8 @@ export function buildCapture(
     confidence: parsed ? Math.min(1, Math.max(0, parsed.confidence)) : 0,
     status: 'pending',
     transactionId: null,
+    ...captureExtrasDefaults,
+    installments: parsed?.installments && parsed.installments > 1 ? parsed.installments : null,
   };
 }
 

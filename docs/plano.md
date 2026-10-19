@@ -2,8 +2,8 @@
 
 Oct 17, 2026 · @Matheux
 
-> Este é o plano (visão, regras e fases). O andamento fica em [`fase-1.md`](fase-1.md) e
-> [`fase-2.md`](fase-2.md); o índice da documentação, em [`README.md`](README.md).
+> Este é o plano (visão, regras e fases). O andamento fica em [`fase-1.md`](fase-1.md),
+> [`fase-2.md`](fase-2.md) e [`fase-3.md`](fase-3.md); o índice da documentação, em [`README.md`](README.md).
 
 ## Visão do produto
 
@@ -383,6 +383,7 @@ decide(capture: Capture): { action: 'link' | 'create'; txId?: string; score: num
 | B | Regras aprendidas | Tabela `merchant_rules` (estabelecimento → categoria e origem), alimentada a cada confirmação; sugestões chegam pré-preenchidas |
 | C | Casos especiais | Duplicata push + SMS em até 5 minutos; estorno vinculado à compra original; parcelado capturado gera as parcelas pelas regras da Fase 1 |
 | D | Experiência | Sugestão "vincular" em Pendentes; confirmação em lote; nível automático configurável por fonte, com histórico de precisão; resumo do que entrou automaticamente |
+| E | Comprovantes compartilhados (decidido em out/2026) | Kustho no menu "Compartilhar" do Android; o comprovante de um Pix (texto, imagem ou PDF) é lido no aparelho (OCR local) e vira sugestão em Pendentes. Cobre os bancos que não notificam o Pix enviado |
 
 **Integração e testes**
 
