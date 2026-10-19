@@ -38,12 +38,20 @@ quem fechar um item marca o `[x]` no mesmo PR. Escopo: "Fase 3" em [`plano.md`](
 
 ### A · Matcher
 
-- [ ] Candidatos: lançamentos não conciliados com o mesmo valor, na mesma conta ou cartão,
-      até 2 dias de distância.
-- [ ] Pontuação 0–1: valor igual obrigatório; mesma origem soma; dias de distância
-      subtraem; descrição parecida com o estabelecimento soma.
-- [ ] Decisão: acima do limiar, sugerir "vincular"; abaixo, lançamento novo.
-- [ ] Testes por cenário: lançamento manual já existente; dois gastos iguais no mesmo dia.
+- [x] Candidatos: lançamentos não conciliados com o mesmo valor e tipo, na mesma conta ou
+      cartão (quando a captura tem origem), até 2 dias de distância
+      (`src/domain/captures/matcher.ts`).
+- [x] Pontuação 0–1: base 0,5; mesma origem +0,2; descrição parecida até +0,3; −0,1 por
+      dia de distância. Limiar para vincular: 0,7.
+- [x] Decisão: acima do limiar, `matchTransactionId` na captura; empate fica com o
+      lançamento mais antigo, para cada captura pegar um.
+- [x] Testes por cenário: lançamento manual já existente; dois gastos iguais no mesmo dia;
+      candidato fraco vira "criar".
+- [x] `linkCapture` no `CapturesService` (fake e real, suíte de contrato): confirma ligando
+      ao lançamento existente, sem criar outro, e aprende a origem. Lançamento já ligado:
+      `already_linked`.
+- [x] Pendentes mostra "Parece ser…" com **Vincular** e "É outro, criar"; "Confirmar N
+      prontas" vincula as que têm sugestão.
 
 ### B · Regras aprendidas
 

@@ -4,7 +4,14 @@
  */
 import type { RawNotification } from '../../../modules/notification-capture/src/NotificationCapture.types';
 import type { CaptureConfirmation, NotificationParser } from '@/domain/contracts';
-import type { Capture, CaptureOriginRule, Entity, Id, ParsedNotification } from '@/domain/types';
+import type {
+  Capture,
+  CaptureOriginRule,
+  Entity,
+  Id,
+  ParsedNotification,
+  Transaction,
+} from '@/domain/types';
 
 export type ParseResult = { parser: string; parsed: ParsedNotification };
 
@@ -120,5 +127,18 @@ export function learnedRule(
     cardLastDigits: capture.cardLastDigits,
     accountId: confirmation.cardId ? null : (confirmation.accountId ?? null),
     cardId: confirmation.cardId ?? null,
+  };
+}
+
+/** Regra de origem a lembrar quando a captura foi ligada a um lançamento que já existia. */
+export function linkedRule(
+  capture: Capture,
+  tx: Pick<Transaction, 'accountId' | 'cardId'>,
+): Omit<CaptureOriginRule, keyof Entity> {
+  return {
+    packageName: capture.packageName,
+    cardLastDigits: capture.cardLastDigits,
+    accountId: tx.cardId ? null : tx.accountId,
+    cardId: tx.cardId,
   };
 }

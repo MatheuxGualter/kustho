@@ -60,3 +60,21 @@ it('descartar tira da caixa sem criar lançamento', async () => {
   expect(store.transactions).toHaveLength(before);
   expect(store.captures.filter((c) => c.status === 'discarded')).toHaveLength(1);
 });
+
+it('captura igual a um lançamento existente sugere vincular, sem criar outro', async () => {
+  const store = createFakeStore();
+  const pix = store.captures.find((c) => c.merchant === 'FULANO DE TAL')!;
+  const existing = store.transactions.find((t) => t.kind === 'income' && t.deletedAt === null)!;
+  pix.matchTransactionId = existing.id;
+  pix.matchScore = 0.9;
+  await renderWithTheme(
+    <ServicesProvider services={createFakeServices(store)}>
+      <PendingScreen />
+    </ServicesProvider>,
+  );
+  expect(await screen.findByText('Parece ser um lançamento que você já registrou:')).toBeTruthy();
+  const before = store.transactions.length;
+  await fireEvent.press(screen.getByRole('button', { name: 'Vincular' }));
+  expect(store.transactions).toHaveLength(before);
+  expect(pix).toMatchObject({ status: 'confirmed', transactionId: existing.id });
+});

@@ -8,7 +8,8 @@ import { createCapturesService } from '@/domain/captures/service';
 import { createCardsService } from '@/domain/cards/service';
 import { createCategoriesService } from '@/domain/categories/service';
 import { createTransactionsService } from '@/domain/transactions/service';
-import type { Services } from '@/domain/contracts';
+import type { NotificationParser, Services } from '@/domain/contracts';
+import { toISODate } from '@/lib/dates';
 import type { DevSeed } from '@/db/devSeed';
 import { runDevSeed } from '@/db/devSeed';
 import { categories } from '@/db/schema';
@@ -31,6 +32,27 @@ export type ContractEnv = {
   notifications: FakeNotificationCapture;
 };
 
+/**
+ * Parser estreito dos testes de contrato: só entende "Compra no débito de R$ X em LOJA.".
+ * O resto entra como não interpretado, como antes.
+ */
+export const testParser: NotificationParser = {
+  id: 'contract-test',
+  packages: [NUBANK_PACKAGE],
+  parse(notification) {
+    const match = /^Compra no débito de R\$ (\d+),(\d{2}) em (.+)\.$/.exec(notification.text ?? '');
+    if (!match) return null;
+    return {
+      amountCents: Number(match[1]) * 100 + Number(match[2]),
+      kind: 'expense',
+      merchant: match[3],
+      date: toISODate(new Date(notification.postedAtMs)),
+      cardLastDigits: null,
+      confidence: 0.8,
+    };
+  },
+};
+
 export type EnvFactory = { name: string; create: () => Promise<ContractEnv> };
 
 export const fakeEnv: EnvFactory = {
@@ -40,7 +62,7 @@ export const fakeEnv: EnvFactory = {
     const notifications = createFakeNotificationCapture({ allowedPackages: [NUBANK_PACKAGE] });
     return {
       notifications,
-      services: createFakeServices(store, notifications),
+      services: createFakeServices(store, notifications, [testParser]),
       seed: {
         accounts: store.accounts,
         creditCards: store.cards,
@@ -68,7 +90,12 @@ export const realEnv: EnvFactory = {
         transactions,
         cards,
         categories: createCategoriesService(db),
-        captures: createCapturesService(db, { transactions, cards, notifications, parsers: [] }),
+        captures: createCapturesService(db, {
+          transactions,
+          cards,
+          notifications,
+          parsers: [testParser],
+        }),
       },
       seed,
     };

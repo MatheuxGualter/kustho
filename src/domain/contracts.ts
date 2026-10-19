@@ -258,6 +258,12 @@ export interface CapturesService {
   confirmCapture(id: Id, input?: Partial<CaptureConfirmation>): Promise<Transaction[]>;
   /** Confirma as completas e devolve as que precisaram ficar (incompletas). */
   confirmMany(ids: Id[]): Promise<{ confirmed: Id[]; skipped: Id[] }>;
+  /**
+   * Fase 3 (trilha A): a captura é um lançamento que já existe. Marca como confirmada
+   * apontando para ele, sem criar outro; aprende a origem. Lançamento já ligado a outra
+   * captura: `already_linked`.
+   */
+  linkCapture(id: Id, transactionId: Id): Promise<Transaction>;
   discardCapture(id: Id): Promise<void>;
   /** Desfaz `discardCapture` (volta a pendente). */
   restoreCapture(id: Id): Promise<void>;

@@ -4,9 +4,11 @@
  * sobre os fakes (testes) e sobre os serviços reais (app, até a trilha D entregar o real).
  */
 import type { NotificationCaptureApi } from '../../../modules/notification-capture/src/NotificationCapture.types';
+import { decideMatch, matchFields } from '@/domain/captures/matcher';
 import {
   buildCapture,
   learnedRule,
+  linkedRule,
   parseNotification,
   resolveConfirmation,
 } from '@/domain/captures/rules';
@@ -61,8 +63,20 @@ export function createFakeCapturesService(
     else store.originRules.push({ ...entity(), ...rule });
   };
 
+  /** Lançamentos já ligados (confirmados) ou sugeridos (pendentes) a uma captura. */
+  const linkedIds = () => {
+    const ids = new Set<string>();
+    for (const c of store.captures) {
+      if (c.deletedAt !== null) continue;
+      if (c.transactionId) ids.add(c.transactionId);
+      if (c.status === 'pending' && c.matchTransactionId) ids.add(c.matchTransactionId);
+    }
+    return ids;
+  };
+
   const service: CapturesService = {
     async ingest() {
+      const transactions = await deps.transactions.listAllTransactions();
       let created = 0;
       for (;;) {
         const batch = await deps.notifications.getPending(INGEST_BATCH);
@@ -70,7 +84,8 @@ export function createFakeCapturesService(
         for (const raw of batch) {
           if (store.captures.some((c) => c.rawId === raw.id)) continue;
           const fields = buildCapture(raw, parseNotification(parsers, raw), store.originRules);
-          store.captures.push({ ...entity(), ...fields });
+          const match = matchFields(decideMatch(fields, transactions, linkedIds()));
+          store.captures.push({ ...entity(), ...fields, ...match });
           created++;
         }
         await deps.notifications.markProcessed(batch.map((raw) => raw.id));
@@ -154,6 +169,26 @@ export function createFakeCapturesService(
         }
       }
       return { confirmed, skipped };
+    },
+
+    async linkCapture(id, transactionId) {
+      const capture = live(id);
+      if (capture.status !== 'pending') throw new DomainError('not_found');
+      const tx = await deps.transactions.getTransaction(transactionId);
+      if (!tx) throw new DomainError('not_found');
+      if (linkedIds().has(tx.id) && capture.matchTransactionId !== tx.id) {
+        throw new DomainError('already_linked');
+      }
+      Object.assign(capture, {
+        status: 'confirmed',
+        transactionId: tx.id,
+        matchTransactionId: tx.id,
+        editedOnConfirm: capture.matchTransactionId !== tx.id,
+        updatedAt: nowTimestamp(),
+      });
+      remember(linkedRule(capture, tx));
+      notifyDataChanged();
+      return tx;
     },
 
     async discardCapture(id) {

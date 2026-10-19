@@ -56,7 +56,18 @@ export async function getCapture(db: AppDatabase, id: string): Promise<Capture |
 export async function updateCapture(
   db: AppDatabase,
   id: string,
-  patch: Partial<Pick<Capture, 'status' | 'transactionId'>>,
+  patch: Partial<
+    Pick<
+      Capture,
+      | 'status'
+      | 'transactionId'
+      | 'matchTransactionId'
+      | 'matchScore'
+      | 'editedOnConfirm'
+      | 'autoConfirmed'
+      | 'duplicateOfId'
+    >
+  >,
 ): Promise<void> {
   await db
     .update(captures)
@@ -90,4 +101,25 @@ export async function upsertOriginRule(db: AppDatabase, rule: OriginRuleFields):
   } else {
     await db.insert(captureOriginRules).values({ ...newEntity(), ...rule });
   }
+}
+
+/**
+ * Lançamentos já ocupados por uma captura: os confirmados (ligados) e os sugeridos para
+ * vincular em capturas pendentes. O matcher não os oferece de novo.
+ */
+export async function listLinkedTransactionIds(db: AppDatabase): Promise<Set<string>> {
+  const rows = await db
+    .select({
+      transactionId: captures.transactionId,
+      matchTransactionId: captures.matchTransactionId,
+      status: captures.status,
+    })
+    .from(captures)
+    .where(isNull(captures.deletedAt));
+  const ids = new Set<string>();
+  for (const r of rows) {
+    if (r.transactionId) ids.add(r.transactionId);
+    if (r.status === 'pending' && r.matchTransactionId) ids.add(r.matchTransactionId);
+  }
+  return ids;
 }
