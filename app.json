@@ -50,7 +50,8 @@
             "enabled": false
           }
         }
-      ]
+      ],
+      "./plugins/withSingleMainActivity"
     ],
     "experiments": {
       "typedRoutes": true,
