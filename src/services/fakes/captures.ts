@@ -6,6 +6,11 @@
 import type { NotificationCaptureApi } from '../../../modules/notification-capture/src/NotificationCapture.types';
 import { decideMatch, matchFields } from '@/domain/captures/matcher';
 import {
+  applyMerchantRule,
+  confirmationEdited,
+  learnedMerchantRule,
+} from '@/domain/captures/merchantRules';
+import {
   buildCapture,
   learnedRule,
   linkedRule,
@@ -21,15 +26,23 @@ import type {
 } from '@/domain/contracts';
 import { DomainError } from '@/domain/errors';
 import { buildReceiptCapture } from '@/domain/receipts/capture';
-import type { Capture, CaptureOriginRule, Transaction } from '@/domain/types';
+import type { Capture, CaptureOriginRule, MerchantRule, Transaction } from '@/domain/types';
 import { nowTimestamp } from '@/lib/id';
 
 import { notifyDataChanged } from '../dataVersion';
 import { entity } from './common';
 
-export type CaptureStore = { captures: Capture[]; originRules: CaptureOriginRule[] };
+export type CaptureStore = {
+  captures: Capture[];
+  originRules: CaptureOriginRule[];
+  merchantRules: MerchantRule[];
+};
 
-export const createCaptureStore = (): CaptureStore => ({ captures: [], originRules: [] });
+export const createCaptureStore = (): CaptureStore => ({
+  captures: [],
+  originRules: [],
+  merchantRules: [],
+});
 
 /** Quantas notificações cruas o `ingest` lê por vez. */
 const INGEST_BATCH = 100;
@@ -67,6 +80,16 @@ export function createFakeCapturesService(
     else store.originRules.push({ ...entity(), ...rule });
   };
 
+  const learnMerchant = (rule: ReturnType<typeof learnedMerchantRule>) => {
+    if (!rule) return;
+    const existing = store.merchantRules.find((r) => r.merchantKey === rule.merchantKey);
+    if (existing) {
+      Object.assign(existing, rule, { hits: existing.hits + 1, updatedAt: nowTimestamp() });
+    } else {
+      store.merchantRules.push({ ...entity(), ...rule, hits: 1 });
+    }
+  };
+
   /** Lançamentos já ligados (confirmados) ou sugeridos (pendentes) a uma captura. */
   const linkedIds = () => {
     const ids = new Set<string>();
@@ -87,7 +110,10 @@ export function createFakeCapturesService(
         if (batch.length === 0) break;
         for (const raw of batch) {
           if (store.captures.some((c) => c.rawId === raw.id)) continue;
-          const fields = buildCapture(raw, parseNotification(parsers, raw), store.originRules);
+          const fields = applyMerchantRule(
+            buildCapture(raw, parseNotification(parsers, raw), store.originRules),
+            store.merchantRules,
+          );
           const match = matchFields(decideMatch(fields, transactions, linkedIds()));
           store.captures.push({ ...entity(), ...fields, ...match });
           created++;
@@ -101,8 +127,9 @@ export function createFakeCapturesService(
 
     async ingestReceipt({ text, receivedAtMs }) {
       const accounts = deps.accounts ? await deps.accounts.listAccountsWithBalance() : [];
-      const fields = buildReceiptCapture(text, receivedAtMs, accounts);
-      if (!fields) throw new DomainError('receipt_unrecognized');
+      const built = buildReceiptCapture(text, receivedAtMs, accounts);
+      if (!built) throw new DomainError('receipt_unrecognized');
+      const fields = applyMerchantRule(built, store.merchantRules);
       const existing = store.captures.find((c) => c.rawId === fields.rawId && c.deletedAt === null);
       if (existing) return existing;
       const transactions = await deps.transactions.listAllTransactions();
@@ -170,9 +197,11 @@ export function createFakeCapturesService(
       Object.assign(capture, {
         status: 'confirmed',
         transactionId: created[0].id,
+        editedOnConfirm: confirmationEdited(capture, input),
         updatedAt: nowTimestamp(),
       });
       remember(learnedRule(capture, confirmation));
+      learnMerchant(learnedMerchantRule(capture, confirmation));
       notifyDataChanged();
       return created;
     },
@@ -208,6 +237,7 @@ export function createFakeCapturesService(
         updatedAt: nowTimestamp(),
       });
       remember(linkedRule(capture, tx));
+      learnMerchant(learnedMerchantRule(capture, tx));
       notifyDataChanged();
       return tx;
     },

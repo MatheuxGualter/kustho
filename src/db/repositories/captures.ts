@@ -1,10 +1,10 @@
 import { and, desc, eq, isNull, sql } from 'drizzle-orm';
 
-import type { Capture, CaptureOriginRule, CaptureStatus } from '@/domain/types';
+import type { Capture, CaptureOriginRule, CaptureStatus, MerchantRule } from '@/domain/types';
 import { nowTimestamp } from '@/lib/id';
 
 import type { AppDatabase } from '../database';
-import { captureOriginRules, captures } from '../schema';
+import { captureOriginRules, captures, merchantRules } from '../schema';
 import { type EntityKeys, newEntity } from './common';
 
 export type CaptureFields = Omit<Capture, EntityKeys>;
@@ -130,4 +130,26 @@ export async function listLinkedTransactionIds(db: AppDatabase): Promise<Set<str
     if (r.status === 'pending' && r.matchTransactionId) ids.add(r.matchTransactionId);
   }
   return ids;
+}
+
+export type MerchantRuleFields = Omit<MerchantRule, EntityKeys | 'hits'>;
+
+export async function listMerchantRules(db: AppDatabase): Promise<MerchantRule[]> {
+  return db.select().from(merchantRules).where(isNull(merchantRules.deletedAt));
+}
+
+/** Cria a regra do estabelecimento ou atualiza a existente, somando uma confirmação. */
+export async function upsertMerchantRule(db: AppDatabase, rule: MerchantRuleFields): Promise<void> {
+  const [existing] = await db
+    .select()
+    .from(merchantRules)
+    .where(eq(merchantRules.merchantKey, rule.merchantKey));
+  if (existing) {
+    await db
+      .update(merchantRules)
+      .set({ ...rule, hits: existing.hits + 1, deletedAt: null, updatedAt: nowTimestamp() })
+      .where(eq(merchantRules.id, existing.id));
+  } else {
+    await db.insert(merchantRules).values({ ...newEntity(), ...rule, hits: 1 });
+  }
 }

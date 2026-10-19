@@ -169,6 +169,42 @@ describe.each(environments)('CapturesService ($name)', ({ create }) => {
     expect(isDomainError(error) && error.code).toBe('receipt_unrecognized');
   });
 
+  it('estabelecimento aprendido: a próxima captura chega com categoria e conta', async () => {
+    const { services, notifications, seed } = await create();
+    const account = seed.accounts[0];
+    const [category] = await services.categories.listCategories('expense');
+    const post = (key: string) =>
+      notifications.post({
+        packageName: NUBANK_PACKAGE,
+        title: 'Compra no débito',
+        text: 'Compra no débito de R$ 12,34 em CAFETERIA EXEMPLO LTDA.',
+        key,
+        postedAtMs: AT_TODAY,
+      });
+    post('a');
+    await services.captures.ingest();
+    const first = (await services.captures.listPending()).find((c) => c.text?.includes('12,34'))!;
+    expect(first.suggestedCategoryId).toBeNull();
+    await services.captures.confirmCapture(first.id, {
+      categoryId: category.id,
+      accountId: account.id,
+    });
+    expect((await services.captures.getCapture(first.id))?.editedOnConfirm).toBe(true);
+
+    post('b');
+    await services.captures.ingest();
+    const next = (await services.captures.listPending()).find((c) => c.text?.includes('12,34'))!;
+    expect(next).toMatchObject({
+      suggestedCategoryId: category.id,
+      suggestedAccountId: account.id,
+    });
+
+    // Confirmar a sugestão como veio não conta como edição.
+    const [tx] = await services.captures.confirmCapture(next.id);
+    expect(tx.categoryId).toBe(category.id);
+    expect((await services.captures.getCapture(next.id))?.editedOnConfirm).toBe(false);
+  });
+
   it('compra no cartão confirmada vira parcelas na fatura', async () => {
     const { services, notifications, seed } = await create();
     const card = seed.creditCards[0];

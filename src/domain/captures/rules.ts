@@ -107,11 +107,14 @@ export function resolveConfirmation(
     amountCents,
     date,
     description: input.description ?? capture.merchant ?? capture.title ?? capture.packageName,
-    categoryId: input.categoryId ?? null,
+    // `null` informado vale (o usuário tirou a categoria); ausente, vale a sugestão.
+    categoryId: input.categoryId !== undefined ? input.categoryId : capture.suggestedCategoryId,
   };
   if (kind === 'card_purchase') {
     const cardId = input.cardId ?? capture.suggestedCardId;
-    return cardId ? { ...base, cardId, installments: input.installments ?? 1 } : null;
+    return cardId
+      ? { ...base, cardId, installments: input.installments ?? capture.installments ?? 1 }
+      : null;
   }
   const accountId = input.accountId ?? capture.suggestedAccountId;
   return accountId ? { ...base, accountId } : null;
