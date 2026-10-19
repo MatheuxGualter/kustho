@@ -83,6 +83,30 @@ describe('findDuplicate', () => {
     ).toBeNull();
   });
 
+  describe('comprovante contra comprovante', () => {
+    const receipt = (fields: Partial<Capture>) =>
+      capture({ packageName: 'kustho.comprovante', channel: 'receipt', ...fields });
+
+    it('o mesmo Pix compartilhado de novo (imagem e PDF) é duplicata', () => {
+      const first = receipt({ id: 'first', rawId: 'receipt:0a1b2c3d', postedAt: at(0) });
+      const again = receipt({ rawId: 'receipt:4e5f6a7b', postedAt: at(4) });
+      expect(findDuplicate(again, [first])?.id).toBe('first');
+    });
+
+    it('IDs de Pix diferentes são dois Pix, mesmo com valor igual', () => {
+      const first = receipt({ rawId: 'receipt:pix:E00000000202610181500AAAAAAAAAAA' });
+      const second = receipt({ rawId: 'receipt:pix:E00000000202610181503BBBBBBBBBBB' });
+      expect(findDuplicate(second, [first])).toBeNull();
+    });
+
+    it('um com ID e outro sem: decide pelo valor e pela janela', () => {
+      const first = receipt({ id: 'first', rawId: 'receipt:0a1b2c3d', postedAt: at(0) });
+      const withId = receipt({ rawId: 'receipt:pix:E00000000202610181500AAAAAAAAAAA' });
+      expect(findDuplicate({ ...withId, postedAt: at(30) }, [first])?.id).toBe('first');
+      expect(findDuplicate({ ...withId, postedAt: at(61) }, [first])).toBeNull();
+    });
+  });
+
   it('ignora descartadas, excluídas, duplicatas e a própria notificação', () => {
     const base = { ...incoming, postedAt: at(0) };
     expect(findDuplicate(base, [capture({ status: 'discarded' })])).toBeNull();

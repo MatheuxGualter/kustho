@@ -115,6 +115,10 @@ saída em Pendentes, sem digitar.
 - [x] Vira captura com `channel: 'receipt'` (`ingestReceipt` no `CapturesService`, fake e
       real, suíte de contrato): conta sugerida pelo banco citado no comprovante, matcher,
       mesmo comprovante não duplica; confirmar cria lançamento com `source: 'receipt'`.
+- [x] Mesmo comprovante em imagem e PDF não duplica (achado no aparelho: o OCR lê os dois
+      com diferenças e o hash do texto mudava). O `rawId` é o ID do Pix
+      (`receipt:pix:E…`, `pixEndToEndId`) quando o comprovante traz; sem ele, dois
+      comprovantes de mesmo valor e tipo em até 60 minutos são duplicata (`findDuplicate`).
 - [x] Depois de ler, abre direto a confirmação (`/pendente/[id]`); falha mostra o motivo
       e "Lançar à mão". Dica na tela de leitura de notificações.
 - [x] CI compila os módulos Kotlin (job `android`) e roda o JUnit das regras puras dos

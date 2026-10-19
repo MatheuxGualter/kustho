@@ -1,6 +1,12 @@
 import type { Account } from '@/domain/types';
 
-import { bankInText, buildReceiptCapture, RECEIPT_SOURCE, receiptRawId } from '../capture';
+import {
+  bankInText,
+  buildReceiptCapture,
+  pixEndToEndId,
+  RECEIPT_SOURCE,
+  receiptRawId,
+} from '../capture';
 
 const account = (fields: Partial<Account>): Account =>
   ({
@@ -69,5 +75,31 @@ describe('buildReceiptCapture', () => {
   it('o mesmo comprovante compartilhado duas vezes tem o mesmo rawId', () => {
     expect(receiptRawId(NUBANK_PIX)).toBe(receiptRawId(`  ${NUBANK_PIX}\n`));
     expect(receiptRawId(NUBANK_PIX)).not.toBe(receiptRawId(NUBANK_PIX.replace('50,00', '51,00')));
+  });
+
+  it('com o ID do Pix, o rawId é ele: imagem e PDF do mesmo comprovante batem', () => {
+    // O OCR lê a imagem e o PDF com diferenças (quebras de linha, acentos, "1 de 1").
+    const image =
+      'itaū\nComprovante de Pix\nR$ 0,02\nDe\nCICLANO\nInstituiçäo: ITAÚ UNIBANCO S.A\nPara\nFULANO DE TAL\nInstituição: NU PAGAMENTOS S.A. - INSTITUIÇÃO DE\nPAGAMENTO\nID da transação:\nE60701190202610191815AB1234CD5EO';
+    const pdf =
+      'itaů\nComprovante de Pix\nR$ 0,02\nDe\nCICLANO\nInstituição: ITAÚ UNIBANCO S.A\nPara\nFULANO DE TAL\nInstituição: NU PAGAMENTOS S.A. - INSTITUIÇÃO DE PAGAMENTO\nID da transação: E60701190202610191815AB1234CD5E0\n1 de 1';
+    expect(receiptRawId(image)).toBe('receipt:pix:E60701190202610191815AB1234CD5E0');
+    expect(receiptRawId(pdf)).toBe(receiptRawId(image));
+  });
+});
+
+describe('pixEndToEndId', () => {
+  it('acha o ID (E + ISPB + data e hora + 11 caracteres) e troca O por 0', () => {
+    expect(pixEndToEndId('ID da transação:\ne18236120202610181432s0123456789')).toBe(
+      'E18236120202610181432S0123456789',
+    );
+    expect(pixEndToEndId('ID: E6O7O1190202610191815AB1234CD5EO')).toBe(
+      'E60701190202610191815AB1234CD5E0',
+    );
+  });
+
+  it('sem ID, ou com a autenticação no lugar: null', () => {
+    expect(pixEndToEndId(NUBANK_PIX)).toBeNull();
+    expect(pixEndToEndId('Autenticação: CE99E8D9CCB07F690C86B68EADFA3640BE4BE310')).toBeNull();
   });
 });
