@@ -5,6 +5,7 @@
  * - estorno capturado: acha a compra do cartão que ele devolve.
  * Parcelas ("em 3x") são lidas pelo parser e criadas na confirmação.
  */
+import { PIX_RAW_ID_PREFIX } from '@/domain/receipts/capture';
 import type { Capture, Transaction } from '@/domain/types';
 import { addDays, daysBetween } from '@/lib/dates';
 
@@ -25,10 +26,23 @@ const windowFor = (a: DuplicateCheck, b: DuplicateCheck) =>
     ? RECEIPT_DUPLICATE_WINDOW_MS
     : DUPLICATE_WINDOW_MS;
 
+const hasPixId = (c: DuplicateCheck) => c.rawId.startsWith(PIX_RAW_ID_PREFIX);
+
+/**
+ * Podem ser a mesma transação? De outra fonte, sim. Da mesma: dois cafés iguais no mesmo
+ * app são duas compras, mas dois comprovantes iguais costumam ser o mesmo compartilhado
+ * de novo (imagem e PDF leem diferente) — a menos que os dois tragam o ID do Pix, que aí
+ * decide sozinho (iguais já caem no mesmo `rawId`).
+ */
+function mayBeSame(a: DuplicateCheck, b: DuplicateCheck): boolean {
+  if (a.packageName !== b.packageName || a.channel !== b.channel) return true;
+  return a.channel === 'receipt' && !(hasPixId(a) && hasPixId(b));
+}
+
 /**
  * Captura já gravada que é a mesma transação: mesmo valor e tipo, de **outra** fonte
- * (outro app ou outro canal; dois cafés iguais no mesmo app são duas compras), dentro da
- * janela. Vale contra pendentes e confirmadas; descartadas e duplicatas não contam.
+ * (outro app ou outro canal) ou outro comprovante (`mayBeSame`), dentro da janela. Vale
+ * contra pendentes e confirmadas; descartadas e duplicatas não contam.
  */
 export function findDuplicate(
   capture: DuplicateCheck,
@@ -46,7 +60,7 @@ export function findDuplicate(
         c.rawId !== capture.rawId &&
         c.amountCents === amountCents &&
         c.kind === kind &&
-        (c.packageName !== capture.packageName || c.channel !== capture.channel) &&
+        mayBeSame(capture, c) &&
         Math.abs(Date.parse(c.postedAt) - at) <= windowFor(capture, c),
     )
     .sort((a, b) => Math.abs(Date.parse(a.postedAt) - at) - Math.abs(Date.parse(b.postedAt) - at));

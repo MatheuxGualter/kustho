@@ -284,6 +284,24 @@ describe.each(environments)('CapturesService ($name)', ({ create }) => {
     ).toHaveLength(1);
   });
 
+  it('o mesmo comprovante em imagem e PDF não vira dois lançamentos', async () => {
+    const { services, seed } = await create();
+    const image =
+      'Comprovante de Pix\nR$ 0,02\nPara\nFULANO DE TAL\nInstituição: NU PAGAMENTOS S.A. - INSTITUIÇÃO DE\nPAGAMENTO\nID da transação:\nE00000000202610171500AB1234CD5EF';
+    const pdf =
+      'Comprovante de Pix\nR$ 0,02\nPara\nFULANO DE TAL\nInstituição: NU PAGAMENTOS S.A. - INSTITUIÇÃO DE PAGAMENTO\nID da transação: E00000000202610171500AB1234CD5EF\n1 de 1';
+    const first = await services.captures.ingestReceipt({ text: image, receivedAtMs: AT_TODAY });
+    await services.captures.confirmCapture(first.id, { accountId: seed.accounts[0].id });
+
+    // Horas depois, fora de qualquer janela: o ID do Pix basta.
+    const later = AT_TODAY + 5 * 60 * 60_000;
+    const again = await services.captures.ingestReceipt({ text: pdf, receivedAtMs: later });
+    expect(again).toMatchObject({ id: first.id, status: 'confirmed' });
+    expect(await services.captures.listPending()).not.toContainEqual(
+      expect.objectContaining({ amountCents: 2 }),
+    );
+  });
+
   it('estorno capturado acha a compra e, ao confirmar, estorna na fatura', async () => {
     const { services, notifications, seed } = await create();
     const card = seed.creditCards[0];

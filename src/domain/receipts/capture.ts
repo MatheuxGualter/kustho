@@ -36,8 +36,27 @@ export function bankInText(text: string): Bank | undefined {
   return bankKeys.find(([key]) => padded.includes(` ${key} `))?.[1];
 }
 
-/** Identificador estável do comprovante: compartilhar duas vezes não cria duas capturas. */
+/** Prefixo do `rawId` de comprovante identificado pelo ID do Pix. */
+export const PIX_RAW_ID_PREFIX = 'receipt:pix:';
+
+// ID do Pix (end-to-end do Banco Central): E + ISPB (8) + AAAAMMDDHHMM (12) + 11 caracteres.
+const END_TO_END = /\bE[0-9O]{20}[0-9A-Z]{11}/;
+
+/**
+ * ID do Pix citado no comprovante, ou `null`. O OCR confunde O e 0; o O vira 0 para que
+ * imagem e PDF do mesmo comprovante deem o mesmo ID.
+ */
+export function pixEndToEndId(text: string): string | null {
+  return END_TO_END.exec(text.toUpperCase())?.[0].replace(/O/g, '0') ?? null;
+}
+
+/**
+ * Identificador estável do comprovante: compartilhar duas vezes não cria duas capturas.
+ * Com o ID do Pix, é ele (o texto muda entre imagem e PDF); sem, um hash do texto.
+ */
 export function receiptRawId(text: string): string {
+  const endToEnd = pixEndToEndId(text);
+  if (endToEnd) return `${PIX_RAW_ID_PREFIX}${endToEnd}`;
   // FNV-1a de 32 bits sobre o texto sem espaços repetidos.
   let hash = 0x811c9dc5;
   for (const char of text.replace(/\s+/g, ' ').trim()) {
