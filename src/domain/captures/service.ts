@@ -17,6 +17,7 @@ import { DomainError } from '@/domain/errors';
 import { buildReceiptCapture } from '@/domain/receipts/capture';
 import type { Transaction } from '@/domain/types';
 
+import { applyMerchantRule, confirmationEdited, learnedMerchantRule } from './merchantRules';
 import { candidateWindow, decideMatch, type MatchableCapture, matchFields } from './matcher';
 import {
   buildCapture,
@@ -59,6 +60,7 @@ export function createCapturesService(
 
   const ingestOnce = async () => {
     const rules = await repo.listOriginRules(db);
+    const merchants = await repo.listMerchantRules(db);
     // Lançamentos já ligados a capturas; cresce a cada sugestão para duas capturas não
     // disputarem o mesmo lançamento.
     const linked = await repo.listLinkedTransactionIds(db);
@@ -67,7 +69,10 @@ export function createCapturesService(
       const batch = await deps.notifications.getPending(INGEST_BATCH);
       if (batch.length === 0) break;
       for (const raw of batch) {
-        const fields = buildCapture(raw, parseNotification(deps.parsers, raw), rules);
+        const fields = applyMerchantRule(
+          buildCapture(raw, parseNotification(deps.parsers, raw), rules),
+          merchants,
+        );
         const match = await suggestLink(fields, linked);
         if (await repo.insertCapture(db, { ...fields, ...match })) {
           created++;
@@ -90,8 +95,9 @@ export function createCapturesService(
     },
 
     async ingestReceipt({ text, receivedAtMs }) {
-      const fields = buildReceiptCapture(text, receivedAtMs, await listAccounts(db));
-      if (!fields) throw new DomainError('receipt_unrecognized');
+      const built = buildReceiptCapture(text, receivedAtMs, await listAccounts(db));
+      if (!built) throw new DomainError('receipt_unrecognized');
+      const fields = applyMerchantRule(built, await repo.listMerchantRules(db));
       const existing = await repo.getByRawId(db, fields.rawId);
       if (existing) return existing;
       const match = await suggestLink(fields, await repo.listLinkedTransactionIds(db));
@@ -135,7 +141,13 @@ export function createCapturesService(
         ];
       }
 
-      await repo.updateCapture(db, id, { status: 'confirmed', transactionId: created[0].id });
+      await repo.updateCapture(db, id, {
+        status: 'confirmed',
+        transactionId: created[0].id,
+        editedOnConfirm: confirmationEdited(capture, input),
+      });
+      const merchantRule = learnedMerchantRule(capture, confirmation);
+      if (merchantRule) await repo.upsertMerchantRule(db, merchantRule);
       await repo.upsertOriginRule(db, learnedRule(capture, confirmation));
       return created;
     },
@@ -172,6 +184,8 @@ export function createCapturesService(
         editedOnConfirm: capture.matchTransactionId !== tx.id,
       });
       await repo.upsertOriginRule(db, linkedRule(capture, tx));
+      const merchantRule = learnedMerchantRule(capture, tx);
+      if (merchantRule) await repo.upsertMerchantRule(db, merchantRule);
       return tx;
     },
 

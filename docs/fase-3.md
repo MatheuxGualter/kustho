@@ -55,9 +55,14 @@ quem fechar um item marca o `[x]` no mesmo PR. Escopo: "Fase 3" em [`plano.md`](
 
 ### B · Regras aprendidas
 
-- [ ] `merchantKey` normalizado; regra atualizada a cada confirmação (categoria e origem).
-- [ ] Captura nova chega com categoria e origem da regra (a regra de origem por app da
-      Fase 2 continua valendo quando não há regra do estabelecimento).
+- [x] `merchantKey` normalizado (sem acento, caixa, números, pontuação e "LTDA"/"S.A."); regra
+      atualizada a cada confirmação e a cada vínculo, com categoria e origem
+      (`src/domain/captures/merchantRules.ts`, `upsertMerchantRule` soma `hits`).
+- [x] Captura nova (notificação ou comprovante) chega com a categoria da regra; a origem da
+      regra só entra quando a captura não tem origem e ela serve ao tipo (cartão não vale
+      para entrada). A regra de origem por app da Fase 2 continua valendo antes dela.
+- [x] `editedOnConfirm` gravado ao confirmar (`confirmationEdited`): base da precisão por
+      fonte da trilha D.
 
 ### C · Casos especiais
 
