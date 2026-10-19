@@ -41,6 +41,10 @@ pnpm install                             # se o lockfile mudou
   `services/app.ts`, `(tabs)/_layout.tsx`): avise o grupo antes e faça um PR só para eles.
 - PRs empilhados (um em cima do outro) fazem o merge cair na branch de baixo, não na
   `main`. Prefira sempre abrir a branch a partir da `main` atualizada.
+- **Fase em andamento vai para `develop`.** Os PRs das trilhas apontam para `develop`;
+  o grupo testa a fase inteira no aparelho a partir dela e, com a validação feita, abre
+  um PR `develop` → `main`. Correções da `main` entram na `develop` com
+  `git merge origin/main`. Fase 3: PRs #32 a #37, nessa ordem.
 - `CLAUDE.md` e `AGENTS.md` são cópias exatas (o CI confere): edite os dois juntos.
 
 ## 4. Passando o bastão (outro dev ou outra sessão do Claude)
