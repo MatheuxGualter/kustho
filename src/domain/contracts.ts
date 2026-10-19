@@ -29,6 +29,7 @@ import type {
   NewTransaction,
   NewTransfer,
   ParsedNotification,
+  Timestamp,
   Transaction,
   TxFilters,
   YearMonth,
@@ -238,6 +239,20 @@ export type CaptureConfirmation = {
   refundOfId?: Id;
 };
 
+/** Precisão de uma fonte (app do banco ou comprovantes) para o nível automático (Fase 3, trilha D). */
+export type SourceStats = {
+  packageName: string;
+  /** Confirmadas pelo usuário (as automáticas não contam). */
+  confirmed: number;
+  /** Dessas, confirmadas exatamente como vieram. */
+  unedited: number;
+  /** `unedited / confirmed`; `null` sem confirmações. */
+  precision: number | null;
+  /** Amostra mínima e precisão acima do portão: a chave pode ser ligada. */
+  eligible: boolean;
+  autoConfirm: boolean;
+};
+
 export interface CapturesService {
   /**
    * Lê as pendentes do módulo nativo, interpreta com os parsers, grava em `captures` e
@@ -275,6 +290,18 @@ export interface CapturesService {
   discardCapture(id: Id): Promise<void>;
   /** Desfaz `discardCapture` (volta a pendente). */
   restoreCapture(id: Id): Promise<void>;
+  /** Fase 3 (trilha D): precisão por fonte, da que tem mais confirmações. */
+  getSourceStats(): Promise<SourceStats[]>;
+  /**
+   * Liga ou desliga o lançamento automático da fonte. Ligar exige `eligible`; senão
+   * `auto_confirm_not_eligible`. Com a chave ligada, `ingest` confirma sozinho o que vier
+   * pronto, com `autoConfirmed: true`.
+   */
+  setAutoConfirm(packageName: string, enabled: boolean): Promise<void>;
+  /** Lançadas sozinhas notificadas desde `since` (ISO 8601), da mais recente: o resumo. */
+  listAutoConfirmed(since: Timestamp): Promise<Capture[]>;
+  /** "Desfazer" de uma automática: exclui o lançamento (e as parcelas) e volta a pendente. */
+  undoAutoConfirm(id: Id): Promise<void>;
 }
 
 export type Services = {

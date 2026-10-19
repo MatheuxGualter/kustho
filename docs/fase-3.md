@@ -23,7 +23,7 @@ quem fechar um item marca o `[x]` no mesmo PR. Escopo: "Fase 3" em [`plano.md`](
 - [x] `source: 'receipt'` nos lançamentos (trilha E).
 - [x] `captureExtrasDefaults` em `src/domain/captures/rules.ts`: campos da Fase 3 numa
       captura nova.
-- [ ] Contratos de cada trilha entram junto com a trilha (abaixo), no fake e no real, com
+- [x] Contratos de cada trilha entram junto com a trilha (abaixo), no fake e no real, com
       suíte de contrato.
 
 ## Trilhas
@@ -83,10 +83,19 @@ quem fechar um item marca o `[x]` no mesmo PR. Escopo: "Fase 3" em [`plano.md`](
 
 ### D · Experiência
 
-- [ ] "Vincular" em Pendentes quando o matcher acha o lançamento.
-- [ ] Precisão por fonte (confirmadas sem edição ÷ confirmadas) e chave "lançar
-      automaticamente" por fonte, só liberada com ≥ 95%.
-- [ ] Lançamento automático com selo e "Desfazer"; resumo do que entrou sozinho.
+- [x] "Vincular" em Pendentes quando o matcher acha o lançamento (entregue com a trilha A).
+- [x] Precisão por fonte (`src/domain/captures/precision.ts`): confirmadas sem edição ÷
+      confirmadas pelo usuário (as automáticas não contam). `getSourceStats` no serviço.
+- [x] Chave "Lançar automaticamente" por fonte no Diagnóstico (`setAutoConfirm`, tabela
+      `capture_sources`): só liga com 20 confirmações e ≥ 95% sem edição; senão
+      `auto_confirm_not_eligible`. Desligar sempre pode. Comprovantes aparecem como fonte
+      própria.
+- [x] Com a chave ligada **e** a fonte ainda acima do portão, `ingest` confirma sozinho o
+      que vier pronto (interpretada, com origem, sem sugestão de vínculo, sem ser estorno
+      nem duplicata) e grava `autoConfirmed`.
+- [x] Resumo em Pendentes: "N lançamentos entraram sozinhos" nos últimos 7 dias, com selo
+      "automático" e **Desfazer** (`undoAutoConfirm`: exclui o lançamento e as parcelas,
+      a captura volta a pendente).
 
 ### E · Comprovantes compartilhados (nova)
 
@@ -115,9 +124,27 @@ saída em Pendentes, sem digitar.
 
 ## Validação no aparelho
 
-Ainda não começou.
+Ainda não começou. Antes: `npx expo prebuild --clean --platform android` e `pnpm android`
+(módulo `receipt-reader` e `expo-sharing` novos). Roteiro:
+
+- [ ] Comprovante de Pix enviado (texto, imagem e PDF) de cada banco → abre a confirmação
+      com valor, quem recebeu e a conta; guardar o texto anonimizado como fixture.
+- [ ] Lançamento manual + notificação igual → "Vincular" não cria outro.
+- [ ] Confirmar duas vezes o mesmo estabelecimento → a terceira chega com categoria e conta.
+- [ ] Pix notificado e comprovante compartilhado → um item só ("Já está no Kustho" se já
+      confirmado).
+- [ ] Notificação de estorno de uma compra → "Estorno da compra:" e o estorno na fatura.
+- [ ] Compra parcelada notificada → parcelas certas na fatura.
+- [ ] Diagnóstico mostra a precisão por fonte; com uma fonte liberada, ligar a chave e
+      conferir o selo "automático" e o "Desfazer".
 
 ## Histórico de entregas
 
-| PR  | O que entrou |
-| --- | ------------ |
+| PR  | O que entrou                                                     |
+| --- | ---------------------------------------------------------------- |
+| #32 | Kickoff: colunas e tabelas da Fase 3, `source: 'receipt'`        |
+| #33 | Trilha A: matcher e "Vincular"                                   |
+| #34 | Trilha E: comprovante compartilhado, OCR no aparelho             |
+| #35 | Trilha B: regras por estabelecimento                             |
+| #36 | Trilha C: duplicatas, estorno e parcelado capturados             |
+| #37 | Trilha D: precisão por fonte, lançamento automático e "Desfazer" |

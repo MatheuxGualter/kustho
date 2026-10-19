@@ -28,6 +28,7 @@ export function createFakeStore(referenceDate = today()): FakeStore {
     captures: sampleCaptures(referenceDate, seed.accounts[0], seed.creditCards[0]),
     originRules: [],
     merchantRules: [],
+    sources: [],
   };
 }
 

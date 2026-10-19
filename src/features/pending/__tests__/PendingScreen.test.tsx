@@ -110,3 +110,25 @@ it('estorno capturado mostra a compra e confirmar lança o estorno, sem vincular
   });
   expect(refund.status).toBe('confirmed');
 });
+
+it('o que entrou sozinho aparece no resumo com selo e Desfazer', async () => {
+  const store = createFakeStore();
+  const services = createFakeServices(store);
+  const pix = store.captures.find((c) => c.merchant === 'FULANO DE TAL')!;
+  pix.postedAt = new Date().toISOString();
+  const [tx] = await services.captures.confirmCapture(pix.id);
+  pix.autoConfirmed = true;
+  await renderWithTheme(
+    <ServicesProvider services={services}>
+      <PendingScreen />
+    </ServicesProvider>,
+  );
+  expect(await screen.findByText('1 lançamento entrou sozinho')).toBeTruthy();
+  expect(screen.getByText('automático')).toBeTruthy();
+
+  await fireEvent.press(screen.getByRole('button', { name: 'Desfazer' }));
+  expect(pix).toMatchObject({ status: 'pending', autoConfirmed: false, transactionId: null });
+  expect(store.transactions.find((t) => t.id === tx.id)?.deletedAt).not.toBeNull();
+  expect(await screen.findByText('FULANO DE TAL')).toBeTruthy();
+  expect(screen.queryByText('1 lançamento entrou sozinho')).toBeNull();
+});

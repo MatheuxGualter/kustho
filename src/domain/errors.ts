@@ -11,6 +11,7 @@ export const domainErrorCodes = [
   'already_linked',
   'receipt_unrecognized',
   'receipt_reader_unavailable',
+  'auto_confirm_not_eligible',
 ] as const;
 
 export type DomainErrorCode = (typeof domainErrorCodes)[number];

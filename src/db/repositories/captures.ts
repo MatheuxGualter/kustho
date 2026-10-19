@@ -1,10 +1,16 @@
-import { and, between, desc, eq, isNull, sql } from 'drizzle-orm';
+import { and, between, desc, eq, gte, isNull, sql } from 'drizzle-orm';
 
-import type { Capture, CaptureOriginRule, CaptureStatus, MerchantRule } from '@/domain/types';
+import type {
+  Capture,
+  CaptureOriginRule,
+  CaptureSource,
+  CaptureStatus,
+  MerchantRule,
+} from '@/domain/types';
 import { nowTimestamp } from '@/lib/id';
 
 import type { AppDatabase } from '../database';
-import { captureOriginRules, captures, merchantRules } from '../schema';
+import { captureOriginRules, captures, captureSources, merchantRules } from '../schema';
 import { type EntityKeys, newEntity } from './common';
 
 export type CaptureFields = Omit<Capture, EntityKeys>;
@@ -168,4 +174,53 @@ export async function upsertMerchantRule(db: AppDatabase, rule: MerchantRuleFiel
   } else {
     await db.insert(merchantRules).values({ ...newEntity(), ...rule, hits: 1 });
   }
+}
+
+// ─── Fase 3 · Trilha D: nível automático por fonte ───────────────────────────
+
+/** Confirmadas (o que a precisão por fonte precisa saber de cada uma). */
+export async function listConfirmedForStats(db: AppDatabase) {
+  return db
+    .select({
+      packageName: captures.packageName,
+      status: captures.status,
+      editedOnConfirm: captures.editedOnConfirm,
+      autoConfirmed: captures.autoConfirmed,
+      deletedAt: captures.deletedAt,
+    })
+    .from(captures)
+    .where(and(isNull(captures.deletedAt), eq(captures.status, 'confirmed')));
+}
+
+export async function listSources(db: AppDatabase): Promise<CaptureSource[]> {
+  return db.select().from(captureSources).where(isNull(captureSources.deletedAt));
+}
+
+export async function upsertSource(
+  db: AppDatabase,
+  packageName: string,
+  autoConfirm: boolean,
+): Promise<void> {
+  await db
+    .insert(captureSources)
+    .values({ ...newEntity(), packageName, autoConfirm })
+    .onConflictDoUpdate({
+      target: captureSources.packageName,
+      set: { autoConfirm, deletedAt: null, updatedAt: nowTimestamp() },
+    });
+}
+
+export async function listAutoConfirmedSince(db: AppDatabase, since: string): Promise<Capture[]> {
+  return db
+    .select()
+    .from(captures)
+    .where(
+      and(
+        isNull(captures.deletedAt),
+        eq(captures.status, 'confirmed'),
+        eq(captures.autoConfirmed, true),
+        gte(captures.postedAt, since),
+      ),
+    )
+    .orderBy(desc(captures.postedAt), desc(captures.createdAt));
 }

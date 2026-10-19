@@ -345,6 +345,77 @@ describe.each(environments)('CapturesService ($name)', ({ create }) => {
     expect(created.every((t) => t.installmentTotal === 3)).toBe(true);
   });
 
+  it('nível automático: só liga acima do portão, lança sozinho e desfaz', async () => {
+    const { services, notifications, seed } = await create();
+    const account = seed.accounts[0];
+    const error = await services.captures
+      .setAutoConfirm(NUBANK_PACKAGE, true)
+      .catch((e: unknown) => e);
+    expect(isDomainError(error) && error.code).toBe('auto_confirm_not_eligible');
+
+    // 1 confirmação editada (escolheu a conta) + 20 como vieram: 95,2% em 21.
+    let n = 0;
+    const postAndIngest = async () => {
+      n++;
+      notifications.post({
+        packageName: NUBANK_PACKAGE,
+        text: `Compra no débito de R$ ${n},37 em LOJA ${n}.`,
+        key: `k${n}`,
+        postedAtMs: AT_TODAY + n * 60 * 60_000,
+      });
+      await services.captures.ingest();
+      return (await services.captures.listRecent(50)).find((c) => c.amountCents === n * 100 + 37)!;
+    };
+    await services.captures.confirmCapture((await postAndIngest()).id, { accountId: account.id });
+    for (let i = 0; i < 20; i++) await services.captures.confirmCapture((await postAndIngest()).id);
+
+    const [nubank] = (await services.captures.getSourceStats()).filter(
+      (s) => s.packageName === NUBANK_PACKAGE,
+    );
+    expect(nubank).toMatchObject({
+      confirmed: 21,
+      unedited: 20,
+      eligible: true,
+      autoConfirm: false,
+    });
+    await services.captures.setAutoConfirm(NUBANK_PACKAGE, true);
+
+    const auto = await postAndIngest();
+    expect(auto).toMatchObject({
+      status: 'confirmed',
+      autoConfirmed: true,
+      editedOnConfirm: false,
+    });
+    const tx = await services.transactions.getTransaction(auto.transactionId!);
+    expect(tx).toMatchObject({
+      source: 'notification',
+      accountId: account.id,
+      amountCents: n * 100 + 37,
+    });
+    // Automáticas não entram na precisão.
+    expect(
+      (await services.captures.getSourceStats()).find((s) => s.packageName === NUBANK_PACKAGE),
+    ).toMatchObject({ confirmed: 21, autoConfirm: true });
+
+    const since = new Date(AT_TODAY).toISOString();
+    expect((await services.captures.listAutoConfirmed(since)).map((c) => c.id)).toEqual([auto.id]);
+
+    await services.captures.undoAutoConfirm(auto.id);
+    expect(await services.captures.getCapture(auto.id)).toMatchObject({
+      status: 'pending',
+      transactionId: null,
+      autoConfirmed: false,
+    });
+    expect(
+      (await services.transactions.getTransaction(tx!.id))?.deletedAt ?? 'excluído',
+    ).not.toBeNull();
+    expect(await services.captures.listAutoConfirmed(since)).toEqual([]);
+
+    // Desligar sempre pode.
+    await services.captures.setAutoConfirm(NUBANK_PACKAGE, false);
+    expect((await postAndIngest()).status).toBe('pending');
+  });
+
   it('confirmar sem valor ou origem é recusado e a captura continua pendente', async () => {
     const { services, notifications } = await create();
     notifications.post({ packageName: NUBANK_PACKAGE, title: 'Nubank', text: 'Algo novo' });

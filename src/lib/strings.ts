@@ -191,6 +191,18 @@ export const strings = {
     packageRow: (total: number, unparsed: number) =>
       `${total} lida${total === 1 ? '' : 's'}${unparsed > 0 ? ` · ${unparsed} não interpretada${unparsed === 1 ? '' : 's'}` : ''}`,
     lastAt: (when: string) => `Última: ${when}`,
+    precisionTitle: 'Lançar automaticamente',
+    precisionHint: (minimum: number, percent: number) =>
+      `Cada fonte mostra quantas confirmações vieram certas, sem você mudar nada. A chave libera com ${minimum} confirmações e ${percent}% de acerto; o que entrar sozinho aparece em Pendentes com "Desfazer".`,
+    precisionEmpty: 'Confirme capturas em Pendentes para medir o acerto de cada fonte.',
+    precisionRow: (unedited: number, confirmed: number, percent: number | null) =>
+      percent === null
+        ? 'Nenhuma confirmação ainda'
+        : `${unedited} de ${confirmed} sem edição (${percent}%)`,
+    precisionLocked: 'Ainda não liberado',
+    receiptsSource: 'Comprovantes compartilhados',
+    autoOn: 'Lançamento automático ligado',
+    autoOff: 'Lançamento automático desligado',
     exportTitle: 'Ajudar a melhorar a leitura',
     exportHint:
       'Exporta as últimas notificações no formato de testes dos parsers, com nomes, estabelecimentos, finais de cartão e documentos trocados. Confira o texto antes de mandar para o grupo.',
@@ -262,6 +274,12 @@ export const strings = {
     refundNoPurchase:
       'Não achamos a compra deste estorno. Abra a compra no cartão e use Estornar, ou descarte.',
     refundConfirmed: 'Estorno lançado na fatura',
+    autoTitle: (count: number) =>
+      count === 1 ? '1 lançamento entrou sozinho' : `${count} lançamentos entraram sozinhos`,
+    autoHint: 'Últimos 7 dias. Desfaça o que não estiver certo: volta para cá como pendente.',
+    autoBadge: 'automático',
+    undo: 'Desfazer',
+    undone: 'Desfeito: voltou para Pendentes',
   },
   transactions: {
     searchPlaceholder: 'Buscar lançamento',
@@ -646,6 +664,8 @@ export const strings = {
       not_found: 'Item não encontrado. Ele pode ter sido excluído.',
       capture_incomplete: 'Falta o valor, o tipo ou a origem. Edite antes de confirmar.',
       already_linked: 'Este lançamento já está ligado a outra notificação.',
+      auto_confirm_not_eligible:
+        'Esta fonte ainda não acerta o bastante para lançar sozinha. Continue confirmando em Pendentes.',
       receipt_reader_unavailable:
         'Para ler imagem ou PDF, o app precisa ser atualizado (recompile com pnpm android).',
       receipt_unrecognized:

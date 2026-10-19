@@ -18,6 +18,7 @@ import { buildReceiptCapture } from '@/domain/receipts/capture';
 import type { Capture } from '@/domain/types';
 
 import { createFromConfirmation } from './confirm';
+import { shouldAutoConfirm, sourceStats } from './precision';
 import { applyMerchantRule, confirmationEdited, learnedMerchantRule } from './merchantRules';
 import { candidateWindow, decideMatch, type MatchableCapture, matchFields } from './matcher';
 import {
@@ -84,8 +85,14 @@ export function createCapturesService(
     return findDuplicate(fields, await repo.listPostedBetween(db, from, to));
   };
 
+  const getSourceStats = async () =>
+    sourceStats(await repo.listConfirmedForStats(db), await repo.listSources(db));
+
   const ingestOnce = async () => {
     const rules = await repo.listOriginRules(db);
+    // Nível automático (trilha D): a precisão é a do início da leitura.
+    const stats = new Map((await getSourceStats()).map((s) => [s.packageName, s]));
+    const toAutoConfirm: string[] = [];
     const merchants = await repo.listMerchantRules(db);
     // Lançamentos já ligados a capturas; cresce a cada sugestão para duas capturas não
     // disputarem o mesmo lançamento.
@@ -114,11 +121,19 @@ export function createCapturesService(
         if (await repo.insertCapture(db, { ...fields, ...match })) {
           created++;
           if (match.matchTransactionId) linked.add(match.matchTransactionId);
+          const capture = await repo.getByRawId(db, fields.rawId);
+          if (capture && shouldAutoConfirm(capture, stats.get(capture.packageName))) {
+            toAutoConfirm.push(capture.id);
+          }
         }
       }
       // Só depois de gravar: se o app cair no meio, o lote é lido de novo (o rawId evita duplicar).
       await deps.notifications.markProcessed(batch.map((raw) => raw.id));
       if (batch.length < INGEST_BATCH) break;
+    }
+    for (const id of toAutoConfirm) {
+      await service.confirmCapture(id);
+      await repo.updateCapture(db, id, { autoConfirmed: true });
     }
     return created;
   };
@@ -229,6 +244,32 @@ export function createCapturesService(
       if (capture?.status === 'discarded') {
         await repo.updateCapture(db, id, { status: 'pending' });
       }
+    },
+
+    getSourceStats,
+
+    async setAutoConfirm(packageName, enabled) {
+      if (enabled) {
+        const stats = (await getSourceStats()).find((s) => s.packageName === packageName);
+        if (!stats?.eligible) throw new DomainError('auto_confirm_not_eligible');
+      }
+      await repo.upsertSource(db, packageName, enabled);
+    },
+
+    listAutoConfirmed: (since) => repo.listAutoConfirmedSince(db, since),
+
+    async undoAutoConfirm(id) {
+      const capture = await repo.getCapture(db, id);
+      if (!capture || capture.status !== 'confirmed' || !capture.autoConfirmed) {
+        throw new DomainError('not_found', `Captura automática não encontrada: ${id}`);
+      }
+      // Exclui o lançamento junto com as parcelas do grupo.
+      if (capture.transactionId) await deps.transactions.deleteTransaction(capture.transactionId);
+      await repo.updateCapture(db, id, {
+        status: 'pending',
+        transactionId: null,
+        autoConfirmed: false,
+      });
     },
   };
   return service;
