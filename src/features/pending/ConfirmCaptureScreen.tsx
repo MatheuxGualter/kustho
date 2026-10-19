@@ -1,5 +1,5 @@
 import * as Haptics from 'expo-haptics';
-import { router, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { Check, X } from 'lucide-react-native';
 import { useState } from 'react';
 
@@ -13,6 +13,7 @@ import type {
 } from '@/domain/types';
 import { CategoryPicker } from '@/features/categories/CategoryPicker';
 import { errorMessage } from '@/features/shared/errorMessage';
+import { goBackOr } from '@/features/shared/goBack';
 import { formatDateBR, toISODate } from '@/lib/dates';
 import { formatBRL, splitInstallments } from '@/lib/money';
 import { strings } from '@/lib/strings';
@@ -94,7 +95,7 @@ const discardCapture = async (services: ReturnType<typeof useServices>, capture:
     showToast(strings.pending.discarded, () => {
       void services.captures.restoreCapture(capture.id);
     });
-    router.back();
+    goBackOr('/pendentes');
   } catch (e) {
     showToast(errorMessage(e));
   }
@@ -129,7 +130,7 @@ function RefundForm({
       });
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       showToast(strings.pending.refundConfirmed);
-      router.back();
+      goBackOr('/pendentes');
     } catch (e) {
       showToast(errorMessage(e));
       setBusy(false);
@@ -224,7 +225,7 @@ function ConfirmForm({
       });
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       showToast(strings.pending.confirmed);
-      router.back();
+      goBackOr('/pendentes');
     } catch (e) {
       showToast(errorMessage(e));
       setBusy(false);
