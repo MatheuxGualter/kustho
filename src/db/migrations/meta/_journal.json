@@ -22,6 +22,13 @@
       "when": 1792365910217,
       "tag": "0002_refund_of",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1792371754413,
+      "tag": "0003_fase3_conciliacao",
+      "breakpoints": true
     }
   ]
 }

@@ -3,6 +3,7 @@ import type { NotificationParser } from '@/domain/contracts';
 import type { Capture, CaptureOriginRule } from '@/domain/types';
 
 import {
+  captureExtrasDefaults,
   buildCapture,
   learnedRule,
   parseNotification,
@@ -70,6 +71,7 @@ const capture = (fields: Partial<Capture> = {}): Capture => ({
   confidence: 0.9,
   status: 'pending',
   transactionId: null,
+  ...captureExtrasDefaults,
   ...fields,
 });
 

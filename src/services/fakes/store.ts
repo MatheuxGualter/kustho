@@ -1,3 +1,4 @@
+import { captureExtrasDefaults } from '@/domain/captures/rules';
 import { buildDevSeed } from '@/db/devSeed';
 import { buildDefaultCategories } from '@/db/seed';
 import type { Account, Capture, Category, CreditCard, Invoice, Transaction } from '@/domain/types';
@@ -40,6 +41,7 @@ function sampleCaptures(date: string, account: Account, card: CreditCard): Captu
     suggestedCardId: null,
     status: 'pending',
     transactionId: null,
+    ...captureExtrasDefaults,
   } as const;
   return [
     {

@@ -183,3 +183,35 @@ describe('0002_refund_of', () => {
     expect(link('p1')).toBeNull();
   });
 });
+
+describe('0003_fase3_conciliacao', () => {
+  it('mantém as capturas antigas com os padrões da Fase 3', () => {
+    const dir = join(__dirname, '..', 'migrations');
+    const db = new DatabaseSync(':memory:');
+    const run = (file: string) => {
+      for (const sql of readFileSync(join(dir, file), 'utf8').split('--> statement-breakpoint')) {
+        db.exec(sql);
+      }
+    };
+    const files = readdirSync(dir)
+      .filter((f) => f.endsWith('.sql'))
+      .sort();
+    for (const f of files.filter((f) => f < '0003')) run(f);
+    db.exec(`INSERT INTO captures (id, created_at, updated_at, raw_id, package_name, posted_at)
+             VALUES ('c1', '${now}', '${now}', 'raw-1', 'com.nu.production', '${now}')`);
+    for (const f of files.filter((f) => f.startsWith('0003'))) run(f);
+
+    const row = db.prepare('SELECT * FROM captures WHERE id = ?').get('c1') as Record<
+      string,
+      unknown
+    >;
+    expect(row).toMatchObject({
+      channel: 'notification',
+      match_score: 0,
+      edited_on_confirm: 0,
+      auto_confirmed: 0,
+      installments: null,
+      suggested_category_id: null,
+    });
+  });
+});

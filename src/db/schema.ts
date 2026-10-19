@@ -19,6 +19,7 @@ import {
 
 import {
   accountTypes,
+  captureChannels,
   captureKinds,
   captureStatuses,
   categoryKinds,
@@ -156,6 +157,15 @@ export const captures = sqliteTable(
     confidence: real('confidence').notNull().default(0),
     status: text('status', { enum: captureStatuses }).notNull().default('pending'),
     transactionId: text('transaction_id').references(() => transactions.id),
+    // Fase 3
+    channel: text('channel', { enum: captureChannels }).notNull().default('notification'),
+    suggestedCategoryId: text('suggested_category_id').references(() => categories.id),
+    installments: integer('installments'),
+    matchTransactionId: text('match_transaction_id').references(() => transactions.id),
+    matchScore: real('match_score').notNull().default(0),
+    duplicateOfId: text('duplicate_of_id'),
+    editedOnConfirm: integer('edited_on_confirm', { mode: 'boolean' }).notNull().default(false),
+    autoConfirmed: integer('auto_confirmed', { mode: 'boolean' }).notNull().default(false),
   },
   (t) => [
     uniqueIndex('captures_raw_id_uq').on(t.rawId),
@@ -191,4 +201,32 @@ export const captureOriginRules = sqliteTable(
       sql`(${t.accountId} IS NULL) <> (${t.cardId} IS NULL)`,
     ),
   ],
+);
+
+// ─── Fase 3 ──────────────────────────────────────────────────────────────────
+
+export const merchantRules = sqliteTable(
+  'merchant_rules',
+  {
+    ...entity,
+    merchantKey: text('merchant_key').notNull(),
+    categoryId: text('category_id').references(() => categories.id),
+    accountId: text('account_id').references(() => accounts.id),
+    cardId: text('card_id').references(() => creditCards.id),
+    hits: integer('hits').notNull().default(1),
+  },
+  (t) => [
+    uniqueIndex('merchant_rules_key_uq').on(t.merchantKey),
+    check('merchant_rules_single_origin', sql`${t.accountId} IS NULL OR ${t.cardId} IS NULL`),
+  ],
+);
+
+export const captureSources = sqliteTable(
+  'capture_sources',
+  {
+    ...entity,
+    packageName: text('package_name').notNull(),
+    autoConfirm: integer('auto_confirm', { mode: 'boolean' }).notNull().default(false),
+  },
+  (t) => [uniqueIndex('capture_sources_package_uq').on(t.packageName)],
 );

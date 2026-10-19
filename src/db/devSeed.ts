@@ -28,8 +28,10 @@ import {
   accounts,
   captureOriginRules,
   captures,
+  captureSources,
   creditCards,
   invoices,
+  merchantRules,
   transactions,
 } from './schema';
 
@@ -388,6 +390,8 @@ export async function clearDevData(db: AppDatabase): Promise<void> {
   // Ordem das chaves estrangeiras: capturas apontam para lançamentos, contas e cartões.
   await db.delete(captures);
   await db.delete(captureOriginRules);
+  await db.delete(merchantRules);
+  await db.delete(captureSources);
   await db.delete(transactions);
   await db.delete(invoices);
   await db.delete(creditCards);

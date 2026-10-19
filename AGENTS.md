@@ -4,8 +4,8 @@ Gerenciador financeiro Android-first, offline-first. Começa como controle manua
 (contas, cartões, faturas, entradas e saídas) e evolui para captura de notificações dos
 bancos. O plano completo está em [`docs/plano.md`](docs/plano.md); consulte-o antes de
 decidir regra de negócio, escopo ou visual.
-O que já está pronto e o que falta: [`docs/fase-1.md`](docs/fase-1.md) e
-[`docs/fase-2.md`](docs/fase-2.md).
+O que já está pronto e o que falta: [`docs/fase-1.md`](docs/fase-1.md),
+[`docs/fase-2.md`](docs/fase-2.md) e [`docs/fase-3.md`](docs/fase-3.md).
 Fluxo de trabalho, passagem de bastão e armadilhas conhecidas:
 [`docs/trabalhando-com-claude.md`](docs/trabalhando-com-claude.md). Ao terminar uma tarefa,
 marque o item no status da fase e registre armadilhas novas no guia.
@@ -134,8 +134,8 @@ Import com alias `@/` → `src/`.
 
 ## Modelo de dados
 
-Tabelas: `accounts`, `credit_cards`, `categories`, `invoices`, `transactions` e, na Fase 2,
-`captures` e `capture_origin_rules`
+Tabelas: `accounts`, `credit_cards`, `categories`, `invoices`, `transactions`; na Fase 2,
+`captures` e `capture_origin_rules`; na Fase 3, `merchant_rules` e `capture_sources`
 (`src/db/schema.ts`). Contratos TS em `src/domain/types.ts`; um teste de tipo garante que
 os dois batem — mudou um, mude o outro e rode `pnpm db:generate`.
 
