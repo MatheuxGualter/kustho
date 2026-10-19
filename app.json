@@ -39,7 +39,18 @@
       ],
       "expo-sqlite",
       "expo-font",
-      "expo-sharing"
+      [
+        "expo-sharing",
+        {
+          "android": {
+            "enabled": true,
+            "singleShareMimeTypes": ["text/plain", "image/*", "application/pdf"]
+          },
+          "ios": {
+            "enabled": false
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

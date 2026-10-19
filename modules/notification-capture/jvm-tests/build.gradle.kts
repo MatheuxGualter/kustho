@@ -10,11 +10,13 @@ repositories {
 sourceSets {
   main {
     kotlin.srcDir("../android/src/main/java")
-    // Só as regras puras: o resto do módulo depende do Android.
-    kotlin.include("**/CaptureRules.kt")
+    kotlin.srcDir("../../receipt-reader/android/src/main/java")
+    // Só as regras puras: o resto dos módulos depende do Android.
+    kotlin.include("**/CaptureRules.kt", "**/ReceiptRules.kt")
   }
   test {
     kotlin.srcDir("../android/src/test/java")
+    kotlin.srcDir("../../receipt-reader/android/src/test/java")
   }
 }
 

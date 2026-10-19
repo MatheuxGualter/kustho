@@ -78,14 +78,24 @@ Motivação: alguns bancos só notificam o Pix **recebido**. Quem envia um Pix a
 comprovante, toca em **Compartilhar** e escolhe o Kustho; o app lê o comprovante e sugere a
 saída em Pendentes, sem digitar.
 
-- [ ] Kustho aparece no menu de compartilhar do Android para texto, imagem e PDF
-      (`expo-sharing`, rota que recebe o conteúdo).
-- [ ] Texto do comprovante: direto quando vem como texto; imagem e PDF passam por OCR **no
-      aparelho** (nada sai do celular).
-- [ ] Parser de comprovante (puro, com fixtures anonimizadas): valor, tipo (Pix enviado ou
-      recebido), quem recebeu/pagou, data, instituição.
-- [ ] Vira captura com `channel: 'receipt'` em Pendentes (e passa pelo matcher e pelas
-      regras como qualquer captura).
+- [x] Kustho aparece no menu de compartilhar do Android para texto, imagem e PDF
+      (`expo-sharing` no `app.json`); o Android abre `kustho://expo-sharing`
+      (`src/app/expo-sharing.tsx` → `ReceiptShareScreen`).
+- [x] Texto do comprovante: direto quando vem como texto; imagem e PDF passam por OCR **no
+      aparelho** — módulo `modules/receipt-reader` (Kotlin + ML Kit com modelo embutido; PDF
+      renderizado pelo `PdfRenderer`). **Revisão humana do Kotlin.**
+- [x] Parser de comprovante puro (`src/domain/receipts/parser.ts`) com fixtures sintéticas
+      no estilo de Nubank, Itaú, Inter, Mercado Pago, Pix recebido e texto numa linha: valor,
+      tipo, quem recebeu/pagou, data, instituição.
+- [x] Vira captura com `channel: 'receipt'` (`ingestReceipt` no `CapturesService`, fake e
+      real, suíte de contrato): conta sugerida pelo banco citado no comprovante, matcher,
+      mesmo comprovante não duplica; confirmar cria lançamento com `source: 'receipt'`.
+- [x] Depois de ler, abre direto a confirmação (`/pendente/[id]`); falha mostra o motivo
+      e "Lançar à mão". Dica na tela de leitura de notificações.
+- [x] CI compila os módulos Kotlin (job `android`) e roda o JUnit das regras puras dos
+      dois módulos.
+- [ ] Testar no aparelho com comprovantes reais de cada banco e guardar os textos
+      anonimizados como fixtures.
 
 ## Validação no aparelho
 

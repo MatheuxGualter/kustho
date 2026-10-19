@@ -9,6 +9,8 @@ export const domainErrorCodes = [
   'not_found',
   'capture_incomplete',
   'already_linked',
+  'receipt_unrecognized',
+  'receipt_reader_unavailable',
 ] as const;
 
 export type DomainErrorCode = (typeof domainErrorCodes)[number];

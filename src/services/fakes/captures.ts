@@ -13,12 +13,14 @@ import {
   resolveConfirmation,
 } from '@/domain/captures/rules';
 import type {
+  AccountsService,
   CapturesService,
   CardsService,
   NotificationParser,
   TransactionsService,
 } from '@/domain/contracts';
 import { DomainError } from '@/domain/errors';
+import { buildReceiptCapture } from '@/domain/receipts/capture';
 import type { Capture, CaptureOriginRule, Transaction } from '@/domain/types';
 import { nowTimestamp } from '@/lib/id';
 
@@ -36,6 +38,8 @@ export function createFakeCapturesService(
   store: CaptureStore,
   deps: {
     transactions: TransactionsService;
+    /** Para sugerir a conta de um comprovante pelo banco (trilha E). */
+    accounts?: AccountsService;
     cards: CardsService;
     /** Módulo nativo ou o fake dele. */
     notifications: NotificationCaptureApi;
@@ -95,6 +99,23 @@ export function createFakeCapturesService(
       return created;
     },
 
+    async ingestReceipt({ text, receivedAtMs }) {
+      const accounts = deps.accounts ? await deps.accounts.listAccountsWithBalance() : [];
+      const fields = buildReceiptCapture(text, receivedAtMs, accounts);
+      if (!fields) throw new DomainError('receipt_unrecognized');
+      const existing = store.captures.find((c) => c.rawId === fields.rawId && c.deletedAt === null);
+      if (existing) return existing;
+      const transactions = await deps.transactions.listAllTransactions();
+      const capture: Capture = {
+        ...entity(),
+        ...fields,
+        ...matchFields(decideMatch(fields, transactions, linkedIds())),
+      };
+      store.captures.push(capture);
+      notifyDataChanged();
+      return capture;
+    },
+
     async listPending() {
       return pending().sort((a, b) => b.postedAt.localeCompare(a.postedAt));
     },
@@ -130,7 +151,7 @@ export function createFakeCapturesService(
           date,
           description,
           categoryId,
-          source: 'notification',
+          source: capture.channel === 'receipt' ? 'receipt' : 'notification',
         });
       } else {
         created = [
@@ -141,7 +162,7 @@ export function createFakeCapturesService(
             description,
             categoryId,
             accountId: confirmation.accountId!,
-            source: 'notification',
+            source: capture.channel === 'receipt' ? 'receipt' : 'notification',
           }),
         ];
       }

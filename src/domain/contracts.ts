@@ -243,6 +243,12 @@ export interface CapturesService {
    * capturas. Devolve quantas capturas novas entraram.
    */
   ingest(): Promise<number>;
+  /**
+   * Fase 3 (trilha E): texto de um comprovante compartilhado (direto ou do OCR) vira
+   * captura pendente com `channel: 'receipt'`. O mesmo comprovante devolve a captura que já
+   * existe. Texto que não parece comprovante: `receipt_unrecognized`.
+   */
+  ingestReceipt(input: { text: string; receivedAtMs: number }): Promise<Capture>;
   /** Pendentes, da mais recente para a mais antiga. */
   listPending(): Promise<Capture[]>;
   /** Selo da aba Pendentes. */

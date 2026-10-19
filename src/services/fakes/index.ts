@@ -20,11 +20,18 @@ export function createFakeServices(
 ): Services {
   const transactions = createFakeTransactionsService(store);
   const cards = createFakeCardsService(store);
+  const accounts = createFakeAccountsService(store);
   return {
-    accounts: createFakeAccountsService(store),
+    accounts,
     transactions,
     cards,
     categories: createFakeCategoriesService(store),
-    captures: createFakeCapturesService(store, { transactions, cards, notifications, parsers }),
+    captures: createFakeCapturesService(store, {
+      transactions,
+      cards,
+      accounts,
+      notifications,
+      parsers,
+    }),
   };
 }

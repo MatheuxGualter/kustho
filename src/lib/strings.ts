@@ -197,6 +197,18 @@ export const strings = {
     export: 'Exportar anonimizado',
     shareTitle: 'Notificações anonimizadas do Kustho',
   },
+  receipts: {
+    title: 'Comprovante',
+    reading: 'Lendo o comprovante…',
+    emptyTitle: 'Nada para ler',
+    failedTitle: 'Não deu para ler',
+    howTo:
+      'Depois de fazer um Pix, abra o comprovante no app do banco, toque em Compartilhar e escolha o Kustho. A saída aparece para você confirmar.',
+    goPending: 'Ir para Pendentes',
+    manual: 'Lançar à mão',
+    tipTitle: 'Pix enviado sem notificação?',
+    tip: 'Alguns bancos só avisam o Pix recebido. Para os enviados, compartilhe o comprovante com o Kustho (imagem, PDF ou texto): ele é lido no aparelho e vira sugestão em Pendentes.',
+  },
   captureNotice: {
     inviteTitle: 'Lance sem digitar',
     invite: 'Ative a leitura de notificações e o Kustho sugere cada Pix e compra dos seus bancos.',
@@ -622,6 +634,10 @@ export const strings = {
       not_found: 'Item não encontrado. Ele pode ter sido excluído.',
       capture_incomplete: 'Falta o valor, o tipo ou a origem. Edite antes de confirmar.',
       already_linked: 'Este lançamento já está ligado a outra notificação.',
+      receipt_reader_unavailable:
+        'Para ler imagem ou PDF, o app precisa ser atualizado (recompile com pnpm android).',
+      receipt_unrecognized:
+        'Não reconheci um comprovante nesse conteúdo. Tente compartilhar o comprovante do Pix (imagem, PDF ou texto).',
     },
   },
 } as const;

@@ -141,6 +141,34 @@ describe.each(environments)('CapturesService ($name)', ({ create }) => {
     expect(isDomainError(error) && error.code).toBe('already_linked');
   });
 
+  it('comprovante compartilhado vira captura na conta do banco e confirma como receipt', async () => {
+    const { services, seed } = await create();
+    const nubank = seed.accounts.find((a) => a.institution === 'Nubank')!;
+    const text =
+      'Comprovante de transferência\nValor\nR$ 33,30\nData 17/10/2026\nDestino\nNome\nFULANO DE TAL\nOrigem\nNome\nCICLANO\nInstituição\nNU PAGAMENTOS - IP';
+    const capture = await services.captures.ingestReceipt({ text, receivedAtMs: AT_TODAY });
+    expect(capture).toMatchObject({
+      channel: 'receipt',
+      kind: 'expense',
+      amountCents: 3330,
+      merchant: 'FULANO DE TAL',
+      suggestedAccountId: nubank.id,
+      status: 'pending',
+    });
+
+    // Compartilhar o mesmo comprovante de novo não duplica.
+    const again = await services.captures.ingestReceipt({ text, receivedAtMs: AT_TODAY + 1000 });
+    expect(again.id).toBe(capture.id);
+
+    const [tx] = await services.captures.confirmCapture(capture.id);
+    expect(tx).toMatchObject({ source: 'receipt', amountCents: 3330, accountId: nubank.id });
+
+    const error = await services.captures
+      .ingestReceipt({ text: 'bom dia!', receivedAtMs: AT_TODAY })
+      .catch((e: unknown) => e);
+    expect(isDomainError(error) && error.code).toBe('receipt_unrecognized');
+  });
+
   it('compra no cartão confirmada vira parcelas na fatura', async () => {
     const { services, notifications, seed } = await create();
     const card = seed.creditCards[0];

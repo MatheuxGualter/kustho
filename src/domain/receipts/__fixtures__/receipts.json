@@ -1,0 +1,76 @@
+{
+  "_sobre": "Comprovantes SINTÉTICOS no estilo dos bancos (texto como sai do OCR ou do compartilhar), sem dado real. Comprovantes reais entram anonimizados.",
+  "cases": [
+    {
+      "name": "Nubank: Pix enviado (texto de imagem, rótulo e valor em linhas separadas)",
+      "text": "Comprovante de transferência\n18 OUT 2026 - 14:32:10\nValor\nR$ 50,00\nTipo de transferência\nPix\nDestino\nNome\nFULANO DE TAL\nCPF\n•••.000.000-••\nInstituição\nBANCO INTER S.A.\nOrigem\nNome\nCICLANO DA SILVA\nInstituição\nNU PAGAMENTOS - IP\nID da transação:\nE00000000202610181432000000000000",
+      "expected": {
+        "amountCents": 5000,
+        "kind": "expense",
+        "counterpart": "FULANO DE TAL",
+        "date": "2026-10-18",
+        "institution": "NU PAGAMENTOS - IP"
+      }
+    },
+    {
+      "name": "Itaú: comprovante Pix com rótulos e dois-pontos na mesma linha",
+      "text": "Comprovante de transferência Pix\nvalor: R$ 1.234,56\ndata da transferência: 17/10/2026\nhorário: 09:15\nnome do recebedor: LOJA EXEMPLO LTDA\ninstituição: CAIXA ECONOMICA FEDERAL\ndados do pagador\nnome: CICLANO DA SILVA\ninstituição: ITAÚ UNIBANCO S.A.\nautenticação: XXXXX",
+      "expected": {
+        "amountCents": 123456,
+        "kind": "expense",
+        "counterpart": "LOJA EXEMPLO LTDA",
+        "date": "2026-10-17",
+        "institution": "ITAÚ UNIBANCO S.A."
+      }
+    },
+    {
+      "name": "Inter: Pix enviado com 'Quem recebeu' e 'Quem pagou'",
+      "text": "Pix enviado\nR$ 25,90\nData 18/10/2026\nHora 20:01\nQuem recebeu\nNome FULANO DE TAL\nCPF ***.000.000-**\nInstituição Nu Pagamentos S.A.\nQuem pagou\nNome CICLANO DA SILVA\nInstituição Banco Inter S.A.",
+      "expected": {
+        "amountCents": 2590,
+        "kind": "expense",
+        "counterpart": "FULANO DE TAL",
+        "date": "2026-10-18",
+        "institution": "Banco Inter S.A."
+      }
+    },
+    {
+      "name": "Mercado Pago: valor sem centavos e 'Para'",
+      "text": "Comprovante de transferência\nVocê transferiu\nR$ 10\n19 de outubro de 2026, 08:40\nDe\nCICLANO DA SILVA\nMercado Pago\nPara\nFULANO DE TAL\nBanco do Brasil",
+      "expected": {
+        "amountCents": 1000,
+        "kind": "expense",
+        "counterpart": "FULANO DE TAL",
+        "date": "2026-10-19",
+        "institution": "Mercado Pago"
+      }
+    },
+    {
+      "name": "Pix recebido: entrada, quem pagou é a contraparte",
+      "text": "Comprovante de Pix recebido\nValor R$ 150,00\nData 16/10/2026 12:00\nDe\nNome FULANO DE TAL\nInstituição Banco Bradesco S.A.\nPara\nNome CICLANO DA SILVA\nInstituição Nu Pagamentos S.A.",
+      "expected": {
+        "amountCents": 15000,
+        "kind": "income",
+        "counterpart": "FULANO DE TAL",
+        "date": "2026-10-16",
+        "institution": "Nu Pagamentos S.A."
+      }
+    },
+    {
+      "name": "texto compartilhado (não imagem) numa linha só",
+      "text": "Pix de R$ 42,00 enviado para FULANO DE TAL em 18/10/2026 às 10:00. Instituição de origem: Banco Santander.",
+      "expected": {
+        "amountCents": 4200,
+        "kind": "expense",
+        "counterpart": "FULANO DE TAL",
+        "date": "2026-10-18",
+        "institution": "Banco Santander"
+      }
+    },
+    {
+      "name": "sem valor: não é comprovante",
+      "text": "Olha essa foto da praia!",
+      "expected": null
+    }
+  ]
+}
