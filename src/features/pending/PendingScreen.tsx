@@ -109,13 +109,16 @@ export function PendingScreen() {
           loading={busy}
           onPress={() =>
             void run(async () => {
-              // As que parecem um lançamento existente são vinculadas, não duplicadas.
-              const toLink = ready.filter((c) => data.matches.has(c.id));
+              // As que parecem um lançamento existente são vinculadas, não duplicadas. Estorno
+              // aponta a compra: é confirmado (vira o estorno na fatura), não vinculado.
+              const toLink = ready.filter(
+                (c) => c.kind !== 'card_refund' && data.matches.has(c.id),
+              );
               for (const c of toLink) {
                 await services.captures.linkCapture(c.id, data.matches.get(c.id)!.id);
               }
               const { confirmed } = await services.captures.confirmMany(
-                ready.filter((c) => !data.matches.has(c.id)).map((c) => c.id),
+                ready.filter((c) => !toLink.includes(c)).map((c) => c.id),
               );
               return strings.pending.confirmedMany(confirmed.length + toLink.length);
             })
@@ -129,7 +132,8 @@ export function PendingScreen() {
           capture={capture}
           originName={data.names.get(capture.suggestedAccountId ?? capture.suggestedCardId ?? '')}
           ready={ready.includes(capture)}
-          match={data.matches.get(capture.id)}
+          match={capture.kind === 'card_refund' ? undefined : data.matches.get(capture.id)}
+          refundOf={capture.kind === 'card_refund' ? data.matches.get(capture.id) : undefined}
           busy={busy}
           onLink={(tx) =>
             void run(async () => {
@@ -156,6 +160,7 @@ function PendingCard({
   originName,
   ready,
   match,
+  refundOf,
   busy,
   onLink,
   onConfirm,
@@ -167,6 +172,8 @@ function PendingCard({
   ready: boolean;
   /** Lançamento que já existe e parece ser o mesmo (sugestão de vincular). */
   match: Transaction | undefined;
+  /** Compra que o estorno devolve (trilha C). */
+  refundOf: Transaction | undefined;
   busy: boolean;
   onLink: (tx: Transaction) => void;
   onConfirm: () => void;
@@ -175,7 +182,9 @@ function PendingCard({
 }) {
   const unparsed = capture.parser === null;
   const amount = capture.amountCents ?? 0;
-  const signed = capture.kind === 'income' ? amount : -amount;
+  // Estorno devolve dinheiro: entra com sinal +, como receita.
+  const isIn = capture.kind === 'income' || capture.kind === 'card_refund';
+  const signed = isIn ? amount : -amount;
   const description = capture.merchant ?? capture.title ?? capture.packageName;
   const date = capture.date ?? toISODate(new Date(capture.postedAt));
 
@@ -195,7 +204,7 @@ function PendingCard({
           </AppText>
         </View>
         {capture.amountCents ? (
-          <MoneyText cents={signed} tone={capture.kind === 'income' ? 'income' : 'expense'} />
+          <MoneyText cents={signed} tone={isIn ? 'income' : 'expense'} />
         ) : null}
       </View>
 
@@ -218,6 +227,19 @@ function PendingCard({
           <AppText variant="label" numberOfLines={1}>
             {`${match.description} · ${formatDateBR(match.date)}`}
           </AppText>
+        </View>
+      ) : null}
+
+      {capture.kind === 'card_refund' ? (
+        <View className="gap-1 rounded-input bg-surface-raised p-3">
+          <AppText variant="caption" tone="muted">
+            {refundOf ? strings.pending.refundOf : strings.pending.refundNoPurchase}
+          </AppText>
+          {refundOf ? (
+            <AppText variant="label" numberOfLines={1}>
+              {`${refundOf.description} · ${formatDateBR(refundOf.date)}`}
+            </AppText>
+          ) : null}
         </View>
       ) : null}
 

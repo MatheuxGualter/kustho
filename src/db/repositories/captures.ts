@@ -1,4 +1,4 @@
-import { and, desc, eq, isNull, sql } from 'drizzle-orm';
+import { and, between, desc, eq, isNull, sql } from 'drizzle-orm';
 
 import type { Capture, CaptureOriginRule, CaptureStatus, MerchantRule } from '@/domain/types';
 import { nowTimestamp } from '@/lib/id';
@@ -35,6 +35,18 @@ export async function listRecent(db: AppDatabase, limit: number): Promise<Captur
     .where(isNull(captures.deletedAt))
     .orderBy(desc(captures.postedAt), desc(captures.createdAt))
     .limit(limit);
+}
+
+/** Capturas não excluídas notificadas entre dois instantes (ISO 8601), para achar duplicatas. */
+export async function listPostedBetween(
+  db: AppDatabase,
+  from: string,
+  to: string,
+): Promise<Capture[]> {
+  return db
+    .select()
+    .from(captures)
+    .where(and(isNull(captures.deletedAt), between(captures.postedAt, from, to)));
 }
 
 export async function countByStatus(db: AppDatabase, status: CaptureStatus): Promise<number> {
@@ -113,7 +125,8 @@ export async function upsertOriginRule(db: AppDatabase, rule: OriginRuleFields):
 
 /**
  * Lançamentos já ocupados por uma captura: os confirmados (ligados) e os sugeridos para
- * vincular em capturas pendentes. O matcher não os oferece de novo.
+ * vincular em capturas pendentes. O matcher não os oferece de novo. A compra apontada por
+ * um estorno pendente não conta: ela continua sendo só dela.
  */
 export async function listLinkedTransactionIds(db: AppDatabase): Promise<Set<string>> {
   const rows = await db
@@ -121,13 +134,16 @@ export async function listLinkedTransactionIds(db: AppDatabase): Promise<Set<str
       transactionId: captures.transactionId,
       matchTransactionId: captures.matchTransactionId,
       status: captures.status,
+      kind: captures.kind,
     })
     .from(captures)
     .where(isNull(captures.deletedAt));
   const ids = new Set<string>();
   for (const r of rows) {
     if (r.transactionId) ids.add(r.transactionId);
-    if (r.status === 'pending' && r.matchTransactionId) ids.add(r.matchTransactionId);
+    if (r.status === 'pending' && r.kind !== 'card_refund' && r.matchTransactionId) {
+      ids.add(r.matchTransactionId);
+    }
   }
   return ids;
 }

@@ -82,6 +82,7 @@ Coisas que custaram tempo e que o Claude (e você) deve saber de cara:
 | Arquivo de texto com acentos (CSV) sai errado              | Grave bytes UTF-8 (`TextEncoder`) com BOM; ver `src/features/shared/shareFile.ts`.                                             |
 | Regra de limite que soma lançamentos (ex.: estornos)       | Ligue os lançamentos por id (`refundOfId`) e teste a soma, não só o valor isolado.                                             |
 | Exportar dados de usuário (diagnóstico)                    | Anonimize e teste com textos reais: bancos mascaram só parte do CPF (`XXX.468.266-XX`).                                        |
+| Fake com `await` dentro do laço de leitura                 | Duas leituras ao mesmo tempo duplicam. Use a mesma trava do real (`running ??= …`) e teste com `Promise.all`.                  |
 | Abrir PR depois de muito tempo na branch                   | `git fetch && git merge origin/main` antes; alguém pode ter mudado os mesmos arquivos na `main`.                               |
 
 ## 6. O que o Claude pode e não pode fazer sozinho

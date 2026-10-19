@@ -15,8 +15,9 @@ import type {
 } from '@/domain/contracts';
 import { DomainError } from '@/domain/errors';
 import { buildReceiptCapture } from '@/domain/receipts/capture';
-import type { Transaction } from '@/domain/types';
+import type { Capture } from '@/domain/types';
 
+import { createFromConfirmation } from './confirm';
 import { applyMerchantRule, confirmationEdited, learnedMerchantRule } from './merchantRules';
 import { candidateWindow, decideMatch, type MatchableCapture, matchFields } from './matcher';
 import {
@@ -26,6 +27,7 @@ import {
   parseNotification,
   resolveConfirmation,
 } from './rules';
+import { duplicateWindow, findDuplicate, findRefundTarget, refundWindow } from './special';
 
 /** Quantas notificações cruas o `ingest` lê por vez. */
 const INGEST_BATCH = 100;
@@ -50,12 +52,36 @@ export function createCapturesService(
 
   // Duas chamadas ao mesmo tempo (abrir o app + evento do módulo) leriam o mesmo lote.
   let running: Promise<number> | null = null;
-  /** Sugestão de vínculo (trilha A) para uma captura ainda não gravada. */
+  /**
+   * Sugestão de vínculo (trilha A) para uma captura ainda não gravada; em estorno, a compra
+   * que ele devolve (trilha C).
+   */
   const suggestLink = async (fields: MatchableCapture, linked: ReadonlySet<string>) => {
     if (!fields.date || !fields.amountCents) return matchFields({ action: 'create', score: 0 });
+    if (fields.kind === 'card_refund') {
+      const { from, to } = refundWindow(fields.date);
+      const purchases = (await txRepo.listTransactionsBetween(db, from, to)).filter(
+        (tx) => tx.kind === 'card_purchase',
+      );
+      const options = await Promise.all(
+        purchases.map(async (tx) => ({
+          tx,
+          refundableCents: await deps.cards.getRefundableCents(tx.id),
+        })),
+      );
+      return matchFields(findRefundTarget(fields, options));
+    }
     const { from, to } = candidateWindow(fields.date);
     const candidates = await txRepo.listTransactionsBetween(db, from, to);
     return matchFields(decideMatch(fields, candidates, linked));
+  };
+
+  /** A mesma transação já capturada por outra fonte (trilha C). */
+  const duplicateOf = async (
+    fields: Omit<Capture, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt'>,
+  ) => {
+    const { from, to } = duplicateWindow(fields.postedAt);
+    return findDuplicate(fields, await repo.listPostedBetween(db, from, to));
   };
 
   const ingestOnce = async () => {
@@ -73,6 +99,17 @@ export function createCapturesService(
           buildCapture(raw, parseNotification(deps.parsers, raw), rules),
           merchants,
         );
+        const duplicate = await duplicateOf(fields);
+        if (duplicate) {
+          // Fica descartada, apontando a original: um item só em Pendentes.
+          const inserted = await repo.insertCapture(db, {
+            ...fields,
+            status: 'discarded',
+            duplicateOfId: duplicate.id,
+          });
+          if (inserted) created++;
+          continue;
+        }
         const match = await suggestLink(fields, linked);
         if (await repo.insertCapture(db, { ...fields, ...match })) {
           created++;
@@ -99,7 +136,21 @@ export function createCapturesService(
       if (!built) throw new DomainError('receipt_unrecognized');
       const fields = applyMerchantRule(built, await repo.listMerchantRules(db));
       const existing = await repo.getByRawId(db, fields.rawId);
-      if (existing) return existing;
+      if (existing) {
+        return (
+          (existing.duplicateOfId && (await repo.getCapture(db, existing.duplicateOfId))) ||
+          existing
+        );
+      }
+      const duplicate = await duplicateOf(fields);
+      if (duplicate) {
+        await repo.insertCapture(db, {
+          ...fields,
+          status: 'discarded',
+          duplicateOfId: duplicate.id,
+        });
+        return duplicate;
+      }
       const match = await suggestLink(fields, await repo.listLinkedTransactionIds(db));
       await repo.insertCapture(db, { ...fields, ...match });
       return (await repo.getByRawId(db, fields.rawId))!;
@@ -115,40 +166,19 @@ export function createCapturesService(
       const confirmation = resolveConfirmation(capture, input);
       if (!confirmation) throw new DomainError('capture_incomplete');
 
-      const { kind, amountCents, date, description, categoryId } = confirmation;
-      let created: Transaction[];
-      if (kind === 'card_purchase') {
-        created = await deps.cards.createCardPurchase({
-          cardId: confirmation.cardId!,
-          amountCents,
-          installments: confirmation.installments ?? 1,
-          date,
-          description,
-          categoryId,
-          source: capture.channel === 'receipt' ? 'receipt' : 'notification',
-        });
-      } else {
-        created = [
-          await deps.transactions.createTransaction({
-            kind,
-            amountCents,
-            date,
-            description,
-            categoryId,
-            accountId: confirmation.accountId!,
-            source: capture.channel === 'receipt' ? 'receipt' : 'notification',
-          }),
-        ];
-      }
+      const created = await createFromConfirmation(deps, capture, confirmation);
 
       await repo.updateCapture(db, id, {
         status: 'confirmed',
         transactionId: created[0].id,
         editedOnConfirm: confirmationEdited(capture, input),
       });
-      const merchantRule = learnedMerchantRule(capture, confirmation);
-      if (merchantRule) await repo.upsertMerchantRule(db, merchantRule);
-      await repo.upsertOriginRule(db, learnedRule(capture, confirmation));
+      // Estorno não ensina origem nem categoria: quem ensina é a compra.
+      if (confirmation.kind !== 'card_refund') {
+        const merchantRule = learnedMerchantRule(capture, confirmation);
+        if (merchantRule) await repo.upsertMerchantRule(db, merchantRule);
+        await repo.upsertOriginRule(db, learnedRule(capture, confirmation));
+      }
       return created;
     },
 

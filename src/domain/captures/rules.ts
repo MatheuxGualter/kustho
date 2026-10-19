@@ -91,7 +91,8 @@ export function buildCapture(
 
 /**
  * Junta o que o usuário informou com a sugestão. `null` quando falta valor, tipo, data ou a
- * origem certa para o tipo (cartão para compra no cartão, conta para os demais).
+ * origem certa para o tipo (cartão para compra no cartão, a compra para estorno, conta para
+ * os demais).
  */
 export function resolveConfirmation(
   capture: Capture,
@@ -110,6 +111,11 @@ export function resolveConfirmation(
     // `null` informado vale (o usuário tirou a categoria); ausente, vale a sugestão.
     categoryId: input.categoryId !== undefined ? input.categoryId : capture.suggestedCategoryId,
   };
+  if (kind === 'card_refund') {
+    // Estorno só existe ligado à compra (trilha C).
+    const refundOfId = input.refundOfId ?? capture.matchTransactionId;
+    return refundOfId ? { ...base, refundOfId } : null;
+  }
   if (kind === 'card_purchase') {
     const cardId = input.cardId ?? capture.suggestedCardId;
     return cardId

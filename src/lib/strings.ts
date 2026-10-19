@@ -206,6 +206,9 @@ export const strings = {
       'Depois de fazer um Pix, abra o comprovante no app do banco, toque em Compartilhar e escolha o Kustho. A saída aparece para você confirmar.',
     goPending: 'Ir para Pendentes',
     manual: 'Lançar à mão',
+    alreadyTitle: 'Já está no Kustho',
+    already:
+      'Este Pix já chegou por notificação ou por outro comprovante. Confira em Pendentes ou nos lançamentos.',
     tipTitle: 'Pix enviado sem notificação?',
     tip: 'Alguns bancos só avisam o Pix recebido. Para os enviados, compartilhe o comprovante com o Kustho (imagem, PDF ou texto): ele é lido no aparelho e vira sugestão em Pendentes.',
   },
@@ -242,7 +245,12 @@ export const strings = {
     linked: 'Vinculado ao lançamento existente',
     confirmedMany: (count: number) => `${count} lançamentos criados`,
     discarded: 'Notificação descartada',
-    kinds: { expense: 'Despesa', income: 'Receita', card_purchase: 'Cartão' },
+    kinds: {
+      expense: 'Despesa',
+      income: 'Receita',
+      card_purchase: 'Cartão',
+      card_refund: 'Estorno',
+    },
     original: 'Notificação original',
     origin: 'Conta',
     card: 'Cartão',
@@ -250,6 +258,10 @@ export const strings = {
     needAmount: 'Informe o valor',
     needOrigin: 'Escolha a conta ou o cartão',
     needDescription: 'Informe uma descrição',
+    refundOf: 'Estorno da compra:',
+    refundNoPurchase:
+      'Não achamos a compra deste estorno. Abra a compra no cartão e use Estornar, ou descarte.',
+    refundConfirmed: 'Estorno lançado na fatura',
   },
   transactions: {
     searchPlaceholder: 'Buscar lançamento',

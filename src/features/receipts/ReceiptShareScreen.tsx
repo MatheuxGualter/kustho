@@ -29,6 +29,8 @@ export function ReceiptShareScreen() {
   const { sharedPayloads, resolvedSharedPayloads, isResolving, clearSharedPayloads } =
     useIncomingShare();
   const [failure, setFailure] = useState<string | null>(null);
+  /** O Pix já tinha chegado (notificação ou outro comprovante) e foi confirmado (trilha C). */
+  const [already, setAlready] = useState(false);
   const started = useRef(false);
 
   const payloads = resolvedSharedPayloads.length > 0 ? resolvedSharedPayloads : sharedPayloads;
@@ -42,6 +44,10 @@ export function ReceiptShareScreen() {
       const text = await sharedReceiptText(receipt, reader);
       const capture = await captures.ingestReceipt({ text, receivedAtMs: Date.now() });
       clearSharedPayloads();
+      if (capture.status !== 'pending') {
+        setAlready(true);
+        return;
+      }
       router.replace({ pathname: '/pendente/[id]', params: { id: capture.id } });
     };
     read().catch((e: unknown) => {
@@ -54,15 +60,21 @@ export function ReceiptShareScreen() {
   // Os itens só são limpos depois de ler (ou falhar): sem itens e sem falha, nada foi compartilhado.
   const nothingShared = !isResolving && payloads.length === 0;
 
-  if (failure || nothingShared) {
+  if (failure || already || nothingShared) {
     return (
       <>
         {title}
         <Screen edges={['bottom']}>
           <EmptyState
             icon={FileText}
-            title={failure ? strings.receipts.failedTitle : strings.receipts.emptyTitle}
-            description={failure ?? strings.receipts.howTo}
+            title={
+              already
+                ? strings.receipts.alreadyTitle
+                : failure
+                  ? strings.receipts.failedTitle
+                  : strings.receipts.emptyTitle
+            }
+            description={already ? strings.receipts.already : (failure ?? strings.receipts.howTo)}
           />
           <Button
             label={strings.receipts.goPending}
