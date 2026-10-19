@@ -19,7 +19,8 @@ pnpm install
 pnpm android        # gera e instala o dev client (expo run:android) e abre o Metro
 ```
 
-Depois da primeira instalação, `pnpm start` basta para continuar desenvolvendo. O Expo Go
+Depois da primeira instalação, `pnpm start:usb` (celular no cabo) ou `pnpm start` (Wi-Fi)
+basta para continuar desenvolvendo. O Expo Go
 não funciona com este projeto.
 
 APK para testes internos: `npx eas-cli@latest build --profile preview --platform android`.
@@ -33,9 +34,16 @@ APK para testes internos: `npx eas-cli@latest build --profile preview --platform
 | `pnpm test`        | Jest (regras puras e componentes)                        |
 | `pnpm db:generate` | Gera a migração do Drizzle após mudar `src/db/schema.ts` |
 | `pnpm format`      | Formata o código                                         |
+| `pnpm start`       | Metro para o app de desenvolvimento (Wi-Fi)              |
+| `pnpm start:usb`   | Metro pelo cabo USB (`adb reverse` + localhost)          |
 
 ## Status
 
-Fase 0 concluída. Fase 1 (CRUD financeiro) com todas as telas prontas sobre o banco real;
-faltam o teste de uso, os testes ponta a ponta e alguns itens nativos. Andamento em
-[`docs/fase-1.md`](docs/fase-1.md).
+- **Fase 0** (fundação): concluída.
+- **Fase 1** (CRUD financeiro): telas prontas e usadas com gastos reais. Falta o portão com
+  dois membros, rodar o Maestro até o fim e a conferência de acessibilidade —
+  [`docs/fase-1.md`](docs/fase-1.md).
+- **Fase 2** (leitura de notificações): captura, Pendentes, configuração e diagnóstico
+  prontos e testados no aparelho (inclusive reinício). Falta juntar 30 notificações reais,
+  medir as metas de captura e precisão e a revisão do Kotlin —
+  [`docs/fase-2.md`](docs/fase-2.md).

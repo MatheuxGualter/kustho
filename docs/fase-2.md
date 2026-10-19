@@ -25,15 +25,16 @@ marca o `[x]` **no mesmo PR**. Escopo e trilhas: "Fase 2" em [`plano.md`](plano.
       `CapturesService` (trilha D). Regras puras em `src/domain/captures/rules.ts` (escolher
       o parser, montar a sugestão, completar a confirmação, aprender a origem).
 - [x] Fake `createFakeCapturesService` (cria os lançamentos pelos serviços de lançamentos e
-      cartões) e suíte de contrato `captures.contract.test.ts`. O app usa o fake sobre os
-      serviços reais até a trilha D entregar o real: capturas em memória, lançamentos no SQLite.
+      cartões) e suíte de contrato `captures.contract.test.ts`, que roda também contra o
+      serviço real.
 - [x] `NewTransaction` e `NewCardPurchase` aceitam `source` (padrão `manual`).
-- [x] Aba Pendentes com selo (`tabBarBadge` na `TabBar`) e rotas vazias
-      `/captura/permissao` e `/captura/diagnostico`.
+- [x] Aba Pendentes com selo (`tabBarBadge` na `TabBar`) e rotas `/captura/permissao` e
+      `/captura/diagnostico` (preenchidas pela trilha B).
 - [x] Barra de abas: Contas saiu do menu Mais e virou aba à direita, e o + voltou ao
-      centro (Início, Lançamentos, Pendentes | + | Cartões, Contas, Mais). Decisão de out/2026.
-- [ ] Cada membro junta notificações reais dos próprios bancos (anonimizar antes do
-      commit: nomes, finais de cartão e estabelecimentos).
+      centro (Início, Lançamentos, Pendentes | + | Cartões, Contas, Mais), só com ícones
+      (Pendentes = sino, Lançamentos = setas de entrada e saída). Decisão de out/2026.
+- [ ] Cada membro junta notificações reais dos próprios bancos (Diagnóstico → Exportar
+      anonimizado; conferir antes do commit). Até agora: um membro, 5 notificações.
 
 ## Trilhas
 
@@ -134,3 +135,34 @@ e rodar `scripts/simulate-notification.sh --exemplos`. Para ler o que foi gravad
 - [x] `CaptureIngestor` no layout raiz: lê o módulo ao abrir o app e ao voltar ao primeiro
       plano; a aba também lê ao abrir.
 - [ ] Lista + detalhe na faixa expandida; conferência com fonte em 130%.
+
+## Validação no aparelho (out/2026)
+
+Testado num Galaxy S24 (SM-S921B), com Itaú, Nubank e Mercado Pago.
+
+| Item                                                                 | Resultado                                 |
+| -------------------------------------------------------------------- | ----------------------------------------- |
+| Convite na Início e "Agora não"                                      | ok                                        |
+| Configuração: bancos sugeridos, acesso, bateria                      | ok                                        |
+| Pix/compra real chega em Pendentes e entra no saldo ao confirmar     | ok                                        |
+| Diagnóstico e exportação anonimizada                                 | ok; CPF parcial vazava → corrigido no #26 |
+| Aviso "A leitura de notificações parou" ao tirar o acesso            | ok                                        |
+| Reinício do celular sem abrir o app                                  | ok (capturou)                             |
+| Período sem abrir o app                                              | ok (capturou)                             |
+| Pacotes de Itaú, Nubank e Mercado Pago                               | ok                                        |
+| NuPay sem estabelecimento; depósito do Mercado Pago não interpretado | corrigidos no #26, **reconferir**         |
+
+- [ ] Medir as metas do portão com números: taxa de captura (meta 95%) e precisão de valor
+      e tipo (meta 90%) num período combinado, com pelo menos dois membros.
+
+## Histórico de entregas
+
+| PR  | O que entrou                                                           |
+| --- | ---------------------------------------------------------------------- |
+| #19 | Kickoff e trilhas A, C e D: módulo Kotlin, parser genérico, Pendentes  |
+| #21 | Trilha B: permissão, bancos, aviso na Início, diagnóstico e exportação |
+| #23 | JUnit do módulo no CI                                                  |
+| #26 | Parsers ajustados às notificações reais; anonimização do CPF mascarado |
+| #27 | Contas vira aba e o + volta ao centro                                  |
+| #28 | Barra só com ícones (sino em Pendentes, setas em Lançamentos)          |
+| #29 | Limpar dados de exemplo apaga também as capturas                       |
