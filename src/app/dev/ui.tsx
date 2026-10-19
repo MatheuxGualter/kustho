@@ -11,7 +11,7 @@ import {
   Trash2,
 } from 'lucide-react-native';
 import { type ReactNode, useCallback, useEffect, useState } from 'react';
-import { AppState, View } from 'react-native';
+import { Alert, AppState, View } from 'react-native';
 
 import { db } from '@/db/client';
 import { NotificationCapture, type RawNotification } from '../../../modules/notification-capture';
@@ -254,13 +254,22 @@ export default function DevCatalogScreen() {
 function DevDataSection() {
   const [status, setStatus] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const run = (action: () => Promise<string>) => {
-    setBusy(true);
-    action()
-      .then(setStatus)
-      .catch((e: unknown) => setStatus(String(e)))
-      .finally(() => setBusy(false));
-  };
+  // Os dois botões apagam os dados do aparelho: confirma antes.
+  const run = (action: () => Promise<string>) =>
+    Alert.alert(strings.devCatalog.seed, strings.devCatalog.seedWarning, [
+      { text: strings.common.cancel, style: 'cancel' },
+      {
+        text: strings.devCatalog.seedConfirmShort,
+        style: 'destructive',
+        onPress: () => {
+          setBusy(true);
+          action()
+            .then(setStatus)
+            .catch((e: unknown) => setStatus(String(e)))
+            .finally(() => setBusy(false));
+        },
+      },
+    ]);
   return (
     <Section title={strings.devCatalog.devData}>
       <AppText variant="caption" tone="muted">

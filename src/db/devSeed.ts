@@ -24,7 +24,14 @@ import { accentPalette } from '@/ui/tokens';
 
 import type { AppDatabase } from './database';
 import { listCategories } from './repositories/categories';
-import { accounts, creditCards, invoices, transactions } from './schema';
+import {
+  accounts,
+  captureOriginRules,
+  captures,
+  creditCards,
+  invoices,
+  transactions,
+} from './schema';
 
 export type DevSeed = {
   accounts: Account[];
@@ -376,8 +383,11 @@ export function buildDevSeed({
 
 const CHUNK = 50;
 
-/** Apaga contas, cartões, faturas e lançamentos (as categorias ficam). Só desenvolvimento. */
+/** Apaga contas, cartões, faturas, lançamentos e capturas (as categorias ficam). Só desenvolvimento. */
 export async function clearDevData(db: AppDatabase): Promise<void> {
+  // Ordem das chaves estrangeiras: capturas apontam para lançamentos, contas e cartões.
+  await db.delete(captures);
+  await db.delete(captureOriginRules);
   await db.delete(transactions);
   await db.delete(invoices);
   await db.delete(creditCards);

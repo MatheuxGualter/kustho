@@ -9,6 +9,12 @@ import { buildDefaultCategories } from '../seed';
 import { buildDevSeed, clearDevData, runDevSeed } from '../devSeed';
 import { categories } from '../schema';
 import { createTestDb } from '../test/testDb';
+import {
+  insertCapture,
+  listByStatus,
+  listOriginRules,
+  upsertOriginRule,
+} from '../repositories/captures';
 
 const today = '2026-10-17';
 let n = 0;
@@ -117,5 +123,41 @@ describe('runDevSeed', () => {
     expect(stored).toHaveLength(first.transactions.length);
     await clearDevData(db);
     expect(await listAccounts(db)).toHaveLength(0);
+  });
+
+  it('também apaga capturas e regras de origem que apontam para os dados (Fase 2)', async () => {
+    const { db } = createTestDb();
+    await db.insert(categories).values(buildDefaultCategories());
+    const seed = await runDevSeed(db, today);
+    const tx = seed.transactions.find((t) => t.accountId)!;
+    await insertCapture(db, {
+      rawId: 'raw-1',
+      packageName: 'com.nu.production',
+      title: 'Pix',
+      text: 'Você recebeu R$ 1,00',
+      postedAt: '2026-10-17T12:00:00.000Z',
+      parser: 'generic',
+      amountCents: 100,
+      kind: 'income',
+      merchant: null,
+      date: today,
+      cardLastDigits: null,
+      suggestedAccountId: tx.accountId,
+      suggestedCardId: null,
+      confidence: 0.6,
+      status: 'confirmed',
+      transactionId: tx.id,
+    });
+    await upsertOriginRule(db, {
+      packageName: 'com.nu.production',
+      cardLastDigits: null,
+      accountId: tx.accountId,
+      cardId: null,
+    });
+
+    await runDevSeed(db, today);
+    expect(await listByStatus(db, 'confirmed')).toHaveLength(0);
+    expect(await listOriginRules(db)).toHaveLength(0);
+    expect(await listAccounts(db)).toHaveLength(3);
   });
 });
