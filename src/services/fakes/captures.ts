@@ -18,6 +18,7 @@ import {
   parseNotification,
   resolveConfirmation,
 } from '@/domain/captures/rules';
+import { shouldAutoConfirm, sourceStats } from '@/domain/captures/precision';
 import { findDuplicate, findRefundTarget } from '@/domain/captures/special';
 import type {
   AccountsService,
@@ -28,7 +29,13 @@ import type {
 } from '@/domain/contracts';
 import { DomainError } from '@/domain/errors';
 import { buildReceiptCapture } from '@/domain/receipts/capture';
-import type { Capture, CaptureOriginRule, MerchantRule, Transaction } from '@/domain/types';
+import type {
+  Capture,
+  CaptureOriginRule,
+  CaptureSource,
+  MerchantRule,
+  Transaction,
+} from '@/domain/types';
 import { nowTimestamp } from '@/lib/id';
 
 import { notifyDataChanged } from '../dataVersion';
@@ -38,12 +45,14 @@ export type CaptureStore = {
   captures: Capture[];
   originRules: CaptureOriginRule[];
   merchantRules: MerchantRule[];
+  sources: CaptureSource[];
 };
 
 export const createCaptureStore = (): CaptureStore => ({
   captures: [],
   originRules: [],
   merchantRules: [],
+  sources: [],
 });
 
 /** Quantas notificações cruas o `ingest` lê por vez. */
@@ -123,8 +132,13 @@ export function createFakeCapturesService(
 
   // Como no real: duas leituras ao mesmo tempo esperam a mesma.
   let running: Promise<number> | null = null;
+  const getSourceStats = async () => sourceStats(store.captures, store.sources);
+
   const ingestOnce = async () => {
     const transactions = await deps.transactions.listAllTransactions();
+    // Nível automático (trilha D): a precisão é a do início da leitura.
+    const stats = new Map((await getSourceStats()).map((s) => [s.packageName, s]));
+    const toAutoConfirm: Capture[] = [];
     let created = 0;
     for (;;) {
       const batch = await deps.notifications.getPending(INGEST_BATCH);
@@ -145,16 +159,24 @@ export function createFakeCapturesService(
             duplicateOfId: duplicate.id,
           });
         } else {
-          store.captures.push({
+          const capture: Capture = {
             ...entity(),
             ...fields,
             ...(await suggestLink(fields, transactions)),
-          });
+          };
+          store.captures.push(capture);
+          if (shouldAutoConfirm(capture, stats.get(capture.packageName))) {
+            toAutoConfirm.push(capture);
+          }
         }
         created++;
       }
       await deps.notifications.markProcessed(batch.map((raw) => raw.id));
       if (batch.length < INGEST_BATCH) break;
+    }
+    for (const capture of toAutoConfirm) {
+      await service.confirmCapture(capture.id);
+      capture.autoConfirmed = true;
     }
     if (created > 0) notifyDataChanged();
     return created;
@@ -289,6 +311,54 @@ export function createFakeCapturesService(
       const capture = live(id);
       if (capture.status !== 'discarded') return;
       Object.assign(capture, { status: 'pending', updatedAt: nowTimestamp() });
+      notifyDataChanged();
+    },
+
+    getSourceStats,
+
+    async setAutoConfirm(packageName, enabled) {
+      if (enabled) {
+        const stats = (await getSourceStats()).find((s) => s.packageName === packageName);
+        if (!stats?.eligible) throw new DomainError('auto_confirm_not_eligible');
+      }
+      const existing = store.sources.find((s) => s.packageName === packageName);
+      if (existing) {
+        Object.assign(existing, {
+          autoConfirm: enabled,
+          deletedAt: null,
+          updatedAt: nowTimestamp(),
+        });
+      } else {
+        store.sources.push({ ...entity(), packageName, autoConfirm: enabled });
+      }
+      notifyDataChanged();
+    },
+
+    async listAutoConfirmed(since) {
+      return store.captures
+        .filter(
+          (c) =>
+            c.deletedAt === null &&
+            c.status === 'confirmed' &&
+            c.autoConfirmed &&
+            c.postedAt >= since,
+        )
+        .sort((a, b) => b.postedAt.localeCompare(a.postedAt));
+    },
+
+    async undoAutoConfirm(id) {
+      const capture = live(id);
+      if (capture.status !== 'confirmed' || !capture.autoConfirmed) {
+        throw new DomainError('not_found');
+      }
+      // Exclui o lançamento junto com as parcelas do grupo.
+      if (capture.transactionId) await deps.transactions.deleteTransaction(capture.transactionId);
+      Object.assign(capture, {
+        status: 'pending',
+        transactionId: null,
+        autoConfirmed: false,
+        updatedAt: nowTimestamp(),
+      });
       notifyDataChanged();
     },
   };

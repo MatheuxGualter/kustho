@@ -1,6 +1,6 @@
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
-import { Bell, Check, CheckCheck, Link2, Pencil, X } from 'lucide-react-native';
+import { Bell, Check, CheckCheck, Link2, Pencil, Sparkles, Undo2, X } from 'lucide-react-native';
 import { useState } from 'react';
 import { View } from 'react-native';
 
@@ -18,8 +18,12 @@ import { MoneyText } from '@/ui/components/MoneyText';
 import { Screen } from '@/ui/components/Screen';
 import { SkeletonRows } from '@/ui/components/Skeleton';
 import { showToast } from '@/ui/components/Toast';
+import { useTheme } from '@/ui/theme';
 
 import { useCaptureDevice } from '@/features/capture-setup/useCaptureDevice';
+
+/** Dias do resumo "entraram sozinhos". */
+const AUTO_SUMMARY_DAYS = 7;
 
 /** Caixa de Pendentes (Fase 2, trilha D): sugestões das notificações para confirmar. */
 export function PendingScreen() {
@@ -28,10 +32,13 @@ export function PendingScreen() {
   const query = useServiceQuery(async () => {
     // Ao abrir a aba, traz o que o módulo gravou desde a última leitura.
     await services.captures.ingest();
-    const [pending, accounts, cards] = await Promise.all([
+    // Fase 3 (trilha D): o que entrou sozinho nos últimos dias, para conferir e desfazer.
+    const since = new Date(Date.now() - AUTO_SUMMARY_DAYS * 86_400_000).toISOString();
+    const [pending, accounts, cards, auto] = await Promise.all([
       services.captures.listPending(),
       services.accounts.listAccountsWithBalance(),
       services.cards.listCardsWithSummary(),
+      services.captures.listAutoConfirmed(since),
     ]);
     const names = new Map<string, string>([
       ...accounts.map((a) => [a.id, a.name] as const),
@@ -44,7 +51,7 @@ export function PendingScreen() {
       const tx = await services.transactions.getTransaction(c.matchTransactionId);
       if (tx) matches.set(c.id, tx);
     }
-    return { pending, names, matches };
+    return { pending, names, matches, auto };
   }, []);
   const [busy, setBusy] = useState(false);
 
@@ -83,8 +90,18 @@ export function PendingScreen() {
     }
   };
 
+  const undoAuto = (capture: Capture) =>
+    void run(async () => {
+      await services.captures.undoAutoConfirm(capture.id);
+      return strings.pending.undone;
+    });
+
   return (
     <Screen title={strings.screens.pending.title}>
+      {data.auto.length > 0 ? (
+        <AutoSummary captures={data.auto} busy={busy} onUndo={undoAuto} />
+      ) : null}
+
       {data.pending.length === 0 ? (
         <EmptyState
           icon={Bell}
@@ -152,6 +169,71 @@ export function PendingScreen() {
         />
       ))}
     </Screen>
+  );
+}
+
+/** Resumo do que o nível automático lançou, com selo e "Desfazer" (Fase 3, trilha D). */
+function AutoSummary({
+  captures,
+  busy,
+  onUndo,
+}: {
+  captures: Capture[];
+  busy: boolean;
+  onUndo: (capture: Capture) => void;
+}) {
+  const { colors } = useTheme();
+  return (
+    <Card>
+      <View className="flex-row items-center gap-2">
+        <Sparkles size={18} color={colors.brand} />
+        <AppText variant="label" className="flex-1">
+          {strings.pending.autoTitle(captures.length)}
+        </AppText>
+      </View>
+      <AppText variant="caption" tone="muted">
+        {strings.pending.autoHint}
+      </AppText>
+      {captures.map((capture) => {
+        const amount = capture.amountCents ?? 0;
+        const description = capture.merchant ?? capture.title ?? capture.packageName;
+        return (
+          <View
+            key={capture.id}
+            className="min-h-touch flex-row items-center gap-3 border-t border-border pt-2"
+          >
+            <View className="flex-1 gap-1">
+              <AppText variant="label" numberOfLines={1}>
+                {description}
+              </AppText>
+              <View className="flex-row items-center gap-2">
+                <View className="rounded-input bg-surface-raised px-2">
+                  <AppText variant="caption" tone="brand">
+                    {strings.pending.autoBadge}
+                  </AppText>
+                </View>
+                {capture.date ? (
+                  <AppText variant="caption" tone="muted">
+                    {formatDateBR(capture.date)}
+                  </AppText>
+                ) : null}
+              </View>
+            </View>
+            <MoneyText
+              cents={capture.kind === 'income' ? amount : -amount}
+              tone={capture.kind === 'income' ? 'income' : 'expense'}
+            />
+            <Button
+              label={strings.pending.undo}
+              icon={Undo2}
+              variant="ghost"
+              disabled={busy}
+              onPress={() => onUndo(capture)}
+            />
+          </View>
+        );
+      })}
+    </Card>
   );
 }
 
