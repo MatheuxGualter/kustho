@@ -10,6 +10,9 @@ appId: app.kustho
     timeout: 120000
 - assertNotVisible: 'Kustho bloqueado'
 - openLink: kustho://dev/seed
+# Confirma que pode apagar os dados do aparelho (ver o aviso em .maestro/README.md).
+- tapOn:
+    id: seed-confirm
 - extendedWaitUntil:
     visible: 'Dados de exemplo prontos'
     timeout: 60000

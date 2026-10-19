@@ -1,5 +1,10 @@
 # Testes ponta a ponta (Maestro)
 
+> **Atenção:** cada fluxo **apaga todos os dados do aparelho** (contas, cartões,
+> lançamentos, notificações capturadas) e põe os dados de exemplo no lugar. Rode num
+> emulador ou num celular sem dados reais; se for no seu, exporte antes (Mais → Exportar
+> dados → JSON).
+
 Fluxos da Fase 1: lançar despesa, compra em 3x em 3 faturas e pagar fatura. Cada um começa
 com `_preparar.yaml`, que abre `kustho://dev/seed` (troca os dados pelos de exemplo e pula
 as boas-vindas).

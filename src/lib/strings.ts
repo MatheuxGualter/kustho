@@ -581,6 +581,10 @@ export const strings = {
     clear: 'Apagar contas, cartões e lançamentos',
     seedDone: (count: number) => `${count} lançamentos criados.`,
     seedReady: 'Dados de exemplo prontos',
+    seedWarning:
+      'Isto apaga todas as contas, cartões, lançamentos e notificações deste aparelho e põe os dados de exemplo no lugar. Use num emulador ou exporte seus dados antes.',
+    seedConfirm: 'Apagar meus dados e popular',
+    seedConfirmShort: 'Apagar',
     clearDone: 'Dados apagados.',
     capture: 'Captura de notificações',
     captureUnavailable: 'Módulo nativo ausente. Recompile o app (pnpm android).',
