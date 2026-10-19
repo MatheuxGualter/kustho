@@ -160,6 +160,109 @@
       }
     },
     {
+      "name": "compra parcelada em 3x (valor total)",
+      "notification": {
+        "packageName": "com.exemplo.banco",
+        "title": "Compra aprovada",
+        "text": "Compra de R$ 300,00 em 3x APROVADA em LOJA EXEMPLO no cartão final 0000."
+      },
+      "expected": {
+        "parser": "generic",
+        "amountCents": 30000,
+        "kind": "card_purchase",
+        "merchant": "LOJA EXEMPLO",
+        "cardLastDigits": "0000",
+        "installments": 3
+      }
+    },
+    {
+      "name": "compra parcelada com valor da parcela (3x de R$ 100,00)",
+      "notification": {
+        "packageName": "com.exemplo.banco",
+        "title": "Compra no crédito",
+        "text": "Compra no crédito de 3x de R$ 100,00 em LOJA EXEMPLO. Cartão final 0000."
+      },
+      "expected": {
+        "parser": "generic",
+        "amountCents": 30000,
+        "kind": "card_purchase",
+        "merchant": "LOJA EXEMPLO",
+        "installments": 3
+      }
+    },
+    {
+      "name": "compra parcelado em 10 vezes",
+      "notification": {
+        "packageName": "com.exemplo.banco",
+        "title": "Compra aprovada",
+        "text": "Compra de R$ 1.200,00 parcelado em 10 vezes em LOJA DE MÓVEIS."
+      },
+      "expected": {
+        "parser": "generic",
+        "amountCents": 120000,
+        "kind": "card_purchase",
+        "merchant": "LOJA DE MÓVEIS",
+        "installments": 10
+      }
+    },
+    {
+      "name": "compra em 1x é à vista",
+      "notification": {
+        "packageName": "com.exemplo.banco",
+        "title": "Compra aprovada",
+        "text": "Compra de R$ 80,69 em 1x no crédito APROVADO em PADARIA EXEMPLO."
+      },
+      "expected": {
+        "parser": "generic",
+        "amountCents": 8069,
+        "kind": "card_purchase",
+        "merchant": "PADARIA EXEMPLO",
+        "installments": null
+      }
+    },
+    {
+      "name": "estorno no cartão",
+      "notification": {
+        "packageName": "com.exemplo.banco",
+        "title": "Estorno realizado",
+        "text": "Estorno de R$ 50,00 da compra em LOJA EXEMPLO no cartão final 0000."
+      },
+      "expected": {
+        "parser": "generic",
+        "amountCents": 5000,
+        "kind": "card_refund",
+        "merchant": "LOJA EXEMPLO",
+        "cardLastDigits": "0000"
+      }
+    },
+    {
+      "name": "estorno no cartão com a loja antes do valor",
+      "notification": {
+        "packageName": "com.exemplo.banco",
+        "title": "Compra estornada",
+        "text": "A compra em LOJA EXEMPLO foi estornada. Valor: R$ 50,00."
+      },
+      "expected": {
+        "parser": "generic",
+        "amountCents": 5000,
+        "kind": "card_refund",
+        "merchant": "LOJA EXEMPLO"
+      }
+    },
+    {
+      "name": "Pix estornado volta como entrada",
+      "notification": {
+        "packageName": "com.exemplo.banco",
+        "title": "Pix estornado",
+        "text": "O Pix de R$ 20,00 para FULANO foi estornado para a sua conta."
+      },
+      "expected": {
+        "parser": "generic",
+        "amountCents": 2000,
+        "kind": "income"
+      }
+    },
+    {
       "name": "compra recusada não é transação",
       "notification": {
         "packageName": "com.exemplo.banco",

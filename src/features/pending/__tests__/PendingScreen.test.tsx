@@ -78,3 +78,35 @@ it('captura igual a um lançamento existente sugere vincular, sem criar outro', 
   expect(store.transactions).toHaveLength(before);
   expect(pix).toMatchObject({ status: 'confirmed', transactionId: existing.id });
 });
+
+it('estorno capturado mostra a compra e confirmar lança o estorno, sem vincular', async () => {
+  const store = createFakeStore();
+  const purchase = store.transactions.find(
+    (t) => t.kind === 'card_purchase' && t.deletedAt === null && t.installmentTotal === null,
+  )!;
+  const refund = store.captures.find((c) => c.merchant === 'FULANO DE TAL')!;
+  Object.assign(refund, {
+    kind: 'card_refund',
+    merchant: 'Estorno da loja',
+    amountCents: 100,
+    matchTransactionId: purchase.id,
+    matchScore: 0.8,
+  });
+  await renderWithTheme(
+    <ServicesProvider services={createFakeServices(store)}>
+      <PendingScreen />
+    </ServicesProvider>,
+  );
+  expect(await screen.findByText('Estorno da compra:')).toBeTruthy();
+  expect(screen.queryByRole('button', { name: 'Vincular' })).toBeNull();
+
+  const [, confirmRefund] = screen.getAllByRole('button', { name: 'Confirmar' });
+  await fireEvent.press(confirmRefund);
+  expect(store.transactions.at(-1)).toMatchObject({
+    kind: 'adjustment',
+    direction: 'in',
+    amountCents: 100,
+    refundOfId: purchase.id,
+  });
+  expect(refund.status).toBe('confirmed');
+});

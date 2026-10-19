@@ -234,6 +234,8 @@ export type CaptureConfirmation = {
   cardId?: Id;
   /** Parcelas da compra no cartão (padrão 1). */
   installments?: number;
+  /** Para `card_refund`: a compra estornada (padrão: a que o matcher achou). */
+  refundOfId?: Id;
 };
 
 export interface CapturesService {

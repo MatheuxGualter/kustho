@@ -31,8 +31,12 @@ jest.mock('expo-sharing', () => ({
 const RECEIPT =
   'Comprovante de transferência\nValor\nR$ 50,00\nData 17/10/2026\nDestino\nNome\nFULANO DE TAL\nOrigem\nInstituição\nNU PAGAMENTOS - IP';
 
-const render = async (reader: { recognizeText: jest.Mock } | null = null) => {
+const render = async (
+  reader: { recognizeText: jest.Mock } | null = null,
+  prepare: (store: ReturnType<typeof createFakeStore>) => void = () => {},
+) => {
   const store = createFakeStore();
+  prepare(store);
   await renderWithTheme(
     <ServicesProvider services={createFakeServices(store)}>
       <ReceiptReaderProvider reader={reader}>
@@ -84,4 +88,24 @@ it('aberto sem nada compartilhado, ensina como usar', async () => {
   mockShared = [];
   await render();
   expect(screen.getByText('Nada para ler')).toBeTruthy();
+});
+
+it('Pix que já chegou e foi confirmado avisa em vez de abrir outra confirmação', async () => {
+  mockShared = [{ value: RECEIPT, shareType: 'text', mimeType: 'text/plain' }];
+  await render(null, (store) => {
+    store.captures.push({
+      ...store.captures[0],
+      id: 'notificado',
+      rawId: 'notificado',
+      packageName: 'com.nu.production',
+      channel: 'notification',
+      status: 'confirmed',
+      kind: 'expense',
+      amountCents: 5000,
+      postedAt: new Date().toISOString(),
+      duplicateOfId: null,
+    });
+  });
+  expect(await screen.findByText('Já está no Kustho')).toBeTruthy();
+  expect(router.replace).not.toHaveBeenCalled();
 });

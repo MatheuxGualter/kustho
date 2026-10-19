@@ -4,7 +4,8 @@
  * sobre os fakes (testes) e sobre os serviços reais (app, até a trilha D entregar o real).
  */
 import type { NotificationCaptureApi } from '../../../modules/notification-capture/src/NotificationCapture.types';
-import { decideMatch, matchFields } from '@/domain/captures/matcher';
+import { createFromConfirmation } from '@/domain/captures/confirm';
+import { decideMatch, type MatchableCapture, matchFields } from '@/domain/captures/matcher';
 import {
   applyMerchantRule,
   confirmationEdited,
@@ -17,6 +18,7 @@ import {
   parseNotification,
   resolveConfirmation,
 } from '@/domain/captures/rules';
+import { findDuplicate, findRefundTarget } from '@/domain/captures/special';
 import type {
   AccountsService,
   CapturesService,
@@ -96,33 +98,74 @@ export function createFakeCapturesService(
     for (const c of store.captures) {
       if (c.deletedAt !== null) continue;
       if (c.transactionId) ids.add(c.transactionId);
-      if (c.status === 'pending' && c.matchTransactionId) ids.add(c.matchTransactionId);
+      if (c.status === 'pending' && c.kind !== 'card_refund' && c.matchTransactionId) {
+        ids.add(c.matchTransactionId);
+      }
     }
     return ids;
   };
 
-  const service: CapturesService = {
-    async ingest() {
-      const transactions = await deps.transactions.listAllTransactions();
-      let created = 0;
-      for (;;) {
-        const batch = await deps.notifications.getPending(INGEST_BATCH);
-        if (batch.length === 0) break;
-        for (const raw of batch) {
-          if (store.captures.some((c) => c.rawId === raw.id)) continue;
-          const fields = applyMerchantRule(
-            buildCapture(raw, parseNotification(parsers, raw), store.originRules),
-            store.merchantRules,
-          );
-          const match = matchFields(decideMatch(fields, transactions, linkedIds()));
-          store.captures.push({ ...entity(), ...fields, ...match });
-          created++;
+  /** Vínculo sugerido (trilha A) ou, em estorno, a compra que ele devolve (trilha C). */
+  const suggestLink = async (fields: MatchableCapture, transactions: readonly Transaction[]) => {
+    if (fields.kind !== 'card_refund') {
+      return matchFields(decideMatch(fields, transactions, linkedIds()));
+    }
+    const options = await Promise.all(
+      transactions
+        .filter((tx) => tx.kind === 'card_purchase')
+        .map(async (tx) => ({
+          tx,
+          refundableCents: await deps.cards.getRefundableCents(tx.id),
+        })),
+    );
+    return matchFields(findRefundTarget(fields, options));
+  };
+
+  // Como no real: duas leituras ao mesmo tempo esperam a mesma.
+  let running: Promise<number> | null = null;
+  const ingestOnce = async () => {
+    const transactions = await deps.transactions.listAllTransactions();
+    let created = 0;
+    for (;;) {
+      const batch = await deps.notifications.getPending(INGEST_BATCH);
+      if (batch.length === 0) break;
+      for (const raw of batch) {
+        if (store.captures.some((c) => c.rawId === raw.id)) continue;
+        const fields = applyMerchantRule(
+          buildCapture(raw, parseNotification(parsers, raw), store.originRules),
+          store.merchantRules,
+        );
+        const duplicate = findDuplicate(fields, store.captures);
+        if (duplicate) {
+          // Fica descartada, apontando a original: um item só em Pendentes.
+          store.captures.push({
+            ...entity(),
+            ...fields,
+            status: 'discarded',
+            duplicateOfId: duplicate.id,
+          });
+        } else {
+          store.captures.push({
+            ...entity(),
+            ...fields,
+            ...(await suggestLink(fields, transactions)),
+          });
         }
-        await deps.notifications.markProcessed(batch.map((raw) => raw.id));
-        if (batch.length < INGEST_BATCH) break;
+        created++;
       }
-      if (created > 0) notifyDataChanged();
-      return created;
+      await deps.notifications.markProcessed(batch.map((raw) => raw.id));
+      if (batch.length < INGEST_BATCH) break;
+    }
+    if (created > 0) notifyDataChanged();
+    return created;
+  };
+
+  const service: CapturesService = {
+    ingest() {
+      running ??= ingestOnce().finally(() => {
+        running = null;
+      });
+      return running;
     },
 
     async ingestReceipt({ text, receivedAtMs }) {
@@ -131,12 +174,26 @@ export function createFakeCapturesService(
       if (!built) throw new DomainError('receipt_unrecognized');
       const fields = applyMerchantRule(built, store.merchantRules);
       const existing = store.captures.find((c) => c.rawId === fields.rawId && c.deletedAt === null);
-      if (existing) return existing;
+      if (existing) {
+        const original = store.captures.find((c) => c.id === existing.duplicateOfId);
+        return original ?? existing;
+      }
+      const duplicate = findDuplicate(fields, store.captures);
+      if (duplicate) {
+        store.captures.push({
+          ...entity(),
+          ...fields,
+          status: 'discarded',
+          duplicateOfId: duplicate.id,
+        });
+        notifyDataChanged();
+        return duplicate;
+      }
       const transactions = await deps.transactions.listAllTransactions();
       const capture: Capture = {
         ...entity(),
         ...fields,
-        ...matchFields(decideMatch(fields, transactions, linkedIds())),
+        ...(await suggestLink(fields, transactions)),
       };
       store.captures.push(capture);
       notifyDataChanged();
@@ -168,31 +225,7 @@ export function createFakeCapturesService(
       const confirmation = resolveConfirmation(capture, input);
       if (!confirmation) throw new DomainError('capture_incomplete');
 
-      const { kind, amountCents, date, description, categoryId } = confirmation;
-      let created: Transaction[];
-      if (kind === 'card_purchase') {
-        created = await deps.cards.createCardPurchase({
-          cardId: confirmation.cardId!,
-          amountCents,
-          installments: confirmation.installments ?? 1,
-          date,
-          description,
-          categoryId,
-          source: capture.channel === 'receipt' ? 'receipt' : 'notification',
-        });
-      } else {
-        created = [
-          await deps.transactions.createTransaction({
-            kind,
-            amountCents,
-            date,
-            description,
-            categoryId,
-            accountId: confirmation.accountId!,
-            source: capture.channel === 'receipt' ? 'receipt' : 'notification',
-          }),
-        ];
-      }
+      const created = await createFromConfirmation(deps, capture, confirmation);
 
       Object.assign(capture, {
         status: 'confirmed',
@@ -200,8 +233,11 @@ export function createFakeCapturesService(
         editedOnConfirm: confirmationEdited(capture, input),
         updatedAt: nowTimestamp(),
       });
-      remember(learnedRule(capture, confirmation));
-      learnMerchant(learnedMerchantRule(capture, confirmation));
+      // Estorno não ensina origem nem categoria: quem ensina é a compra.
+      if (confirmation.kind !== 'card_refund') {
+        remember(learnedRule(capture, confirmation));
+        learnMerchant(learnedMerchantRule(capture, confirmation));
+      }
       notifyDataChanged();
       return created;
     },

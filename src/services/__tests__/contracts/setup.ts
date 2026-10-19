@@ -24,6 +24,8 @@ import { createFakeServices, createFakeStore } from '../../fakes';
 
 export const TODAY = '2026-10-17';
 export const NUBANK_PACKAGE = 'com.nu.production';
+/** App de SMS: o mesmo aviso do banco chega também por ele (duplicatas, Fase 3). */
+export const SMS_PACKAGE = 'com.google.android.apps.messaging';
 
 export type ContractEnv = {
   services: Services;
@@ -33,23 +35,47 @@ export type ContractEnv = {
 };
 
 /**
- * Parser estreito dos testes de contrato: só entende "Compra no débito de R$ X em LOJA.".
- * O resto entra como não interpretado, como antes.
+ * Parser estreito dos testes de contrato. Entende só três formatos:
+ * "Compra no débito de R$ X em LOJA.", "Compra no crédito de R$ X em Nx em LOJA." e
+ * "Estorno de R$ X em LOJA.". O resto entra como não interpretado, como antes.
  */
 export const testParser: NotificationParser = {
   id: 'contract-test',
-  packages: [NUBANK_PACKAGE],
+  packages: [NUBANK_PACKAGE, SMS_PACKAGE],
   parse(notification) {
-    const match = /^Compra no débito de R\$ (\d+),(\d{2}) em (.+)\.$/.exec(notification.text ?? '');
-    if (!match) return null;
-    return {
-      amountCents: Number(match[1]) * 100 + Number(match[2]),
-      kind: 'expense',
-      merchant: match[3],
-      date: toISODate(new Date(notification.postedAtMs)),
-      cardLastDigits: null,
-      confidence: 0.8,
-    };
+    const text = notification.text ?? '';
+    const date = toISODate(new Date(notification.postedAtMs));
+    const cents = (reais: string, centavos: string) => Number(reais) * 100 + Number(centavos);
+    const base = { date, cardLastDigits: null, confidence: 0.8 };
+    const debit = /^Compra no débito de R\$ (\d+),(\d{2}) em (.+)\.$/.exec(text);
+    if (debit) {
+      return {
+        ...base,
+        amountCents: cents(debit[1], debit[2]),
+        kind: 'expense',
+        merchant: debit[3],
+      };
+    }
+    const credit = /^Compra no crédito de R\$ (\d+),(\d{2}) em (\d+)x em (.+)\.$/.exec(text);
+    if (credit) {
+      return {
+        ...base,
+        amountCents: cents(credit[1], credit[2]),
+        kind: 'card_purchase',
+        merchant: credit[4],
+        installments: Number(credit[3]),
+      };
+    }
+    const refund = /^Estorno de R\$ (\d+),(\d{2}) em (.+)\.$/.exec(text);
+    if (refund) {
+      return {
+        ...base,
+        amountCents: cents(refund[1], refund[2]),
+        kind: 'card_refund',
+        merchant: refund[3],
+      };
+    }
+    return null;
   },
 };
 
@@ -59,7 +85,9 @@ export const fakeEnv: EnvFactory = {
   name: 'fake',
   create: async () => {
     const store = createFakeStore(TODAY);
-    const notifications = createFakeNotificationCapture({ allowedPackages: [NUBANK_PACKAGE] });
+    const notifications = createFakeNotificationCapture({
+      allowedPackages: [NUBANK_PACKAGE, SMS_PACKAGE],
+    });
     return {
       notifications,
       services: createFakeServices(store, notifications, [testParser]),
@@ -82,7 +110,9 @@ export const realEnv: EnvFactory = {
     const seed = await runDevSeed(db, TODAY);
     const transactions = createTransactionsService(db);
     const cards = createCardsService(db);
-    const notifications = createFakeNotificationCapture({ allowedPackages: [NUBANK_PACKAGE] });
+    const notifications = createFakeNotificationCapture({
+      allowedPackages: [NUBANK_PACKAGE, SMS_PACKAGE],
+    });
     return {
       notifications,
       services: {

@@ -66,9 +66,20 @@ quem fechar um item marca o `[x]` no mesmo PR. Escopo: "Fase 3" em [`plano.md`](
 
 ### C · Casos especiais
 
-- [ ] Duplicata push + SMS (ou notificação + comprovante) em até 5 minutos vira um item só.
-- [ ] Estorno capturado ligado à compra original.
-- [ ] Parcelado capturado ("em 3x") gera as parcelas pelas regras da Fase 1.
+- [x] Duplicata: mesmo valor e tipo de **outra** fonte (outro app ou canal) em até 5 minutos
+      (60 com comprovante) vira um item só; a segunda fica descartada com `duplicateOfId`.
+      Vale contra pendentes e confirmadas; o mesmo app duas vezes são duas compras
+      (`findDuplicate` em `src/domain/captures/special.ts`). Comprovante de um Pix já
+      confirmado avisa "Já está no Kustho".
+- [x] Estorno capturado: o genérico lê "estorno" (no cartão vira o tipo `card_refund`; Pix
+      estornado, entrada). `findRefundTarget` acha a compra (mesmo cartão, até 120 dias
+      antes, saldo a estornar que cubra o valor, loja parecida ou valor exato) e grava em
+      `matchTransactionId`; confirmar chama `refundCardPurchase`. Sem compra: incompleta.
+      Pendentes mostra "Estorno da compra:". Pendência: o estorno sai com `source: 'manual'`
+      (`refundCardPurchase` ainda não recebe `source`).
+- [x] Parcelado capturado ("em 3x", "parcelado em 10 vezes", "3x de R$ 100,00" → total)
+      grava `installments`; confirmar gera as parcelas pelas regras da Fase 1 e a tela de
+      completar já vem com as parcelas (e a categoria da trilha B).
 
 ### D · Experiência
 

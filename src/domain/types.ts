@@ -195,12 +195,11 @@ export type DayGroup = {
 
 // ─── Capturas (Fase 2) ───────────────────────────────────────────────────────
 
-/** Tipo de lançamento que uma notificação sugere. */
-export const captureKinds = [
-  'expense',
-  'income',
-  'card_purchase',
-] as const satisfies readonly TransactionKind[];
+/**
+ * Tipo de lançamento que uma notificação sugere. `card_refund` (Fase 3, trilha C): estorno
+ * no cartão; ao confirmar vira `adjustment` ligado à compra (`refundCardPurchase`).
+ */
+export const captureKinds = ['expense', 'income', 'card_purchase', 'card_refund'] as const;
 export type CaptureKind = (typeof captureKinds)[number];
 
 /** Por onde a captura chegou: notificação do banco (Fase 2) ou comprovante compartilhado (Fase 3, trilha E). */
@@ -261,7 +260,10 @@ export type Capture = Entity & {
   suggestedCategoryId: Id | null;
   /** Parcelas detectadas no texto; `null` = à vista (trilha C). */
   installments: number | null;
-  /** Lançamento já existente que parece ser o mesmo (trilha A): sugerir "vincular". */
+  /**
+   * Lançamento já existente que parece ser o mesmo (trilha A): sugerir "vincular". Em
+   * `card_refund`, a compra que o estorno devolve (trilha C).
+   */
   matchTransactionId: Id | null;
   /** 0 a 1; 0 sem candidato. */
   matchScore: number;

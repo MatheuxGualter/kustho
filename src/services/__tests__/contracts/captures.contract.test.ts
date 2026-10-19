@@ -3,7 +3,7 @@ import { isDomainError } from '@/domain/errors';
 
 import { LINK_THRESHOLD } from '@/domain/captures/matcher';
 
-import { environments, NUBANK_PACKAGE, TODAY } from './setup';
+import { environments, NUBANK_PACKAGE, SMS_PACKAGE, TODAY } from './setup';
 
 jest.mock('expo-sqlite', () => ({ addDatabaseChangeListener: jest.fn() }));
 
@@ -222,6 +222,127 @@ describe.each(environments)('CapturesService ($name)', ({ create }) => {
 
     expect(created).toHaveLength(3);
     expect(created.every((t) => t.source === 'notification' && t.cardId === card.id)).toBe(true);
+  });
+
+  it('push + SMS da mesma compra em até 5 minutos viram um item só', async () => {
+    const { services, notifications } = await create();
+    const text = 'Compra no débito de R$ 27,50 em MERCADO EXEMPLO.';
+    notifications.post({ packageName: NUBANK_PACKAGE, text, postedAtMs: AT_TODAY });
+    notifications.post({ packageName: SMS_PACKAGE, text, postedAtMs: AT_TODAY + 3 * 60_000 });
+    // Mesmo app, mesma compra: são duas (dois cafés iguais).
+    notifications.post({
+      packageName: NUBANK_PACKAGE,
+      text,
+      key: 'outra',
+      postedAtMs: AT_TODAY + 60_000,
+    });
+    // SMS 10 minutos depois já é outra compra.
+    notifications.post({
+      packageName: SMS_PACKAGE,
+      text,
+      key: 'tarde',
+      postedAtMs: AT_TODAY + 10 * 60_000,
+    });
+    await services.captures.ingest();
+
+    const recent = (await services.captures.listRecent(20)).filter((c) => c.text === text);
+    const pending = recent.filter((c) => c.status === 'pending');
+    const duplicates = recent.filter((c) => c.duplicateOfId !== null);
+    expect(pending).toHaveLength(3);
+    expect(duplicates).toHaveLength(1);
+    expect(duplicates[0]).toMatchObject({ packageName: SMS_PACKAGE, status: 'discarded' });
+    expect(pending.map((c) => c.id)).toContain(duplicates[0].duplicateOfId);
+  });
+
+  it('comprovante de um Pix já notificado não cria outra pendente', async () => {
+    const { services, notifications } = await create();
+    notifications.post({
+      packageName: NUBANK_PACKAGE,
+      text: 'Compra no débito de R$ 33,30 em FULANO DE TAL.',
+      postedAtMs: AT_TODAY,
+    });
+    await services.captures.ingest();
+    const [original] = (await services.captures.listPending()).filter(
+      (c) => c.amountCents === 3330,
+    );
+
+    const text =
+      'Comprovante de transferência\nValor\nR$ 33,30\nData 17/10/2026\nDestino\nNome\nFULANO DE TAL';
+    const shared = await services.captures.ingestReceipt({
+      text,
+      receivedAtMs: AT_TODAY + 20 * 60_000,
+    });
+    expect(shared.id).toBe(original.id);
+    // Compartilhar de novo continua apontando a original.
+    const again = await services.captures.ingestReceipt({
+      text,
+      receivedAtMs: AT_TODAY + 30 * 60_000,
+    });
+    expect(again.id).toBe(original.id);
+    expect(
+      (await services.captures.listPending()).filter((c) => c.amountCents === 3330),
+    ).toHaveLength(1);
+  });
+
+  it('estorno capturado acha a compra e, ao confirmar, estorna na fatura', async () => {
+    const { services, notifications, seed } = await create();
+    const card = seed.creditCards[0];
+    const [purchase] = await services.cards.createCardPurchase({
+      cardId: card.id,
+      amountCents: 15000,
+      installments: 1,
+      date: TODAY,
+      description: 'Loja de Tênis',
+      categoryId: null,
+    });
+    notifications.post({
+      packageName: NUBANK_PACKAGE,
+      text: 'Estorno de R$ 60,00 em LOJA DE TENIS.',
+      postedAtMs: AT_TODAY,
+    });
+    await services.captures.ingest();
+    const refund = (await services.captures.listPending()).find((c) => c.kind === 'card_refund')!;
+    expect(refund.matchTransactionId).toBe(purchase.id);
+
+    const [adjustment] = await services.captures.confirmCapture(refund.id);
+    expect(adjustment).toMatchObject({
+      kind: 'adjustment',
+      direction: 'in',
+      amountCents: 6000,
+      refundOfId: purchase.id,
+    });
+    expect(await services.cards.getRefundableCents(purchase.id)).toBe(9000);
+  });
+
+  it('estorno sem compra encontrada fica incompleto', async () => {
+    const { services, notifications } = await create();
+    notifications.post({
+      packageName: NUBANK_PACKAGE,
+      text: 'Estorno de R$ 9999,00 em LUGAR NENHUM.',
+      postedAtMs: AT_TODAY,
+    });
+    await services.captures.ingest();
+    const refund = (await services.captures.listPending()).find((c) => c.kind === 'card_refund')!;
+    expect(refund.matchTransactionId).toBeNull();
+    const error = await services.captures.confirmCapture(refund.id).catch((e: unknown) => e);
+    expect(isDomainError(error) && error.code).toBe('capture_incomplete');
+  });
+
+  it('compra parcelada capturada ("em 3x") gera as parcelas ao confirmar', async () => {
+    const { services, notifications, seed } = await create();
+    const card = seed.creditCards[0];
+    notifications.post({
+      packageName: NUBANK_PACKAGE,
+      text: 'Compra no crédito de R$ 300,00 em 3x em LOJA EXEMPLO.',
+      postedAtMs: AT_TODAY,
+    });
+    await services.captures.ingest();
+    const capture = (await services.captures.listPending()).find((c) => c.amountCents === 30000)!;
+    expect(capture.installments).toBe(3);
+
+    const created = await services.captures.confirmCapture(capture.id, { cardId: card.id });
+    expect(created.map((t) => t.amountCents)).toEqual([10000, 10000, 10000]);
+    expect(created.every((t) => t.installmentTotal === 3)).toBe(true);
   });
 
   it('confirmar sem valor ou origem é recusado e a captura continua pendente', async () => {

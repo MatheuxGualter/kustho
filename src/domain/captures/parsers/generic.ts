@@ -10,7 +10,7 @@ import { parseBRL } from '@/lib/money';
 
 /** Avisos que citam valor mas não são uma transação feita (ou que ainda não tratamos). */
 const NOT_A_TRANSACTION =
-  /nao aprovad|recusad|negad|cancelad|estorn|fatura|limite|codigo|senha|token|agendad|programad|vence|lembrete|cashback|rendimento|rendeu|investiment|emprestimo|oferta/;
+  /nao aprovad|recusad|negad|cancelad|fatura|limite|codigo|senha|token|agendad|programad|vence|lembrete|cashback|rendimento|rendeu|investiment|emprestimo|oferta/;
 
 /** Ordem importa: "crédito em conta" é entrada; "débito" vence "compra". */
 const KIND_RULES: [RegExp, CaptureKind][] = [
@@ -19,6 +19,16 @@ const KIND_RULES: [RegExp, CaptureKind][] = [
   [/compra|cartao|credito/, 'card_purchase'],
   [/enviad|enviou|pagou|pagamento|transferiu|transferencia realizada|saque|sacou/, 'expense'],
 ];
+
+/** Estorno (Fase 3, trilha C): no cartão vira `card_refund`; Pix devolvido, entrada. */
+const REFUND = /estorn/;
+const CARD_CONTEXT = /cartao|credito|compra|final \d{4}/;
+
+/** "em 3x", "parcelado em 3 vezes", "em 3 parcelas" (Fase 3, trilha C). */
+const INSTALLMENTS = /(?:em|parcelad[oa] em)\s+(\d{1,2})\s*(?:x\b|vezes|parcelas)/;
+/** Valor da parcela antes do R$: "3x de R$ 100,00". */
+const PER_INSTALLMENT = /(\d{1,2})\s*x\s+de\s+$/i;
+const MAX_INSTALLMENTS = 48;
 
 /** "R$ 1.234,56", "R$ 45,90" ou, sem centavos, "R$ 10" (Mercado Pago). */
 const AMOUNT = /R\$\s*(\d{1,3}(?:\.\d{3})+(?:,\d{2})?|\d+,\d{2}|\d+)(?![\d,.]\d)/i;
@@ -56,15 +66,32 @@ export const genericParser: NotificationParser = {
     if (NOT_A_TRANSACTION.test(norm)) return null;
 
     const amount = AMOUNT.exec(full);
-    const amountCents = amount ? parseBRL(amount[1]) : null;
+    let amountCents = amount ? parseBRL(amount[1]) : null;
     if (!amount || !amountCents || amountCents <= 0) return null;
 
-    const kind = KIND_RULES.find(([pattern]) => pattern.test(norm))?.[1];
+    const kind: CaptureKind | undefined = REFUND.test(norm)
+      ? CARD_CONTEXT.test(norm)
+        ? 'card_refund'
+        : 'income'
+      : KIND_RULES.find(([pattern]) => pattern.test(norm))?.[1];
     if (!kind) return null;
 
     const afterAmount = full.slice(amount.index + amount[0].length);
-    const merchant = extractName(afterAmount, kind);
+    // Estorno costuma citar a loja antes do valor ("Estorno da compra em LOJA de R$ 50").
+    const merchant =
+      extractName(afterAmount, kind) ?? (kind === 'card_refund' ? extractName(full, kind) : null);
     const cardLastDigits = CARD_DIGITS.exec(norm)?.[1] ?? null;
+
+    let installments: number | null = null;
+    if (kind === 'card_purchase') {
+      const perInstallment = PER_INSTALLMENT.exec(full.slice(0, amount.index));
+      const count = Number(perInstallment?.[1] ?? INSTALLMENTS.exec(norm)?.[1] ?? 1);
+      if (count > 1 && count <= MAX_INSTALLMENTS) {
+        installments = count;
+        // "3x de R$ 100,00": o valor lido é da parcela; a compra é o total.
+        if (perInstallment) amountCents *= count;
+      }
+    }
 
     let confidence = 0.6;
     if (merchant) confidence += 0.1;
@@ -78,6 +105,7 @@ export const genericParser: NotificationParser = {
       date: toISODate(new Date(notification.postedAtMs)),
       cardLastDigits,
       confidence,
+      installments,
     };
   },
 };

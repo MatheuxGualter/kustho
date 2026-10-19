@@ -176,6 +176,24 @@ describe('resolveConfirmation', () => {
     expect(resolveConfirmation(capture(), { kind: 'expense' })).toBeNull();
   });
 
+  it('estorno precisa da compra: a que o matcher achou ou a informada', () => {
+    const refund = capture({ kind: 'card_refund', matchTransactionId: 'buy-1' });
+    expect(resolveConfirmation(refund, {})).toMatchObject({
+      kind: 'card_refund',
+      refundOfId: 'buy-1',
+    });
+    expect(resolveConfirmation(refund, { refundOfId: 'buy-2' })).toMatchObject({
+      refundOfId: 'buy-2',
+    });
+    expect(resolveConfirmation({ ...refund, matchTransactionId: null }, {})).toBeNull();
+  });
+
+  it('compra parcelada usa as parcelas lidas da notificação', () => {
+    expect(resolveConfirmation(capture({ installments: 3 }), {})).toMatchObject({
+      installments: 3,
+    });
+  });
+
   it('sem estabelecimento, a descrição vem do título', () => {
     const result = resolveConfirmation(capture({ merchant: null, title: 'Pix enviado' }), {});
     expect(result?.description).toBe('Pix enviado');
