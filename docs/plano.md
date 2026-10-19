@@ -2,8 +2,8 @@
 
 Oct 17, 2026 · @Matheux
 
-> Este é o plano (visão, regras e fases). O andamento da fase atual fica em
-> [`fase-1.md`](fase-1.md); o índice da documentação, em [`README.md`](README.md).
+> Este é o plano (visão, regras e fases). O andamento fica em [`fase-1.md`](fase-1.md) e
+> [`fase-2.md`](fase-2.md); o índice da documentação, em [`README.md`](README.md).
 
 ## Visão do produto
 
@@ -149,10 +149,12 @@ O visual é calmo e confiável: base neutra, verde como cor de marca, um verde s
 1. **Início:** saldo total, cartões com fatura atual, resumo do mês, últimos lançamentos.
 2. **Lançamentos:** lista do mês agrupada por dia, filtros e busca.
 3. **Cartões:** cartões, fatura aberta, faturas anteriores e pagamento.
-4. **Mais:** contas, categorias, exportar dados, configurações.
+4. **Mais:** categorias, leitura de notificações, exportar dados, configurações.
 5. **Novo lançamento:** sheet aberto pelo botão central, com valor, descrição e origem visíveis de cara; o resto fica em "mais opções".
 
-A Fase 2 acrescenta a aba **Pendentes**, com selo de contagem.
+A Fase 2 acrescenta a aba **Pendentes**, com selo de contagem. Para o botão + continuar no
+centro, **Contas** saiu do Mais e virou aba (out/2026). A barra mostra só ícones (os nomes
+ficam no rótulo de acessibilidade): Início, Lançamentos, Pendentes | + | Cartões, Contas, Mais.
 
 ## Modelo de dados e regras
 
@@ -301,8 +303,8 @@ payInvoice(invoiceId: string, accountId: string, amountCents: number): Transacti
 
 - [x] Estados vazios e skeletons; nenhuma tela em branco
 - [x] Vibração leve nas ações principais; desfazer em toda exclusão
-- [ ] Lista + detalhe na faixa expandida (tablet e dobrável)
-- [ ] Fonte em 130%, rótulos de acessibilidade e contraste AA
+- [ ] Lista + detalhe na faixa expandida (tablet e dobrável): feito em Lançamentos; falta nas demais
+- [ ] Fonte em 130%, rótulos de acessibilidade e contraste AA (contraste AA dos tokens coberto por teste)
 
 **Integração e testes**
 
@@ -316,7 +318,7 @@ A Fase 2 captura, interpreta e mostra as notificações dos bancos numa caixa de
 
 **Kickoff de contratos**
 
-- [ ] API do módulo nativo (B e C usam um fake dela até A terminar):
+- [x] API do módulo nativo (B e C usam um fake dela até A terminar):
 
 ```ts
 isPermissionGranted(): boolean
@@ -329,8 +331,8 @@ markProcessed(ids: string[]): void
 addListener('onCaptured', cb): Subscription
 ```
 
-- [ ] Tipos `RawNotification` (pacote, título, texto, horário) e `Capture` (valor em centavos, tipo provável, estabelecimento, data, final do cartão, origem sugerida, confiança, status)
-- [ ] Migração da tabela `captures`
+- [x] Tipos `RawNotification` (pacote, título, texto, horário) e `Capture` (valor em centavos, tipo provável, estabelecimento, data, final do cartão, origem sugerida, confiança, status)
+- [x] Migração da tabela `captures`
 - [ ] Cada membro começa a juntar notificações reais dos próprios bancos: quatro pessoas cobrem mais bancos
 
 **Trilhas**
@@ -487,7 +489,7 @@ O maior risco técnico é a captura de notificações falhar em silêncio; o mai
 
 **Próximos passos**
 
-- [ ] Fechar a paleta completa a partir do verde-petróleo e validar contraste AA nos dois temas (trilha B da Fase 0)
+- [x] Fechar a paleta completa a partir do verde-petróleo e validar contraste AA nos dois temas (todos os tokens de texto com AA ≥ 4,5 nos dois temas, conferido por teste)
 - [ ] Definir os donos das trilhas A a D (ver `fase-1.md`)
 - [x] Primeira sessão juntos: `schema.ts` do Drizzle e `lib/money.ts` com testes
 

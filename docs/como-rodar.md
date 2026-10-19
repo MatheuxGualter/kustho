@@ -210,11 +210,18 @@ antes `npx expo prebuild --clean --platform android` e `pnpm android`.
 
 ### 3.5 Dados de exemplo
 
-No app: **Mais → Catálogo de componentes → Popular dados de exemplo** (3 contas,
-2 cartões e 3 meses de lançamentos). O mesmo catálogo mostra todos os componentes, para
-conferir os temas claro e escuro e a fonte grande.
+No app de desenvolvimento: **Mais → Catálogo de componentes → Popular dados de exemplo**
+(3 contas, 2 cartões e 3 meses de lançamentos). **Isso apaga os seus dados do aparelho**
+(pede confirmação): exporte antes (Mais → Exportar dados → JSON) se o celular tiver gastos
+reais. O mesmo catálogo mostra todos os componentes, para conferir os temas claro e
+escuro e a fonte grande.
 
-### 3.6 Ícone do app e splash
+### 3.6 Testes ponta a ponta (Maestro)
+
+Ver [`.maestro/README.md`](../.maestro/README.md). Os fluxos também apagam os dados do
+aparelho: prefira um emulador.
+
+### 3.7 Ícone do app e splash
 
 Ficam em `assets/images/` e são configurados no `app.json`. Para trocar, gere os PNGs
 nestes formatos (mesmos nomes) e regere o nativo (`prebuild --clean`, passo 3.3):

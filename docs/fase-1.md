@@ -9,8 +9,9 @@ regras" em [`plano.md`](plano.md).
 
 ## Situação
 
-Todas as telas da fase existem e usam os serviços reais (SQLite). Falta o que depende de
-gente (teste de uso, Maestro) e alguns itens nativos (exigem recompilar).
+Todas as telas da fase existem, usam os serviços reais (SQLite) e foram usadas no aparelho
+com gastos reais (out/2026). Falta fechar o portão com um segundo membro, rodar o Maestro
+até o fim, a conferência de acessibilidade e lista + detalhe nas demais telas.
 
 | Peça                   | Onde                                                                                                      |
 | ---------------------- | --------------------------------------------------------------------------------------------------------- |
@@ -52,7 +53,7 @@ await accounts.createTransfer({ ... }); // todas as consultas abertas recarregam
 
 | Trilha                       | Serviço               | Rotas                                                                                                   | Pastas                                                                         |
 | ---------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| A · Contas                   | `AccountsService`     | `/contas`, `/conta/nova`, `/conta/[id]`, `/transferencia`                                               | `src/domain/accounts/`, `src/features/accounts/`                               |
+| A · Contas                   | `AccountsService`     | aba Contas, `/conta/nova`, `/conta/[id]`, `/transferencia`                                              | `src/domain/accounts/`, `src/features/accounts/`                               |
 | B · Lançamentos              | `TransactionsService` | aba Lançamentos, `/lancamento/novo`, `/lancamento/[id]`                                                 | `src/domain/transactions/`, `src/features/transactions/`                       |
 | C · Cartões e faturas        | `CardsService`        | aba Cartões, `/cartao/novo`, `/cartao/[id]`, `/fatura/[id]`, `/fatura/[id]/pagar`                       | `src/domain/cards/`, `src/domain/invoices/`, `src/features/cards/`             |
 | D · Categorias e visão geral | `CategoriesService`   | Início (dono), Mais (dono), `/categorias`, `/categoria/*`, `/configuracoes`, `/exportar`, `/onboarding` | `src/domain/categories/`, `src/features/categories/`, `src/features/overview/` |
@@ -81,7 +82,8 @@ pendência de outra trilha.
       (FlashList), deslizar para editar ou excluir com "Desfazer".
 - [x] Previstos vencidos: aviso no topo da lista para confirmar.
 - [x] Editar e excluir lançamento.
-- [ ] Medir os 10 lançamentos cronometrados (meta < 5 s) no teste de uso.
+- [ ] Medir os 10 lançamentos cronometrados (meta < 5 s): o teste de uso confirmou que
+      lançar funciona, mas o tempo não foi medido.
 
 ### C · Cartões e faturas
 
@@ -129,13 +131,31 @@ pendência de outra trilha.
 - [x] Todos os fakes trocados pelos serviços reais (`src/services/app.ts`).
 - [x] Fluxos Maestro escritos (`.maestro/`): lançar despesa; compra em 3x aparece em 3
       faturas; pagar fatura reduz o saldo. Começam de `kustho://dev/seed`.
-- [ ] Rodar os fluxos do Maestro num aparelho. 1ª rodada (out/2026): os 4 falharam no
-      preparo (o link chegava antes do app carregar); `_preparar.yaml` agora espera a Início.
-      Rodar de novo.
-- [x] **Teste de uso** (versão curta, out/2026): gastos reais lançados no aparelho;
-      funcionou. Atritos encontrados e corrigidos: estorno acumulado (#25) e acentos no
+- [ ] Rodar os fluxos do Maestro até o fim (de preferência num emulador: o preparo apaga
+      os dados do aparelho). Rodadas de out/2026, todas paradas no preparo: 1ª, o link
+      chegava antes do app carregar (#27); 2ª, `FOREIGN KEY` ao limpar com capturas no
+      aparelho (#29); depois, o app não alcançava o Metro pelo IP do Wi-Fi
+      (`pnpm start:usb`, #30).
+- [x] **Teste de uso** (versão curta, out/2026, um membro): gastos reais lançados no
+      aparelho; funcionou. Atritos encontrados e corrigidos: estorno acumulado e acentos no
       CSV (#25).
+- [ ] **Portão:** saldo das contas e fatura dos cartões conferidos contra o app do banco por
+      pelo menos **dois** membros.
 - [ ] Revisar os logos dos bancos antes de qualquer publicação na Play Store.
+
+## Validação no aparelho (out/2026)
+
+Testado num Galaxy S24 (SM-S921B), temas claro e escuro, sem tablet.
+
+| Item                                               | Resultado                                                         |
+| -------------------------------------------------- | ----------------------------------------------------------------- |
+| Lançar, editar, excluir e desfazer; saldo e fatura | ok (teste de uso)                                                 |
+| Estorno parcial                                    | falhou (somava além da compra) → corrigido no #25, **reconferir** |
+| Exportar CSV                                       | falhou (acentos) → corrigido no #25, **reconferir no Planilhas**  |
+| Bloqueio: tela em branco nos recentes e sem print  | ok                                                                |
+| Verde de receita no tema claro                     | ok                                                                |
+| Barra de abas (+ no centro, só ícones)             | entregue (#27, #28), **conferir**                                 |
+| Maestro                                            | ainda não rodou até o fim (ver Integração)                        |
 
 ## Histórico de entregas
 
@@ -148,3 +168,10 @@ pendência de outra trilha.
 | #14    | Ações de deslizar não aparecem por cima da lista; títulos de mês               |
 | #15    | Mais ícones e categorias padrão; nomes de categoria sem corte                  |
 | #16    | Ícone do app (capivara) e splash                                               |
+| #17–18 | Documentação: guia de trabalho com o Claude, status vivo, modelos de PR        |
+| #22    | Estorno parcial, `FLAG_SECURE`, exportar arquivo, contraste do verde           |
+| #23    | Fluxos Maestro e JUnit do módulo de captura no CI                              |
+| #24    | Lista + detalhe em Lançamentos na tela larga                                   |
+| #25    | Estornos somados limitados à compra (`refundOfId`); acentos no CSV             |
+| #27–28 | Contas vira aba, + no centro, barra só com ícones                              |
+| #29–30 | Preparo do Maestro com capturas; `pnpm start:usb`                              |

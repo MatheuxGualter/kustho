@@ -4,10 +4,11 @@ Gerenciador financeiro Android-first, offline-first. Começa como controle manua
 (contas, cartões, faturas, entradas e saídas) e evolui para captura de notificações dos
 bancos. O plano completo está em [`docs/plano.md`](docs/plano.md); consulte-o antes de
 decidir regra de negócio, escopo ou visual.
-O que já está pronto e o que falta na fase atual: [`docs/fase-1.md`](docs/fase-1.md).
+O que já está pronto e o que falta: [`docs/fase-1.md`](docs/fase-1.md) e
+[`docs/fase-2.md`](docs/fase-2.md).
 Fluxo de trabalho, passagem de bastão e armadilhas conhecidas:
 [`docs/trabalhando-com-claude.md`](docs/trabalhando-com-claude.md). Ao terminar uma tarefa,
-marque o item em `fase-1.md` e registre armadilhas novas lá.
+marque o item no status da fase e registre armadilhas novas no guia.
 
 > `AGENTS.md` é uma cópia exata deste arquivo (o CI confere). Edite os dois juntos.
 
@@ -17,7 +18,8 @@ marque o item em `fase-1.md` e registre armadilhas novas lá.
 pnpm install              # único gerenciador de pacotes; Node em .nvmrc
 npx expo install <pkg>    # SEMPRE para adicionar dependências (resolve a versão do SDK)
 pnpm android              # build de desenvolvimento num aparelho/emulador (expo run:android)
-pnpm start                # Metro para o dev client já instalado
+pnpm start                # Metro para o dev client já instalado (Wi-Fi)
+pnpm start:usb            # o mesmo pelo cabo USB (adb reverse + localhost)
 pnpm typecheck            # tsc --noEmit
 pnpm lint                 # ESLint (inclui Prettier e a regra de cores soltas)
 pnpm format               # Prettier
@@ -49,20 +51,24 @@ Nunca edite `android/` ou `ios/` à mão: configure por `app.json` e config plug
 ```
 src/
   app/                    # rotas (Expo Router) — só telas, sem lógica
-    (tabs)/               # index (Início), lancamentos, cartoes, mais
+    (tabs)/               # index (Início), lancamentos, pendentes | + | cartoes, contas, mais
     lancamento/novo.tsx   # novo lançamento (sheet)
     lancamento/[id].tsx   # editar
+    captura/              # permissao, diagnostico (leitura de notificações, Fase 2)
+    pendente/[id].tsx     # completar uma captura
     dev/ui.tsx            # catálogo de componentes (só __DEV__)
+    dev/seed.tsx          # kustho://dev/seed: dados de exemplo para o Maestro (apaga tudo)
   db/                     # schema.ts, migrations/ (geradas), client.ts, seed.ts, setup.ts
     repositories/         # CRUD básico por tabela (recebem AppDatabase)
-    devSeed.ts            # dados de exemplo (catálogo dev/ui → "Popular dados de exemplo")
+    devSeed.ts            # dados de exemplo; tabela nova com FK → incluir em clearDevData
     test/testDb.ts        # SQLite real em memória para testes (node:sqlite + migrações)
   domain/                 # types.ts e contracts.ts (contratos) + regras e serviços por domínio
   services/               # registro dos serviços (useServices), useServiceQuery e fakes
-  features/<domínio>/     # telas e seções compostas (HomeAccountsSection…)
+  features/<domínio>/     # telas e seções (HomeAccountsSection…); capture-setup e pending na Fase 2
   ui/                     # tokens.ts, theme.tsx, components/
   lib/                    # money.ts, dates.ts, strings.ts, id.ts, preferences.ts
-modules/notification-capture/   # Fase 2 (Kotlin + ponte TS)
+modules/notification-capture/   # Fase 2: Kotlin + ponte TS; jvm-tests/ roda o JUnit no CI
+.maestro/                 # fluxos ponta a ponta (README explica como rodar)
 docs/                     # plano.md, prompts/
 ```
 
@@ -126,9 +132,10 @@ Import com alias `@/` → `src/`.
   script e registre o banco em `banks.ts`. Logos são marcas de terceiros: revisar antes de
   publicar na Play Store (ver riscos em `docs/plano.md`).
 
-## Modelo de dados (Fase 1)
+## Modelo de dados
 
-Tabelas: `accounts`, `credit_cards`, `categories`, `invoices`, `transactions`
+Tabelas: `accounts`, `credit_cards`, `categories`, `invoices`, `transactions` e, na Fase 2,
+`captures` e `capture_origin_rules`
 (`src/db/schema.ts`). Contratos TS em `src/domain/types.ts`; um teste de tipo garante que
 os dois batem — mudou um, mude o outro e rode `pnpm db:generate`.
 
@@ -138,7 +145,10 @@ os dois batem — mudou um, mude o outro e rode `pnpm db:generate`.
 - Transferência = duas pernas (`out` na origem, `in` no destino) ligadas por
   `transferPeerId`; não conta como receita nem despesa.
 - Estorno no cartão = `adjustment` com `direction: 'in'` na fatura da compra (ou na
-  aberta, se aquela já fechou).
+  aberta, se aquela já fechou), com `refundOfId` apontando a compra; a soma dos estornos
+  não passa do valor dela.
+- Captura (Fase 2) não é lançamento: fica em `captures` até o usuário confirmar; ao
+  confirmar vira lançamento com `source: 'notification'` e guarda o `transactionId`.
 
 Regras de negócio (todas com testes): ver "Modelo de dados e regras" em `docs/plano.md`.
 Resumo: saldo da conta é sempre calculado (inicial + receitas − despesas ± transferências
