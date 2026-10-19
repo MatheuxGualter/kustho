@@ -8,6 +8,7 @@ export const domainErrorCodes = [
   'invalid_amount',
   'not_found',
   'capture_incomplete',
+  'already_linked',
 ] as const;
 
 export type DomainErrorCode = (typeof domainErrorCodes)[number];

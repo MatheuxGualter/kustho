@@ -5,6 +5,7 @@
 import type { NotificationCaptureApi } from '../../../modules/notification-capture/src/NotificationCapture.types';
 import type { AppDatabase } from '@/db/database';
 import * as repo from '@/db/repositories/captures';
+import * as txRepo from '@/db/repositories/transactions';
 import type {
   CapturesService,
   CardsService,
@@ -14,7 +15,14 @@ import type {
 import { DomainError } from '@/domain/errors';
 import type { Transaction } from '@/domain/types';
 
-import { buildCapture, learnedRule, parseNotification, resolveConfirmation } from './rules';
+import { candidateWindow, decideMatch, type MatchableCapture, matchFields } from './matcher';
+import {
+  buildCapture,
+  learnedRule,
+  linkedRule,
+  parseNotification,
+  resolveConfirmation,
+} from './rules';
 
 /** Quantas notificações cruas o `ingest` lê por vez. */
 const INGEST_BATCH = 100;
@@ -39,15 +47,30 @@ export function createCapturesService(
 
   // Duas chamadas ao mesmo tempo (abrir o app + evento do módulo) leriam o mesmo lote.
   let running: Promise<number> | null = null;
+  /** Sugestão de vínculo (trilha A) para uma captura ainda não gravada. */
+  const suggestLink = async (fields: MatchableCapture, linked: ReadonlySet<string>) => {
+    if (!fields.date || !fields.amountCents) return matchFields({ action: 'create', score: 0 });
+    const { from, to } = candidateWindow(fields.date);
+    const candidates = await txRepo.listTransactionsBetween(db, from, to);
+    return matchFields(decideMatch(fields, candidates, linked));
+  };
+
   const ingestOnce = async () => {
     const rules = await repo.listOriginRules(db);
+    // Lançamentos já ligados a capturas; cresce a cada sugestão para duas capturas não
+    // disputarem o mesmo lançamento.
+    const linked = await repo.listLinkedTransactionIds(db);
     let created = 0;
     for (;;) {
       const batch = await deps.notifications.getPending(INGEST_BATCH);
       if (batch.length === 0) break;
       for (const raw of batch) {
         const fields = buildCapture(raw, parseNotification(deps.parsers, raw), rules);
-        if (await repo.insertCapture(db, fields)) created++;
+        const match = await suggestLink(fields, linked);
+        if (await repo.insertCapture(db, { ...fields, ...match })) {
+          created++;
+          if (match.matchTransactionId) linked.add(match.matchTransactionId);
+        }
       }
       // Só depois de gravar: se o app cair no meio, o lote é lido de novo (o rawId evita duplicar).
       await deps.notifications.markProcessed(batch.map((raw) => raw.id));
@@ -118,6 +141,26 @@ export function createCapturesService(
         }
       }
       return { confirmed, skipped };
+    },
+
+    async linkCapture(id, transactionId) {
+      const capture = await requirePending(id);
+      const tx = await deps.transactions.getTransaction(transactionId);
+      if (!tx) throw new DomainError('not_found', `Lançamento não encontrado: ${transactionId}`);
+      if (
+        (await repo.listLinkedTransactionIds(db)).has(tx.id) &&
+        capture.matchTransactionId !== tx.id
+      ) {
+        throw new DomainError('already_linked');
+      }
+      await repo.updateCapture(db, id, {
+        status: 'confirmed',
+        transactionId: tx.id,
+        matchTransactionId: tx.id,
+        editedOnConfirm: capture.matchTransactionId !== tx.id,
+      });
+      await repo.upsertOriginRule(db, linkedRule(capture, tx));
+      return tx;
     },
 
     async discardCapture(id) {

@@ -1,11 +1,11 @@
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
-import { Bell, Check, CheckCheck, Pencil, X } from 'lucide-react-native';
+import { Bell, Check, CheckCheck, Link2, Pencil, X } from 'lucide-react-native';
 import { useState } from 'react';
 import { View } from 'react-native';
 
 import { resolveConfirmation } from '@/domain/captures/rules';
-import type { Capture } from '@/domain/types';
+import type { Capture, Transaction } from '@/domain/types';
 import { errorMessage } from '@/features/shared/errorMessage';
 import { formatDateBR, toISODate } from '@/lib/dates';
 import { strings } from '@/lib/strings';
@@ -37,7 +37,14 @@ export function PendingScreen() {
       ...accounts.map((a) => [a.id, a.name] as const),
       ...cards.map((c) => [c.id, c.name] as const),
     ]);
-    return { pending, names };
+    // Fase 3 (trilha A): lançamentos já existentes que parecem ser a mesma transação.
+    const matches = new Map<string, Transaction>();
+    for (const c of pending) {
+      if (!c.matchTransactionId) continue;
+      const tx = await services.transactions.getTransaction(c.matchTransactionId);
+      if (tx) matches.set(c.id, tx);
+    }
+    return { pending, names, matches };
   }, []);
   const [busy, setBusy] = useState(false);
 
@@ -102,8 +109,15 @@ export function PendingScreen() {
           loading={busy}
           onPress={() =>
             void run(async () => {
-              const { confirmed } = await services.captures.confirmMany(ready.map((c) => c.id));
-              return strings.pending.confirmedMany(confirmed.length);
+              // As que parecem um lançamento existente são vinculadas, não duplicadas.
+              const toLink = ready.filter((c) => data.matches.has(c.id));
+              for (const c of toLink) {
+                await services.captures.linkCapture(c.id, data.matches.get(c.id)!.id);
+              }
+              const { confirmed } = await services.captures.confirmMany(
+                ready.filter((c) => !data.matches.has(c.id)).map((c) => c.id),
+              );
+              return strings.pending.confirmedMany(confirmed.length + toLink.length);
             })
           }
         />
@@ -115,7 +129,14 @@ export function PendingScreen() {
           capture={capture}
           originName={data.names.get(capture.suggestedAccountId ?? capture.suggestedCardId ?? '')}
           ready={ready.includes(capture)}
+          match={data.matches.get(capture.id)}
           busy={busy}
+          onLink={(tx) =>
+            void run(async () => {
+              await services.captures.linkCapture(capture.id, tx.id);
+              return strings.pending.linked;
+            })
+          }
           onConfirm={() =>
             void run(async () => {
               await services.captures.confirmCapture(capture.id);
@@ -134,7 +155,9 @@ function PendingCard({
   capture,
   originName,
   ready,
+  match,
   busy,
+  onLink,
   onConfirm,
   onEdit,
   onDiscard,
@@ -142,7 +165,10 @@ function PendingCard({
   capture: Capture;
   originName: string | undefined;
   ready: boolean;
+  /** Lançamento que já existe e parece ser o mesmo (sugestão de vincular). */
+  match: Transaction | undefined;
   busy: boolean;
+  onLink: (tx: Transaction) => void;
   onConfirm: () => void;
   onEdit: () => void;
   onDiscard: () => void;
@@ -184,11 +210,31 @@ function PendingCard({
         </AppText>
       ) : null}
 
+      {match ? (
+        <View className="gap-1 rounded-input bg-surface-raised p-3">
+          <AppText variant="caption" tone="muted">
+            {strings.pending.matchTitle}
+          </AppText>
+          <AppText variant="label" numberOfLines={1}>
+            {`${match.description} · ${formatDateBR(match.date)}`}
+          </AppText>
+        </View>
+      ) : null}
+
       <View className="flex-row flex-wrap gap-2">
+        {match ? (
+          <Button
+            label={strings.pending.link}
+            icon={Link2}
+            disabled={busy}
+            onPress={() => onLink(match)}
+          />
+        ) : null}
         {ready ? (
           <Button
-            label={strings.pending.confirm}
+            label={match ? strings.pending.createNew : strings.pending.confirm}
             icon={Check}
+            variant={match ? 'secondary' : 'primary'}
             disabled={busy}
             onPress={onConfirm}
           />

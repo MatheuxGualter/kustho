@@ -1,9 +1,14 @@
 /** Contrato de CapturesService (Fase 2): roda igual no fake e sobre os serviços reais. */
 import { isDomainError } from '@/domain/errors';
 
+import { LINK_THRESHOLD } from '@/domain/captures/matcher';
+
 import { environments, NUBANK_PACKAGE, TODAY } from './setup';
 
 jest.mock('expo-sqlite', () => ({ addDatabaseChangeListener: jest.fn() }));
+
+/** Meio da tarde do dia dos dados de exemplo, no fuso local. */
+const AT_TODAY = new Date(2026, 9, 17, 15, 0).getTime();
 
 /** Depois de qualquer captura dos dados de exemplo. */
 const FUTURE = Date.UTC(2100, 0, 1);
@@ -85,6 +90,55 @@ describe.each(environments)('CapturesService ($name)', ({ create }) => {
     await services.captures.ingest();
     const [next] = await services.captures.listPending();
     expect(next.suggestedAccountId).toBe(account.id);
+  });
+
+  it('lançamento manual igual: ingest sugere vincular e vincular não cria outro', async () => {
+    const { services, notifications, seed } = await create();
+    const account = seed.accounts[0];
+    const manual = await services.transactions.createTransaction({
+      kind: 'expense',
+      amountCents: 4567,
+      date: TODAY,
+      description: 'Padaria Exemplo',
+      categoryId: null,
+      accountId: account.id,
+    });
+    notifications.post({
+      packageName: NUBANK_PACKAGE,
+      title: 'Compra no débito',
+      text: 'Compra no débito de R$ 45,67 em PADARIA EXEMPLO.',
+      postedAtMs: AT_TODAY,
+    });
+    await services.captures.ingest();
+    const capture = (await services.captures.listPending()).find((c) => c.text?.includes('45,67'))!;
+    expect(capture.matchTransactionId).toBe(manual.id);
+    expect(capture.matchScore).toBeGreaterThanOrEqual(LINK_THRESHOLD);
+
+    const before = (await services.transactions.listAllTransactions()).length;
+    const linked = await services.captures.linkCapture(capture.id, manual.id);
+    expect(linked.id).toBe(manual.id);
+    expect((await services.transactions.listAllTransactions()).length).toBe(before);
+    expect(await services.captures.getCapture(capture.id)).toMatchObject({
+      status: 'confirmed',
+      transactionId: manual.id,
+      editedOnConfirm: false,
+    });
+
+    // O mesmo lançamento não é sugerido de novo, e a origem foi aprendida.
+    notifications.post({
+      packageName: NUBANK_PACKAGE,
+      title: 'Compra no débito',
+      text: 'Compra no débito de R$ 45,67 em PADARIA EXEMPLO.',
+      key: 'outra',
+      postedAtMs: AT_TODAY + 60_000,
+    });
+    await services.captures.ingest();
+    const [next] = await services.captures.listPending();
+    expect(next.matchTransactionId).toBeNull();
+    expect(next.suggestedAccountId).toBe(account.id);
+
+    const error = await services.captures.linkCapture(next.id, manual.id).catch((e: unknown) => e);
+    expect(isDomainError(error) && error.code).toBe('already_linked');
   });
 
   it('compra no cartão confirmada vira parcelas na fatura', async () => {

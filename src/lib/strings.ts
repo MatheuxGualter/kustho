@@ -224,6 +224,10 @@ export const strings = {
     discard: 'Descartar',
     confirmAll: (count: number) => `Confirmar ${count} prontas`,
     confirmed: 'Lançamento criado',
+    matchTitle: 'Parece ser um lançamento que você já registrou:',
+    link: 'Vincular',
+    createNew: 'É outro, criar',
+    linked: 'Vinculado ao lançamento existente',
     confirmedMany: (count: number) => `${count} lançamentos criados`,
     discarded: 'Notificação descartada',
     kinds: { expense: 'Despesa', income: 'Receita', card_purchase: 'Cartão' },
@@ -617,6 +621,7 @@ export const strings = {
       invalid_amount: 'Informe um valor maior que zero.',
       not_found: 'Item não encontrado. Ele pode ter sido excluído.',
       capture_incomplete: 'Falta o valor, o tipo ou a origem. Edite antes de confirmar.',
+      already_linked: 'Este lançamento já está ligado a outra notificação.',
     },
   },
 } as const;
