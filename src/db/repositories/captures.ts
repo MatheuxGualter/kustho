@@ -53,6 +53,14 @@ export async function getCapture(db: AppDatabase, id: string): Promise<Capture |
   return row;
 }
 
+export async function getByRawId(db: AppDatabase, rawId: string): Promise<Capture | undefined> {
+  const [row] = await db
+    .select()
+    .from(captures)
+    .where(and(eq(captures.rawId, rawId), isNull(captures.deletedAt)));
+  return row;
+}
+
 export async function updateCapture(
   db: AppDatabase,
   id: string,

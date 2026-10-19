@@ -6,6 +6,7 @@ import {
   Circle,
   CircleCheck,
   Info,
+  Share2,
   Stethoscope,
 } from 'lucide-react-native';
 import { type ReactNode, useEffect, useState } from 'react';
@@ -212,6 +213,17 @@ export function CaptureSetupScreen() {
         </Step>
 
         {ready ? <AppText tone="brand">{strings.captureSetup.done}</AppText> : null}
+        <Card>
+          <View className="flex-row items-center gap-2">
+            <Share2 size={ICON_SIZE} color={colors.brand} />
+            <AppText variant="label" className="flex-1">
+              {strings.receipts.tipTitle}
+            </AppText>
+          </View>
+          <AppText variant="caption" tone="muted">
+            {strings.receipts.tip}
+          </AppText>
+        </Card>
         <Button
           label={strings.captureSetup.diagnostics}
           icon={Stethoscope}

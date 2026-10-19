@@ -4,6 +4,7 @@
  */
 import type { NotificationCaptureApi } from '../../../modules/notification-capture/src/NotificationCapture.types';
 import type { AppDatabase } from '@/db/database';
+import { listAccounts } from '@/db/repositories/accounts';
 import * as repo from '@/db/repositories/captures';
 import * as txRepo from '@/db/repositories/transactions';
 import type {
@@ -13,6 +14,7 @@ import type {
   TransactionsService,
 } from '@/domain/contracts';
 import { DomainError } from '@/domain/errors';
+import { buildReceiptCapture } from '@/domain/receipts/capture';
 import type { Transaction } from '@/domain/types';
 
 import { candidateWindow, decideMatch, type MatchableCapture, matchFields } from './matcher';
@@ -87,6 +89,16 @@ export function createCapturesService(
       return running;
     },
 
+    async ingestReceipt({ text, receivedAtMs }) {
+      const fields = buildReceiptCapture(text, receivedAtMs, await listAccounts(db));
+      if (!fields) throw new DomainError('receipt_unrecognized');
+      const existing = await repo.getByRawId(db, fields.rawId);
+      if (existing) return existing;
+      const match = await suggestLink(fields, await repo.listLinkedTransactionIds(db));
+      await repo.insertCapture(db, { ...fields, ...match });
+      return (await repo.getByRawId(db, fields.rawId))!;
+    },
+
     listPending: () => repo.listByStatus(db, 'pending'),
     countPending: () => repo.countByStatus(db, 'pending'),
     listRecent: (limit) => repo.listRecent(db, limit),
@@ -107,7 +119,7 @@ export function createCapturesService(
           date,
           description,
           categoryId,
-          source: 'notification',
+          source: capture.channel === 'receipt' ? 'receipt' : 'notification',
         });
       } else {
         created = [
@@ -118,7 +130,7 @@ export function createCapturesService(
             description,
             categoryId,
             accountId: confirmation.accountId!,
-            source: 'notification',
+            source: capture.channel === 'receipt' ? 'receipt' : 'notification',
           }),
         ];
       }
