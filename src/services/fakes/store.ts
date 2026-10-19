@@ -1,3 +1,4 @@
+import { captureExtrasDefaults } from '@/domain/captures/rules';
 import { buildDevSeed } from '@/db/devSeed';
 import { buildDefaultCategories } from '@/db/seed';
 import type { Account, Capture, Category, CreditCard, Invoice, Transaction } from '@/domain/types';
@@ -26,6 +27,8 @@ export function createFakeStore(referenceDate = today()): FakeStore {
     categories,
     captures: sampleCaptures(referenceDate, seed.accounts[0], seed.creditCards[0]),
     originRules: [],
+    merchantRules: [],
+    sources: [],
   };
 }
 
@@ -40,6 +43,7 @@ function sampleCaptures(date: string, account: Account, card: CreditCard): Captu
     suggestedCardId: null,
     status: 'pending',
     transactionId: null,
+    ...captureExtrasDefaults,
   } as const;
   return [
     {

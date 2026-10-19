@@ -3,6 +3,7 @@ import type { NotificationParser } from '@/domain/contracts';
 import type { Capture, CaptureOriginRule } from '@/domain/types';
 
 import {
+  captureExtrasDefaults,
   buildCapture,
   learnedRule,
   parseNotification,
@@ -70,6 +71,7 @@ const capture = (fields: Partial<Capture> = {}): Capture => ({
   confidence: 0.9,
   status: 'pending',
   transactionId: null,
+  ...captureExtrasDefaults,
   ...fields,
 });
 
@@ -172,6 +174,24 @@ describe('resolveConfirmation', () => {
     expect(resolveConfirmation(capture({ suggestedCardId: null }), {})).toBeNull();
     // Despesa precisa de conta, não de cartão.
     expect(resolveConfirmation(capture(), { kind: 'expense' })).toBeNull();
+  });
+
+  it('estorno precisa da compra: a que o matcher achou ou a informada', () => {
+    const refund = capture({ kind: 'card_refund', matchTransactionId: 'buy-1' });
+    expect(resolveConfirmation(refund, {})).toMatchObject({
+      kind: 'card_refund',
+      refundOfId: 'buy-1',
+    });
+    expect(resolveConfirmation(refund, { refundOfId: 'buy-2' })).toMatchObject({
+      refundOfId: 'buy-2',
+    });
+    expect(resolveConfirmation({ ...refund, matchTransactionId: null }, {})).toBeNull();
+  });
+
+  it('compra parcelada usa as parcelas lidas da notificação', () => {
+    expect(resolveConfirmation(capture({ installments: 3 }), {})).toMatchObject({
+      installments: 3,
+    });
   });
 
   it('sem estabelecimento, a descrição vem do título', () => {

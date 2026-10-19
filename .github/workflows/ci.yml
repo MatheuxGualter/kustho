@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
   pull_request:
 
 concurrency:
@@ -50,3 +50,27 @@ jobs:
       - name: JUnit do módulo de captura
         working-directory: modules/notification-capture/jvm-tests
         run: gradle test --no-daemon
+
+  android:
+    # Compila os módulos nativos (Kotlin) dentro do app gerado pelo prebuild: pega erro de
+    # compilação que o JUnit das regras puras não vê. Ninguém precisa do Android SDK local.
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+      - run: pnpm install --frozen-lockfile
+      - name: Prebuild Android
+        run: npx expo prebuild --platform android --no-install
+      - name: Compilar os módulos nativos
+        working-directory: android
+        run: ./gradlew :notification-capture:compileDebugKotlin :receipt-reader:compileDebugKotlin --no-daemon

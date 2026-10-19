@@ -4,7 +4,14 @@
  */
 import type { RawNotification } from '../../../modules/notification-capture/src/NotificationCapture.types';
 import type { CaptureConfirmation, NotificationParser } from '@/domain/contracts';
-import type { Capture, CaptureOriginRule, Entity, Id, ParsedNotification } from '@/domain/types';
+import type {
+  Capture,
+  CaptureOriginRule,
+  Entity,
+  Id,
+  ParsedNotification,
+  Transaction,
+} from '@/domain/types';
 
 export type ParseResult = { parser: string; parsed: ParsedNotification };
 
@@ -39,6 +46,18 @@ export function suggestOrigin(
     : { accountId: null, cardId: null };
 }
 
+/** Campos da Fase 3 numa captura nova, antes de matcher, regras e confirmação mexerem. */
+export const captureExtrasDefaults = {
+  channel: 'notification',
+  suggestedCategoryId: null,
+  installments: null,
+  matchTransactionId: null,
+  matchScore: 0,
+  duplicateOfId: null,
+  editedOnConfirm: false,
+  autoConfirmed: false,
+} as const satisfies Partial<Capture>;
+
 /** Campos da captura a partir da notificação crua e do que o parser entendeu. */
 export function buildCapture(
   raw: RawNotification,
@@ -65,12 +84,15 @@ export function buildCapture(
     confidence: parsed ? Math.min(1, Math.max(0, parsed.confidence)) : 0,
     status: 'pending',
     transactionId: null,
+    ...captureExtrasDefaults,
+    installments: parsed?.installments && parsed.installments > 1 ? parsed.installments : null,
   };
 }
 
 /**
  * Junta o que o usuário informou com a sugestão. `null` quando falta valor, tipo, data ou a
- * origem certa para o tipo (cartão para compra no cartão, conta para os demais).
+ * origem certa para o tipo (cartão para compra no cartão, a compra para estorno, conta para
+ * os demais).
  */
 export function resolveConfirmation(
   capture: Capture,
@@ -86,11 +108,19 @@ export function resolveConfirmation(
     amountCents,
     date,
     description: input.description ?? capture.merchant ?? capture.title ?? capture.packageName,
-    categoryId: input.categoryId ?? null,
+    // `null` informado vale (o usuário tirou a categoria); ausente, vale a sugestão.
+    categoryId: input.categoryId !== undefined ? input.categoryId : capture.suggestedCategoryId,
   };
+  if (kind === 'card_refund') {
+    // Estorno só existe ligado à compra (trilha C).
+    const refundOfId = input.refundOfId ?? capture.matchTransactionId;
+    return refundOfId ? { ...base, refundOfId } : null;
+  }
   if (kind === 'card_purchase') {
     const cardId = input.cardId ?? capture.suggestedCardId;
-    return cardId ? { ...base, cardId, installments: input.installments ?? 1 } : null;
+    return cardId
+      ? { ...base, cardId, installments: input.installments ?? capture.installments ?? 1 }
+      : null;
   }
   const accountId = input.accountId ?? capture.suggestedAccountId;
   return accountId ? { ...base, accountId } : null;
@@ -106,5 +136,18 @@ export function learnedRule(
     cardLastDigits: capture.cardLastDigits,
     accountId: confirmation.cardId ? null : (confirmation.accountId ?? null),
     cardId: confirmation.cardId ?? null,
+  };
+}
+
+/** Regra de origem a lembrar quando a captura foi ligada a um lançamento que já existia. */
+export function linkedRule(
+  capture: Capture,
+  tx: Pick<Transaction, 'accountId' | 'cardId'>,
+): Omit<CaptureOriginRule, keyof Entity> {
+  return {
+    packageName: capture.packageName,
+    cardLastDigits: capture.cardLastDigits,
+    accountId: tx.cardId ? null : tx.accountId,
+    cardId: tx.cardId,
   };
 }

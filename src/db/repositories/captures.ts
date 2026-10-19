@@ -1,10 +1,16 @@
-import { and, desc, eq, isNull, sql } from 'drizzle-orm';
+import { and, between, desc, eq, gte, isNull, sql } from 'drizzle-orm';
 
-import type { Capture, CaptureOriginRule, CaptureStatus } from '@/domain/types';
+import type {
+  Capture,
+  CaptureOriginRule,
+  CaptureSource,
+  CaptureStatus,
+  MerchantRule,
+} from '@/domain/types';
 import { nowTimestamp } from '@/lib/id';
 
 import type { AppDatabase } from '../database';
-import { captureOriginRules, captures } from '../schema';
+import { captureOriginRules, captures, captureSources, merchantRules } from '../schema';
 import { type EntityKeys, newEntity } from './common';
 
 export type CaptureFields = Omit<Capture, EntityKeys>;
@@ -37,6 +43,18 @@ export async function listRecent(db: AppDatabase, limit: number): Promise<Captur
     .limit(limit);
 }
 
+/** Capturas não excluídas notificadas entre dois instantes (ISO 8601), para achar duplicatas. */
+export async function listPostedBetween(
+  db: AppDatabase,
+  from: string,
+  to: string,
+): Promise<Capture[]> {
+  return db
+    .select()
+    .from(captures)
+    .where(and(isNull(captures.deletedAt), between(captures.postedAt, from, to)));
+}
+
 export async function countByStatus(db: AppDatabase, status: CaptureStatus): Promise<number> {
   const [row] = await db
     .select({ count: sql<number>`count(*)` })
@@ -53,10 +71,29 @@ export async function getCapture(db: AppDatabase, id: string): Promise<Capture |
   return row;
 }
 
+export async function getByRawId(db: AppDatabase, rawId: string): Promise<Capture | undefined> {
+  const [row] = await db
+    .select()
+    .from(captures)
+    .where(and(eq(captures.rawId, rawId), isNull(captures.deletedAt)));
+  return row;
+}
+
 export async function updateCapture(
   db: AppDatabase,
   id: string,
-  patch: Partial<Pick<Capture, 'status' | 'transactionId'>>,
+  patch: Partial<
+    Pick<
+      Capture,
+      | 'status'
+      | 'transactionId'
+      | 'matchTransactionId'
+      | 'matchScore'
+      | 'editedOnConfirm'
+      | 'autoConfirmed'
+      | 'duplicateOfId'
+    >
+  >,
 ): Promise<void> {
   await db
     .update(captures)
@@ -90,4 +127,100 @@ export async function upsertOriginRule(db: AppDatabase, rule: OriginRuleFields):
   } else {
     await db.insert(captureOriginRules).values({ ...newEntity(), ...rule });
   }
+}
+
+/**
+ * Lançamentos já ocupados por uma captura: os confirmados (ligados) e os sugeridos para
+ * vincular em capturas pendentes. O matcher não os oferece de novo. A compra apontada por
+ * um estorno pendente não conta: ela continua sendo só dela.
+ */
+export async function listLinkedTransactionIds(db: AppDatabase): Promise<Set<string>> {
+  const rows = await db
+    .select({
+      transactionId: captures.transactionId,
+      matchTransactionId: captures.matchTransactionId,
+      status: captures.status,
+      kind: captures.kind,
+    })
+    .from(captures)
+    .where(isNull(captures.deletedAt));
+  const ids = new Set<string>();
+  for (const r of rows) {
+    if (r.transactionId) ids.add(r.transactionId);
+    if (r.status === 'pending' && r.kind !== 'card_refund' && r.matchTransactionId) {
+      ids.add(r.matchTransactionId);
+    }
+  }
+  return ids;
+}
+
+export type MerchantRuleFields = Omit<MerchantRule, EntityKeys | 'hits'>;
+
+export async function listMerchantRules(db: AppDatabase): Promise<MerchantRule[]> {
+  return db.select().from(merchantRules).where(isNull(merchantRules.deletedAt));
+}
+
+/** Cria a regra do estabelecimento ou atualiza a existente, somando uma confirmação. */
+export async function upsertMerchantRule(db: AppDatabase, rule: MerchantRuleFields): Promise<void> {
+  const [existing] = await db
+    .select()
+    .from(merchantRules)
+    .where(eq(merchantRules.merchantKey, rule.merchantKey));
+  if (existing) {
+    await db
+      .update(merchantRules)
+      .set({ ...rule, hits: existing.hits + 1, deletedAt: null, updatedAt: nowTimestamp() })
+      .where(eq(merchantRules.id, existing.id));
+  } else {
+    await db.insert(merchantRules).values({ ...newEntity(), ...rule, hits: 1 });
+  }
+}
+
+// ─── Fase 3 · Trilha D: nível automático por fonte ───────────────────────────
+
+/** Confirmadas (o que a precisão por fonte precisa saber de cada uma). */
+export async function listConfirmedForStats(db: AppDatabase) {
+  return db
+    .select({
+      packageName: captures.packageName,
+      status: captures.status,
+      editedOnConfirm: captures.editedOnConfirm,
+      autoConfirmed: captures.autoConfirmed,
+      deletedAt: captures.deletedAt,
+    })
+    .from(captures)
+    .where(and(isNull(captures.deletedAt), eq(captures.status, 'confirmed')));
+}
+
+export async function listSources(db: AppDatabase): Promise<CaptureSource[]> {
+  return db.select().from(captureSources).where(isNull(captureSources.deletedAt));
+}
+
+export async function upsertSource(
+  db: AppDatabase,
+  packageName: string,
+  autoConfirm: boolean,
+): Promise<void> {
+  await db
+    .insert(captureSources)
+    .values({ ...newEntity(), packageName, autoConfirm })
+    .onConflictDoUpdate({
+      target: captureSources.packageName,
+      set: { autoConfirm, deletedAt: null, updatedAt: nowTimestamp() },
+    });
+}
+
+export async function listAutoConfirmedSince(db: AppDatabase, since: string): Promise<Capture[]> {
+  return db
+    .select()
+    .from(captures)
+    .where(
+      and(
+        isNull(captures.deletedAt),
+        eq(captures.status, 'confirmed'),
+        eq(captures.autoConfirmed, true),
+        gte(captures.postedAt, since),
+      ),
+    )
+    .orderBy(desc(captures.postedAt), desc(captures.createdAt));
 }

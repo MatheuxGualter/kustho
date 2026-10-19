@@ -9,6 +9,7 @@ import { buildDefaultCategories } from '../seed';
 import { buildDevSeed, clearDevData, runDevSeed } from '../devSeed';
 import { categories } from '../schema';
 import { createTestDb } from '../test/testDb';
+import { captureExtrasDefaults } from '@/domain/captures/rules';
 import {
   insertCapture,
   listByStatus,
@@ -147,6 +148,7 @@ describe('runDevSeed', () => {
       confidence: 0.6,
       status: 'confirmed',
       transactionId: tx.id,
+      ...captureExtrasDefaults,
     });
     await upsertOriginRule(db, {
       packageName: 'com.nu.production',

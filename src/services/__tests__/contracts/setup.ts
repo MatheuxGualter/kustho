@@ -8,7 +8,8 @@ import { createCapturesService } from '@/domain/captures/service';
 import { createCardsService } from '@/domain/cards/service';
 import { createCategoriesService } from '@/domain/categories/service';
 import { createTransactionsService } from '@/domain/transactions/service';
-import type { Services } from '@/domain/contracts';
+import type { NotificationParser, Services } from '@/domain/contracts';
+import { toISODate } from '@/lib/dates';
 import type { DevSeed } from '@/db/devSeed';
 import { runDevSeed } from '@/db/devSeed';
 import { categories } from '@/db/schema';
@@ -23,6 +24,8 @@ import { createFakeServices, createFakeStore } from '../../fakes';
 
 export const TODAY = '2026-10-17';
 export const NUBANK_PACKAGE = 'com.nu.production';
+/** App de SMS: o mesmo aviso do banco chega também por ele (duplicatas, Fase 3). */
+export const SMS_PACKAGE = 'com.google.android.apps.messaging';
 
 export type ContractEnv = {
   services: Services;
@@ -31,16 +34,63 @@ export type ContractEnv = {
   notifications: FakeNotificationCapture;
 };
 
+/**
+ * Parser estreito dos testes de contrato. Entende só três formatos:
+ * "Compra no débito de R$ X em LOJA.", "Compra no crédito de R$ X em Nx em LOJA." e
+ * "Estorno de R$ X em LOJA.". O resto entra como não interpretado, como antes.
+ */
+export const testParser: NotificationParser = {
+  id: 'contract-test',
+  packages: [NUBANK_PACKAGE, SMS_PACKAGE],
+  parse(notification) {
+    const text = notification.text ?? '';
+    const date = toISODate(new Date(notification.postedAtMs));
+    const cents = (reais: string, centavos: string) => Number(reais) * 100 + Number(centavos);
+    const base = { date, cardLastDigits: null, confidence: 0.8 };
+    const debit = /^Compra no débito de R\$ (\d+),(\d{2}) em (.+)\.$/.exec(text);
+    if (debit) {
+      return {
+        ...base,
+        amountCents: cents(debit[1], debit[2]),
+        kind: 'expense',
+        merchant: debit[3],
+      };
+    }
+    const credit = /^Compra no crédito de R\$ (\d+),(\d{2}) em (\d+)x em (.+)\.$/.exec(text);
+    if (credit) {
+      return {
+        ...base,
+        amountCents: cents(credit[1], credit[2]),
+        kind: 'card_purchase',
+        merchant: credit[4],
+        installments: Number(credit[3]),
+      };
+    }
+    const refund = /^Estorno de R\$ (\d+),(\d{2}) em (.+)\.$/.exec(text);
+    if (refund) {
+      return {
+        ...base,
+        amountCents: cents(refund[1], refund[2]),
+        kind: 'card_refund',
+        merchant: refund[3],
+      };
+    }
+    return null;
+  },
+};
+
 export type EnvFactory = { name: string; create: () => Promise<ContractEnv> };
 
 export const fakeEnv: EnvFactory = {
   name: 'fake',
   create: async () => {
     const store = createFakeStore(TODAY);
-    const notifications = createFakeNotificationCapture({ allowedPackages: [NUBANK_PACKAGE] });
+    const notifications = createFakeNotificationCapture({
+      allowedPackages: [NUBANK_PACKAGE, SMS_PACKAGE],
+    });
     return {
       notifications,
-      services: createFakeServices(store, notifications),
+      services: createFakeServices(store, notifications, [testParser]),
       seed: {
         accounts: store.accounts,
         creditCards: store.cards,
@@ -60,7 +110,9 @@ export const realEnv: EnvFactory = {
     const seed = await runDevSeed(db, TODAY);
     const transactions = createTransactionsService(db);
     const cards = createCardsService(db);
-    const notifications = createFakeNotificationCapture({ allowedPackages: [NUBANK_PACKAGE] });
+    const notifications = createFakeNotificationCapture({
+      allowedPackages: [NUBANK_PACKAGE, SMS_PACKAGE],
+    });
     return {
       notifications,
       services: {
@@ -68,7 +120,12 @@ export const realEnv: EnvFactory = {
         transactions,
         cards,
         categories: createCategoriesService(db),
-        captures: createCapturesService(db, { transactions, cards, notifications, parsers: [] }),
+        captures: createCapturesService(db, {
+          transactions,
+          cards,
+          notifications,
+          parsers: [testParser],
+        }),
       },
       seed,
     };

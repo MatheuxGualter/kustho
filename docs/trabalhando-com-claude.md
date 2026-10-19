@@ -41,6 +41,10 @@ pnpm install                             # se o lockfile mudou
   `services/app.ts`, `(tabs)/_layout.tsx`): avise o grupo antes e faça um PR só para eles.
 - PRs empilhados (um em cima do outro) fazem o merge cair na branch de baixo, não na
   `main`. Prefira sempre abrir a branch a partir da `main` atualizada.
+- **Fase em andamento vai para `develop`.** Os PRs das trilhas apontam para `develop`;
+  o grupo testa a fase inteira no aparelho a partir dela e, com a validação feita, abre
+  um PR `develop` → `main`. Correções da `main` entram na `develop` com
+  `git merge origin/main`. Fase 3: PRs #32 a #37, nessa ordem.
 - `CLAUDE.md` e `AGENTS.md` são cópias exatas (o CI confere): edite os dois juntos.
 
 ## 4. Passando o bastão (outro dev ou outra sessão do Claude)
@@ -64,25 +68,28 @@ parou"_.
 
 Coisas que custaram tempo e que o Claude (e você) deve saber de cara:
 
-| Situação                                                   | O que fazer                                                                                                                    |
-| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| API do Expo/React Native "não existe" ou mudou             | O projeto está no Expo SDK 58. Confira os tipos em `node_modules` ou a doc versionada, não a memória.                          |
-| Mudou ícone, splash, nome ou plugin no `app.json`          | `npx expo prebuild --clean --platform android` e `pnpm android`. Só recompilar não basta.                                      |
-| Dependência nova                                           | `npx expo install <pacote>`. Se for nativa, o PR avisa que precisa recompilar.                                                 |
-| Teste de componente travando ou "não encontrou o elemento" | RNTL 14: `render`, `fireEvent` e `act` são assíncronos; sempre `await`. Use `renderWithTheme`.                                 |
-| Módulo nativo quebra o Jest                                | Mock em `src/test/setup.ui.ts` (já há Reanimated, deslizar, SQLite, kv-store).                                                 |
-| Regra que toca o banco                                     | `createTestDb()`: SQLite real com as migrações e as restrições CHECK. Não use mock de banco.                                   |
-| ESLint reclama de cor                                      | Hex só em `src/ui/tokens.ts` (e logos em `src/ui/banks/`). Use classes do Tailwind ou `useTheme()`.                            |
-| `watch()` do react-hook-form dá erro de lint               | Use `useWatch` (o React Compiler não aceita `watch`).                                                                          |
-| Data de lançamento errada em um dia                        | Nunca `toISOString()` para data de competência; use `today()` e `src/lib/dates.ts`.                                            |
-| Algo de trás aparece "vazando" num item com opacidade      | No Android a opacidade do pai vale filho a filho. Dê feedback de toque com cor, não com opacidade (ex.: `TransactionRow`).     |
-| Texto cortado em telas pequenas                            | `numberOfLines` + `adjustsFontSizeToFit` com `minimumFontScale`; nomes com espaço podem quebrar em duas linhas.                |
-| App mostra `Host unreachable` ao abrir                     | O app procura o Metro no IP do Wi-Fi. Use `pnpm start:usb` (cabo) e `a` no terminal.                                           |
-| Tabela nova com chave estrangeira                          | Inclua em `clearDevData` (`src/db/devSeed.ts`) na ordem certa; senão os dados de exemplo e o Maestro falham com `FOREIGN KEY`. |
-| Arquivo de texto com acentos (CSV) sai errado              | Grave bytes UTF-8 (`TextEncoder`) com BOM; ver `src/features/shared/shareFile.ts`.                                             |
-| Regra de limite que soma lançamentos (ex.: estornos)       | Ligue os lançamentos por id (`refundOfId`) e teste a soma, não só o valor isolado.                                             |
-| Exportar dados de usuário (diagnóstico)                    | Anonimize e teste com textos reais: bancos mascaram só parte do CPF (`XXX.468.266-XX`).                                        |
-| Abrir PR depois de muito tempo na branch                   | `git fetch && git merge origin/main` antes; alguém pode ter mudado os mesmos arquivos na `main`.                               |
+| Situação                                                        | O que fazer                                                                                                                         |
+| --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| API do Expo/React Native "não existe" ou mudou                  | O projeto está no Expo SDK 58. Confira os tipos em `node_modules` ou a doc versionada, não a memória.                               |
+| Mudou ícone, splash, nome ou plugin no `app.json`               | `npx expo prebuild --clean --platform android` e `pnpm android`. Só recompilar não basta.                                           |
+| Dependência nova                                                | `npx expo install <pacote>`. Se for nativa, o PR avisa que precisa recompilar.                                                      |
+| Teste de componente travando ou "não encontrou o elemento"      | RNTL 14: `render`, `fireEvent` e `act` são assíncronos; sempre `await`. Use `renderWithTheme`.                                      |
+| Módulo nativo quebra o Jest                                     | Mock em `src/test/setup.ui.ts` (já há Reanimated, deslizar, SQLite, kv-store).                                                      |
+| Regra que toca o banco                                          | `createTestDb()`: SQLite real com as migrações e as restrições CHECK. Não use mock de banco.                                        |
+| ESLint reclama de cor                                           | Hex só em `src/ui/tokens.ts` (e logos em `src/ui/banks/`). Use classes do Tailwind ou `useTheme()`.                                 |
+| `watch()` do react-hook-form dá erro de lint                    | Use `useWatch` (o React Compiler não aceita `watch`).                                                                               |
+| Data de lançamento errada em um dia                             | Nunca `toISOString()` para data de competência; use `today()` e `src/lib/dates.ts`.                                                 |
+| Algo de trás aparece "vazando" num item com opacidade           | No Android a opacidade do pai vale filho a filho. Dê feedback de toque com cor, não com opacidade (ex.: `TransactionRow`).          |
+| Texto cortado em telas pequenas                                 | `numberOfLines` + `adjustsFontSizeToFit` com `minimumFontScale`; nomes com espaço podem quebrar em duas linhas.                     |
+| App mostra `Host unreachable` ao abrir                          | O app procura o Metro no IP do Wi-Fi. Use `pnpm start:usb` (cabo) e `a` no terminal.                                                |
+| Tabela nova com chave estrangeira                               | Inclua em `clearDevData` (`src/db/devSeed.ts`) na ordem certa; senão os dados de exemplo e o Maestro falham com `FOREIGN KEY`.      |
+| Arquivo de texto com acentos (CSV) sai errado                   | Grave bytes UTF-8 (`TextEncoder`) com BOM; ver `src/features/shared/shareFile.ts`.                                                  |
+| Regra de limite que soma lançamentos (ex.: estornos)            | Ligue os lançamentos por id (`refundOfId`) e teste a soma, não só o valor isolado.                                                  |
+| Exportar dados de usuário (diagnóstico)                         | Anonimize e teste com textos reais: bancos mascaram só parte do CPF (`XXX.468.266-XX`).                                             |
+| Fake com `await` dentro do laço de leitura                      | Duas leituras ao mesmo tempo duplicam. Use a mesma trava do real (`running ??= …`) e teste com `Promise.all`.                       |
+| "Multiple navigation containers" ao receber um compartilhamento | O Android abriu uma 2ª MainActivity. `plugins/withSingleMainActivity.js` (`documentLaunchMode="never"`) evita; precisa de prebuild. |
+| `GO_BACK was not handled` numa tela aberta direto               | Use `goBackOr(destino)` (`src/features/shared/goBack.ts`), não `router.back()`.                                                     |
+| Abrir PR depois de muito tempo na branch                        | `git fetch && git merge origin/main` antes; alguém pode ter mudado os mesmos arquivos na `main`.                                    |
 
 ## 6. O que o Claude pode e não pode fazer sozinho
 

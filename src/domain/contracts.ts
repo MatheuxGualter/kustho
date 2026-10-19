@@ -29,6 +29,7 @@ import type {
   NewTransaction,
   NewTransfer,
   ParsedNotification,
+  Timestamp,
   Transaction,
   TxFilters,
   YearMonth,
@@ -234,6 +235,22 @@ export type CaptureConfirmation = {
   cardId?: Id;
   /** Parcelas da compra no cartão (padrão 1). */
   installments?: number;
+  /** Para `card_refund`: a compra estornada (padrão: a que o matcher achou). */
+  refundOfId?: Id;
+};
+
+/** Precisão de uma fonte (app do banco ou comprovantes) para o nível automático (Fase 3, trilha D). */
+export type SourceStats = {
+  packageName: string;
+  /** Confirmadas pelo usuário (as automáticas não contam). */
+  confirmed: number;
+  /** Dessas, confirmadas exatamente como vieram. */
+  unedited: number;
+  /** `unedited / confirmed`; `null` sem confirmações. */
+  precision: number | null;
+  /** Amostra mínima e precisão acima do portão: a chave pode ser ligada. */
+  eligible: boolean;
+  autoConfirm: boolean;
 };
 
 export interface CapturesService {
@@ -243,6 +260,12 @@ export interface CapturesService {
    * capturas. Devolve quantas capturas novas entraram.
    */
   ingest(): Promise<number>;
+  /**
+   * Fase 3 (trilha E): texto de um comprovante compartilhado (direto ou do OCR) vira
+   * captura pendente com `channel: 'receipt'`. O mesmo comprovante devolve a captura que já
+   * existe. Texto que não parece comprovante: `receipt_unrecognized`.
+   */
+  ingestReceipt(input: { text: string; receivedAtMs: number }): Promise<Capture>;
   /** Pendentes, da mais recente para a mais antiga. */
   listPending(): Promise<Capture[]>;
   /** Selo da aba Pendentes. */
@@ -258,9 +281,27 @@ export interface CapturesService {
   confirmCapture(id: Id, input?: Partial<CaptureConfirmation>): Promise<Transaction[]>;
   /** Confirma as completas e devolve as que precisaram ficar (incompletas). */
   confirmMany(ids: Id[]): Promise<{ confirmed: Id[]; skipped: Id[] }>;
+  /**
+   * Fase 3 (trilha A): a captura é um lançamento que já existe. Marca como confirmada
+   * apontando para ele, sem criar outro; aprende a origem. Lançamento já ligado a outra
+   * captura: `already_linked`.
+   */
+  linkCapture(id: Id, transactionId: Id): Promise<Transaction>;
   discardCapture(id: Id): Promise<void>;
   /** Desfaz `discardCapture` (volta a pendente). */
   restoreCapture(id: Id): Promise<void>;
+  /** Fase 3 (trilha D): precisão por fonte, da que tem mais confirmações. */
+  getSourceStats(): Promise<SourceStats[]>;
+  /**
+   * Liga ou desliga o lançamento automático da fonte. Ligar exige `eligible`; senão
+   * `auto_confirm_not_eligible`. Com a chave ligada, `ingest` confirma sozinho o que vier
+   * pronto, com `autoConfirmed: true`.
+   */
+  setAutoConfirm(packageName: string, enabled: boolean): Promise<void>;
+  /** Lançadas sozinhas notificadas desde `since` (ISO 8601), da mais recente: o resumo. */
+  listAutoConfirmed(since: Timestamp): Promise<Capture[]>;
+  /** "Desfazer" de uma automática: exclui o lançamento (e as parcelas) e volta a pendente. */
+  undoAutoConfirm(id: Id): Promise<void>;
 }
 
 export type Services = {

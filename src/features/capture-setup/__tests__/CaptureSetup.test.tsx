@@ -20,8 +20,12 @@ jest.mock('expo-router', () => ({
   Stack: { Screen: () => null },
 }));
 
-const render = async (ui: React.ReactElement, module = createFakeNotificationCapture()) => {
-  const services = createFakeServices(createFakeStore(), module);
+const render = async (
+  ui: React.ReactElement,
+  module = createFakeNotificationCapture(),
+  store = createFakeStore(),
+) => {
+  const services = createFakeServices(store, module);
   await renderWithTheme(
     <ServicesProvider services={services}>
       <CaptureModuleProvider module={module}>{ui}</CaptureModuleProvider>
@@ -138,5 +142,34 @@ describe('CaptureDiagnosticsScreen', () => {
     const before = await services.captures.countPending();
     await fireEvent.press(await screen.findByRole('button', { name: 'Buscar notificações agora' }));
     expect(await services.captures.countPending()).toBe(before + 1);
+  });
+
+  it('precisão por fonte: liga o automático só na fonte liberada', async () => {
+    const store = createFakeStore();
+    const [sample] = store.captures;
+    const confirmed = (packageName: string, n: number) =>
+      Array.from({ length: n }, (_, i) => ({
+        ...sample,
+        id: `${packageName}-${i}`,
+        rawId: `${packageName}-${i}`,
+        packageName,
+        status: 'confirmed' as const,
+      }));
+    store.captures.push(...confirmed('com.nu.production', 20), ...confirmed('com.itau', 3));
+    const { services } = await render(<CaptureDiagnosticsScreen />, undefined, store);
+
+    expect(await screen.findByText('20 de 20 sem edição (100%)')).toBeTruthy();
+    expect(screen.getByText('3 de 3 sem edição (100%)')).toBeTruthy();
+    expect(screen.getByText('Ainda não liberado')).toBeTruthy();
+
+    const nubank = getBank('nubank')!.name;
+    await fireEvent(
+      screen.getByLabelText(`Lançar automaticamente: ${nubank}`),
+      'valueChange',
+      true,
+    );
+    const stats = await services.captures.getSourceStats();
+    expect(stats.find((s) => s.packageName === 'com.nu.production')?.autoConfirm).toBe(true);
+    expect(stats.find((s) => s.packageName === 'com.itau')?.autoConfirm).toBe(false);
   });
 });

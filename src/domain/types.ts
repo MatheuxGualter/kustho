@@ -114,7 +114,7 @@ export const transactionStatuses = ['posted', 'scheduled', 'pending'] as const;
 /** Efetivada, futura ou aguardando confirmação (a partir da Fase 2). */
 export type TransactionStatus = (typeof transactionStatuses)[number];
 
-export const transactionSources = ['manual', 'notification', 'open_finance'] as const;
+export const transactionSources = ['manual', 'notification', 'receipt', 'open_finance'] as const;
 export type TransactionSource = (typeof transactionSources)[number];
 
 export type Transaction = Entity & {
@@ -195,13 +195,16 @@ export type DayGroup = {
 
 // ─── Capturas (Fase 2) ───────────────────────────────────────────────────────
 
-/** Tipo de lançamento que uma notificação sugere. */
-export const captureKinds = [
-  'expense',
-  'income',
-  'card_purchase',
-] as const satisfies readonly TransactionKind[];
+/**
+ * Tipo de lançamento que uma notificação sugere. `card_refund` (Fase 3, trilha C): estorno
+ * no cartão; ao confirmar vira `adjustment` ligado à compra (`refundCardPurchase`).
+ */
+export const captureKinds = ['expense', 'income', 'card_purchase', 'card_refund'] as const;
 export type CaptureKind = (typeof captureKinds)[number];
+
+/** Por onde a captura chegou: notificação do banco (Fase 2) ou comprovante compartilhado (Fase 3, trilha E). */
+export const captureChannels = ['notification', 'receipt'] as const;
+export type CaptureChannel = (typeof captureChannels)[number];
 
 /** Pendente na caixa, confirmada (virou lançamento) ou descartada. */
 export const captureStatuses = ['pending', 'confirmed', 'discarded'] as const;
@@ -219,6 +222,8 @@ export type ParsedNotification = {
   cardLastDigits: string | null;
   /** 0 a 1: quão certo o parser está de valor e tipo. */
   confidence: number;
+  /** Compra parcelada ("em 3x"): número de parcelas; `null` ou 1 = à vista (Fase 3, trilha C). */
+  installments?: number | null;
 };
 
 /**
@@ -247,8 +252,46 @@ export type Capture = Entity & {
   /** 0 a 1; 0 quando não interpretada. */
   confidence: number;
   status: CaptureStatus;
-  /** Lançamento criado ao confirmar (o primeiro, se parcelado). */
+  /** Lançamento criado ao confirmar (o primeiro, se parcelado) ou o já existente vinculado. */
   transactionId: Id | null;
+  // ── Fase 3 ──
+  channel: CaptureChannel;
+  /** Categoria sugerida pelas regras de estabelecimento (trilha B). */
+  suggestedCategoryId: Id | null;
+  /** Parcelas detectadas no texto; `null` = à vista (trilha C). */
+  installments: number | null;
+  /**
+   * Lançamento já existente que parece ser o mesmo (trilha A): sugerir "vincular". Em
+   * `card_refund`, a compra que o estorno devolve (trilha C).
+   */
+  matchTransactionId: Id | null;
+  /** 0 a 1; 0 sem candidato. */
+  matchScore: number;
+  /** Mesma transação já capturada por outra fonte (ex.: push + SMS): fica descartada. */
+  duplicateOfId: Id | null;
+  /** O usuário mudou algo da sugestão ao confirmar (mede a precisão por fonte). */
+  editedOnConfirm: boolean;
+  /** Entrou sozinho pelo nível automático (trilha D), com selo e "Desfazer". */
+  autoConfirmed: boolean;
+};
+
+/**
+ * Regra aprendida por estabelecimento (Fase 3, trilha B): "iFood" → categoria e origem.
+ * `merchantKey` é o nome normalizado (sem acentos, minúsculo, sem sufixos como "LTDA").
+ */
+export type MerchantRule = Entity & {
+  merchantKey: string;
+  categoryId: Id | null;
+  accountId: Id | null;
+  cardId: Id | null;
+  /** Quantas confirmações ensinaram esta regra. */
+  hits: number;
+};
+
+/** Configuração por fonte (app do banco ou comprovantes): nível automático (trilha D). */
+export type CaptureSource = Entity & {
+  packageName: string;
+  autoConfirm: boolean;
 };
 
 /**

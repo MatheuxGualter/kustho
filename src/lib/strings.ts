@@ -191,11 +191,38 @@ export const strings = {
     packageRow: (total: number, unparsed: number) =>
       `${total} lida${total === 1 ? '' : 's'}${unparsed > 0 ? ` · ${unparsed} não interpretada${unparsed === 1 ? '' : 's'}` : ''}`,
     lastAt: (when: string) => `Última: ${when}`,
+    precisionTitle: 'Lançar automaticamente',
+    precisionHint: (minimum: number, percent: number) =>
+      `Cada fonte mostra quantas confirmações vieram certas, sem você mudar nada. A chave libera com ${minimum} confirmações e ${percent}% de acerto; o que entrar sozinho aparece em Pendentes com "Desfazer".`,
+    precisionEmpty: 'Confirme capturas em Pendentes para medir o acerto de cada fonte.',
+    precisionRow: (unedited: number, confirmed: number, percent: number | null) =>
+      percent === null
+        ? 'Nenhuma confirmação ainda'
+        : `${unedited} de ${confirmed} sem edição (${percent}%)`,
+    precisionLocked: 'Ainda não liberado',
+    receiptsSource: 'Comprovantes compartilhados',
+    autoOn: 'Lançamento automático ligado',
+    autoOff: 'Lançamento automático desligado',
     exportTitle: 'Ajudar a melhorar a leitura',
     exportHint:
       'Exporta as últimas notificações no formato de testes dos parsers, com nomes, estabelecimentos, finais de cartão e documentos trocados. Confira o texto antes de mandar para o grupo.',
     export: 'Exportar anonimizado',
     shareTitle: 'Notificações anonimizadas do Kustho',
+  },
+  receipts: {
+    title: 'Comprovante',
+    reading: 'Lendo o comprovante…',
+    emptyTitle: 'Nada para ler',
+    failedTitle: 'Não deu para ler',
+    howTo:
+      'Depois de fazer um Pix, abra o comprovante no app do banco, toque em Compartilhar e escolha o Kustho. A saída aparece para você confirmar.',
+    goPending: 'Ir para Pendentes',
+    manual: 'Lançar à mão',
+    alreadyTitle: 'Já está no Kustho',
+    already:
+      'Este Pix já chegou por notificação ou por outro comprovante. Confira em Pendentes ou nos lançamentos.',
+    tipTitle: 'Pix enviado sem notificação?',
+    tip: 'Alguns bancos só avisam o Pix recebido. Para os enviados, compartilhe o comprovante com o Kustho (imagem, PDF ou texto): ele é lido no aparelho e vira sugestão em Pendentes.',
   },
   captureNotice: {
     inviteTitle: 'Lance sem digitar',
@@ -224,9 +251,18 @@ export const strings = {
     discard: 'Descartar',
     confirmAll: (count: number) => `Confirmar ${count} prontas`,
     confirmed: 'Lançamento criado',
+    matchTitle: 'Parece ser um lançamento que você já registrou:',
+    link: 'Vincular',
+    createNew: 'É outro, criar',
+    linked: 'Vinculado ao lançamento existente',
     confirmedMany: (count: number) => `${count} lançamentos criados`,
     discarded: 'Notificação descartada',
-    kinds: { expense: 'Despesa', income: 'Receita', card_purchase: 'Cartão' },
+    kinds: {
+      expense: 'Despesa',
+      income: 'Receita',
+      card_purchase: 'Cartão',
+      card_refund: 'Estorno',
+    },
     original: 'Notificação original',
     origin: 'Conta',
     card: 'Cartão',
@@ -234,6 +270,16 @@ export const strings = {
     needAmount: 'Informe o valor',
     needOrigin: 'Escolha a conta ou o cartão',
     needDescription: 'Informe uma descrição',
+    refundOf: 'Estorno da compra:',
+    refundNoPurchase:
+      'Não achamos a compra deste estorno. Abra a compra no cartão e use Estornar, ou descarte.',
+    refundConfirmed: 'Estorno lançado na fatura',
+    autoTitle: (count: number) =>
+      count === 1 ? '1 lançamento entrou sozinho' : `${count} lançamentos entraram sozinhos`,
+    autoHint: 'Últimos 7 dias. Desfaça o que não estiver certo: volta para cá como pendente.',
+    autoBadge: 'automático',
+    undo: 'Desfazer',
+    undone: 'Desfeito: voltou para Pendentes',
   },
   transactions: {
     searchPlaceholder: 'Buscar lançamento',
@@ -617,6 +663,13 @@ export const strings = {
       invalid_amount: 'Informe um valor maior que zero.',
       not_found: 'Item não encontrado. Ele pode ter sido excluído.',
       capture_incomplete: 'Falta o valor, o tipo ou a origem. Edite antes de confirmar.',
+      already_linked: 'Este lançamento já está ligado a outra notificação.',
+      auto_confirm_not_eligible:
+        'Esta fonte ainda não acerta o bastante para lançar sozinha. Continue confirmando em Pendentes.',
+      receipt_reader_unavailable:
+        'Para ler imagem ou PDF, o app precisa ser atualizado (recompile com pnpm android).',
+      receipt_unrecognized:
+        'Não reconheci um comprovante nesse conteúdo. Tente compartilhar o comprovante do Pix (imagem, PDF ou texto).',
     },
   },
 } as const;
