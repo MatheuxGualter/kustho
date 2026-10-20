@@ -5,8 +5,19 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 
 export type ThemePreference = 'system' | 'light' | 'dark';
 
+/** Teto do nome mostrado na saudação, para não estourar o título da Início. */
+export const DISPLAY_NAME_MAX = 40;
+
+/** Remove espaços nas pontas e corta no limite. Vazio significa "sem nome". */
+export function normalizeDisplayName(value: string): string {
+  return value.trim().slice(0, DISPLAY_NAME_MAX);
+}
+
 type PreferencesState = {
   theme: ThemePreference;
+  /** Nome pedido nas boas-vindas. `null` usa o fallback "Usuário" na saudação. */
+  displayName: string | null;
+  setDisplayName: (name: string) => void;
   /** Modo "ocultar valores": `MoneyText` mostra máscara no lugar dos números. */
   hideValues: boolean;
   /** Última origem usada no novo lançamento (`account:<id>` ou `card:<id>`). */
@@ -32,6 +43,12 @@ export const usePreferences = create<PreferencesState>()(
   persist(
     (set) => ({
       theme: 'system',
+      displayName: null,
+      setDisplayName: (name) => {
+        const displayName = normalizeDisplayName(name);
+        if (!displayName) return;
+        set({ displayName });
+      },
       hideValues: false,
       lastOrigin: null,
       setLastOrigin: (lastOrigin) => set({ lastOrigin }),
@@ -51,6 +68,7 @@ export const usePreferences = create<PreferencesState>()(
       storage: createJSONStorage(() => Storage),
       partialize: ({
         theme,
+        displayName,
         hideValues,
         lastOrigin,
         lockEnabled,
@@ -59,6 +77,7 @@ export const usePreferences = create<PreferencesState>()(
         captureInviteDismissed,
       }) => ({
         theme,
+        displayName,
         hideValues,
         lastOrigin,
         lockEnabled,

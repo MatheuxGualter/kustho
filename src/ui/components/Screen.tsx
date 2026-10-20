@@ -39,7 +39,8 @@ type ScreenProps = {
 
 /**
  * Contêiner padrão de tela: fundo do tema, safe areas, título opcional e teclado que nunca
- * cobre o campo em edição (a tela ganha espaço embaixo e rola até o campo focado).
+ * cobre o campo em edição. Com rolagem, ganha espaço embaixo e vai até o campo focado;
+ * sem rolagem, o conteúdo ocupa a altura e sobe junto com o teclado.
  */
 export function Screen({ title, children, edges = ['top'], scroll = true }: ScreenProps) {
   const scrollRef = useRef<ScrollViewInstance>(null);
@@ -54,15 +55,14 @@ export function Screen({ title, children, edges = ['top'], scroll = true }: Scre
     node.measureLayout(
       content,
       (_x, y) => scrollRef.current?.scrollTo({ y: Math.max(0, y - FOCUS_MARGIN), animated: true }),
-      () => { },
+      () => {},
     );
   }, []);
 
   useEffect(() => {
-    if (!scroll) return;
     const show = Keyboard.addListener('keyboardDidShow', (e) => {
       setKeyboardHeight(e.endCoordinates.height);
-      requestAnimationFrame(reveal);
+      if (scroll) requestAnimationFrame(reveal);
     });
     const hide = Keyboard.addListener('keyboardDidHide', () => {
       setKeyboardHeight(0);
@@ -84,7 +84,7 @@ export function Screen({ title, children, edges = ['top'], scroll = true }: Scre
   );
 
   const content = (
-    <View ref={contentRef} className="gap-4 px-4 pb-8 pt-8">
+    <View ref={contentRef} className={`gap-4 px-4 pb-8 pt-8 ${scroll ? '' : 'flex-1'}`}>
       {title ? (
         <AppText variant="headline" accessibilityRole="header">
           {title}
@@ -107,7 +107,9 @@ export function Screen({ title, children, edges = ['top'], scroll = true }: Scre
           </ScrollView>
         </ScrollIntoViewContext.Provider>
       ) : (
-        content
+        <View className="flex-1" style={{ paddingBottom: keyboardHeight }}>
+          {content}
+        </View>
       )}
     </SafeAreaView>
   );

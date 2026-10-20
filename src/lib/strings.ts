@@ -42,6 +42,7 @@ export const strings = {
     home: {
       title: 'Início',
       placeholder: 'O resumo do mês aparece aqui.',
+      /** Fallback de quem concluiu as boas-vindas sem informar um nome. */
       greetingName: 'Usuário',
       greetings: {
         morning: 'Bom dia',
@@ -95,7 +96,7 @@ export const strings = {
     category: { title: 'Categoria', placeholder: 'Editar ou excluir, movendo os lançamentos.' },
     settings: {
       title: 'Configurações',
-      placeholder: 'Tema, ocultar valores e bloqueio por biometria ou PIN.',
+      placeholder: 'Nome, tema, ocultar valores e bloqueio por biometria ou PIN.',
     },
     export: { title: 'Exportar dados', placeholder: 'Exportar tudo em CSV ou JSON.' },
     onboarding: { title: 'Boas-vindas', placeholder: 'Primeira conta, primeiro cartão e pronto.' },
@@ -397,6 +398,8 @@ export const strings = {
     share: (pct: number) => `${pct}%`,
   },
   settings: {
+    profile: 'Perfil',
+    name: 'Nome',
     appearance: 'Aparência',
     privacy: 'Privacidade e segurança',
     hideValues: 'Ocultar valores',
@@ -439,10 +442,17 @@ export const strings = {
         title: 'Cartões sem surpresa',
         text: 'Compras parceladas caem em cada fatura certa, e o limite disponível já desconta as parcelas.',
       },
+      {
+        title: 'Como podemos te chamar?',
+        text: 'Depois disso, é só usar!',
+      },
     ],
-    next: 'Continuar',
-    createAccount: 'Cadastrar minha primeira conta',
-    skip: 'Agora não',
+    back: 'Voltar',
+    next: 'Avançar',
+    start: 'Começar',
+    nameLabel: 'Nome',
+    namePlaceholder: 'Seu nome',
+    nameHint: 'Não abrevie seu nome',
     step: (n: number, total: number) => `Passo ${n} de ${total}`,
   },
   banks: {

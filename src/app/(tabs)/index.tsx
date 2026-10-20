@@ -13,6 +13,8 @@ import { Screen } from '@/ui/components/Screen';
 // Montada por seções que cada trilha entrega em src/features/<domínio>/ (dona: trilha D).
 export default function HomeScreen() {
   const onboardingDone = usePreferences((s) => s.onboardingDone);
+  const displayName = usePreferences((s) => s.displayName);
+  const name = displayName || strings.screens.home.greetingName;
 
   useEffect(() => {
     if (!onboardingDone) router.push('/onboarding');
@@ -20,7 +22,7 @@ export default function HomeScreen() {
 
   return (
     <Screen
-      title={`${strings.screens.home.greetings[dayPeriod(new Date().getHours())]}, ${strings.screens.home.greetingName}!`}
+      title={`${strings.screens.home.greetings[dayPeriod(new Date().getHours())]}, ${name.trim().split(' ')[0]}!`}
     >
       <HomeCaptureNotice />
       <HomeAccountsSection />

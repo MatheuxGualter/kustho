@@ -98,7 +98,10 @@ function RootStack() {
         />
         <Stack.Screen name="pendente/[id]" options={{ title: strings.pending.confirmTitle }} />
         <Stack.Screen name="dev/ui" options={{ title: strings.devCatalog.title }} />
-        <Stack.Screen name="onboarding" options={{ headerShown: false, presentation: 'modal' }} />
+        <Stack.Screen
+          name="onboarding"
+          options={{ headerShown: false, presentation: 'modal', gestureEnabled: false }}
+        />
       </Stack>
     </>
   );
