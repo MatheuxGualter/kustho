@@ -126,7 +126,9 @@ saída em Pendentes, sem digitar.
 - [ ] Testar no aparelho com comprovantes reais de cada banco e guardar os textos
       anonimizados como fixtures. Nubank (out/2026): o OCR pode entregar em colunas e
       errar `R$`/centavos; o parser agora tolera os dois. Quando a leitura falha, a tela
-      oferece **Enviar o texto lido**: é esse texto (anonimizado) que vira fixture.
+      oferece **Enviar o texto lido**: é esse texto (anonimizado) que vira fixture. No
+      aparelho o ML Kit entregou todos os rótulos e depois os valores misturados ao rodapé:
+      o parser lê esse bloco pelo tipo de cada linha (nome, banco, documento).
 
 ## Validação no aparelho
 

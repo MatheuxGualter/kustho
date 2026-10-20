@@ -154,6 +154,57 @@ function readSection(lines: string[], inlineName: string | null): Section {
 
 type Bounds = { start: number; inline: string | null };
 
+/** Seção em que o OCR só deixou rótulos ("Nome", "CPF"…): os valores ficaram em outro bloco. */
+const onlyLabels = (lines: readonly string[]) =>
+  lines.length > 0 && lines.every((line) => labelOf(line)?.rest === '');
+
+/** Linhas que não são nome de pessoa nem banco: rodapé, ajuda, títulos. */
+const BOILERPLATE =
+  /ajuda|ouvidoria|estamos|duvida|atendimento|comprovante|transferencia|^pix$|^ted$|^doc$|canais|uteis/;
+/** Banco ou instituição de pagamento (e não a frase do rodapé "Instituição de Pagamento"). */
+const BANK_LINE = /\b(banco|bank|pagamentos|financeira|cooperativa|caixa|sicoob|sicredi|ip)\b/;
+
+const isBankLine = (line: string) => {
+  const norm = normalize(line);
+  return BANK_LINE.test(norm) && !/institui/.test(norm) && !looksLikeDocument(line);
+};
+
+/** Nome de pessoa ou empresa: só letras, duas palavras ou mais. */
+const isNameLine = (line: string) => {
+  const norm = normalize(line);
+  return (
+    /^[a-z'.]+(?: [a-z'.&-]+)+$/.test(norm) &&
+    !BOILERPLATE.test(norm) &&
+    !isBankLine(line) &&
+    !labelOf(line)
+  );
+};
+
+/**
+ * OCR em colunas (ML Kit): todos os rótulos primeiro e, depois, os valores misturados ao
+ * rodapé. Os valores ficam na ordem visual, então o 1º nome e o 1º banco são da seção que
+ * aparece primeiro (normalmente Destino) e os 2º, da seguinte.
+ */
+function readColumns(lines: string[], receiverFirst: boolean) {
+  const lastLabel = lines.reduce(
+    (last, line, i) =>
+      labelOf(line)?.rest === '' ||
+      RECEIVER_HEADER.test(normalize(line)) ||
+      PAYER_HEADER.test(normalize(line))
+        ? i
+        : last,
+    -1,
+  );
+  const values = lines.slice(lastLabel + 1);
+  const names = values.filter(isNameLine);
+  const banks = values.filter(isBankLine);
+  const [first, second] = [0, 1].map((i) => ({
+    name: names[i] ?? null,
+    institution: banks[i] ?? null,
+  }));
+  return receiverFirst ? { receiver: first, payer: second } : { receiver: second, payer: first };
+}
+
 function findSections(lines: string[]) {
   const receivers: Bounds[] = [];
   const payers: Bounds[] = [];
@@ -170,12 +221,18 @@ function findSections(lines: string[]) {
       headers.push(i);
     }
   });
-  const slice = (b: Bounds | undefined): Section | null => {
-    if (!b) return null;
-    const end = headers.find((h) => h > b.start) ?? lines.length;
-    return readSection(lines.slice(b.start + 1, end), b.inline);
-  };
-  return { receiver: slice(receivers[0]), payer: slice(payers[0]) };
+  const sectionLines = (b: Bounds) =>
+    lines.slice(b.start + 1, headers.find((h) => h > b.start) ?? lines.length);
+  const slice = (b: Bounds | undefined): Section | null =>
+    b ? readSection(sectionLines(b), b.inline) : null;
+
+  const [receiver, payer] = [receivers[0], payers[0]];
+  const columns = [receiver, payer].some((b) => b && !b.inline && onlyLabels(sectionLines(b)));
+  if (columns) {
+    const receiverFirst = !payer || (!!receiver && receiver.start < payer.start);
+    return readColumns(lines, receiverFirst);
+  }
+  return { receiver: slice(receiver), payer: slice(payer) };
 }
 
 /** Comprovante numa frase só ("Pix de R$ 42,00 enviado para FULANO em …"). */

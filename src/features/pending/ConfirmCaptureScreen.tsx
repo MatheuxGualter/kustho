@@ -81,7 +81,7 @@ function OriginalCard({ capture }: { capture: Capture }) {
   return (
     <Card>
       <AppText variant="caption" tone="muted">
-        {strings.pending.original}
+        {capture.channel === 'receipt' ? strings.pending.originalReceipt : strings.pending.original}
       </AppText>
       {capture.title ? <AppText variant="label">{capture.title}</AppText> : null}
       {capture.text ? <AppText variant="caption">{capture.text}</AppText> : null}

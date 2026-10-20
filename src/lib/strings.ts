@@ -279,6 +279,7 @@ export const strings = {
       card_refund: 'Estorno',
     },
     original: 'Notificação original',
+    originalReceipt: 'Comprovante original',
     origin: 'Conta',
     card: 'Cartão',
     confirmTitle: 'Confirmar lançamento',
