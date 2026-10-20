@@ -22,6 +22,7 @@ export default function HomeScreen() {
 
   return (
     <Screen
+      topFade
       title={`${strings.screens.home.greetings[dayPeriod(new Date().getHours())]}, ${name.trim().split(' ')[0]}!`}
     >
       <HomeCaptureNotice />
