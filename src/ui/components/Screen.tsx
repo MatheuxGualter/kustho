@@ -54,7 +54,7 @@ export function Screen({ title, children, edges = ['top'], scroll = true }: Scre
     node.measureLayout(
       content,
       (_x, y) => scrollRef.current?.scrollTo({ y: Math.max(0, y - FOCUS_MARGIN), animated: true }),
-      () => {},
+      () => { },
     );
   }, []);
 
@@ -84,7 +84,7 @@ export function Screen({ title, children, edges = ['top'], scroll = true }: Scre
   );
 
   const content = (
-    <View ref={contentRef} className="gap-4 px-4 pb-8 pt-4">
+    <View ref={contentRef} className="gap-4 px-4 pb-8 pt-8">
       {title ? (
         <AppText variant="headline" accessibilityRole="header">
           {title}

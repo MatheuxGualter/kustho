@@ -39,7 +39,16 @@ export const strings = {
     withBadge: (label: string, badge: string | number) => `${label}, ${badge} novas`,
   },
   screens: {
-    home: { title: 'Início', placeholder: 'O resumo do mês aparece aqui.' },
+    home: {
+      title: 'Início',
+      placeholder: 'O resumo do mês aparece aqui.',
+      greetingName: 'Usuário',
+      greetings: {
+        morning: 'Bom dia',
+        afternoon: 'Boa tarde',
+        night: 'Boa noite',
+      },
+    },
     captureSetup: {
       title: 'Leitura de notificações',
       placeholder:

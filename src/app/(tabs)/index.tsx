@@ -5,6 +5,7 @@ import { HomeAccountsSection } from '@/features/accounts/HomeAccountsSection';
 import { HomeCaptureNotice } from '@/features/capture-setup/HomeCaptureNotice';
 import { HomeCardsSection } from '@/features/cards/HomeCardsSection';
 import { HomeMonthSummary } from '@/features/overview/HomeMonthSummary';
+import { dayPeriod } from '@/lib/dates';
 import { usePreferences } from '@/lib/preferences';
 import { strings } from '@/lib/strings';
 import { Screen } from '@/ui/components/Screen';
@@ -18,7 +19,9 @@ export default function HomeScreen() {
   }, [onboardingDone]);
 
   return (
-    <Screen title={strings.screens.home.title}>
+    <Screen
+      title={`${strings.screens.home.greetings[dayPeriod(new Date().getHours())]}, ${strings.screens.home.greetingName}!`}
+    >
       <HomeCaptureNotice />
       <HomeAccountsSection />
       <HomeCardsSection />

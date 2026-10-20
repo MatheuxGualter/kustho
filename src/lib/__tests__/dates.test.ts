@@ -3,6 +3,7 @@ import {
   addMonths,
   compareDates,
   dateInMonth,
+  dayPeriod,
   daysBetween,
   daysInMonth,
   formatDateBR,
@@ -146,6 +147,19 @@ describe('máscara e semana', () => {
     ['171020269', '17/10/2026'],
   ])('maskDateBR(%p) → %p', (text, expected) => {
     expect(maskDateBR(text)).toBe(expected);
+  });
+
+  it.each([
+    [0, 'night'],
+    [4, 'night'],
+    [5, 'morning'],
+    [11, 'morning'],
+    [12, 'afternoon'],
+    [17, 'afternoon'],
+    [18, 'night'],
+    [23, 'night'],
+  ])('dayPeriod(%i) → %s', (hour, period) => {
+    expect(dayPeriod(hour)).toBe(period);
   });
 
   it('startOfWeek volta para a segunda-feira', () => {
