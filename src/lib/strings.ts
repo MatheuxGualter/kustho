@@ -514,6 +514,7 @@ export const strings = {
   accounts: {
     totalBalance: 'Saldo total',
     monthChange: (value: string) => `${value} desde o início do mês`,
+    yourAccounts: 'Suas contas',
     seeAll: 'Ver contas',
     newAccount: 'Nova conta',
     empty: 'Nenhuma conta ainda',
