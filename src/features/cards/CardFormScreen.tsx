@@ -5,6 +5,7 @@ import { Controller, useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 
 import { errorMessage } from '@/features/shared/errorMessage';
+import { formatDateBR, today } from '@/lib/dates';
 import { strings } from '@/lib/strings';
 import { useServiceQuery, useServices } from '@/services';
 import { Button } from '@/ui/components/Button';
@@ -45,6 +46,11 @@ export function CardFormScreen() {
   const { cards, accounts } = useServices();
   const accountsQuery = useServiceQuery(() => accounts.listAccountsWithBalance(), []);
   const [loaded, setLoaded] = useState(!id);
+  // Fatura atual (fora do cadastro do cartão): a diferença vira "Ajuste da fatura".
+  const [invoiceCents, setInvoiceCents] = useState(0);
+  const [loadedInvoice, setLoadedInvoice] = useState<{ cents: number; closes: string } | null>(
+    null,
+  );
   const form = useForm<FormInput, unknown, FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -65,16 +71,27 @@ export function CardFormScreen() {
 
   useEffect(() => {
     if (!id) return;
-    void cards.getCard(id).then((card) => {
+    void Promise.all([
+      cards.getCard(id),
+      cards.listCardsWithSummary({ includeArchived: true }),
+    ]).then(([card, summaries]) => {
       if (card) form.reset(card);
+      const invoice = summaries.find((c) => c.id === id)?.currentInvoice;
+      const cents = invoice?.remainingCents ?? 0;
+      setInvoiceCents(cents);
+      setLoadedInvoice({ cents, closes: invoice ? formatDateBR(invoice.closingDate) : '' });
       setLoaded(true);
     });
   }, [id, cards, form]);
 
   const submit = handleSubmit(async (values) => {
     try {
+      const cardId = id ?? (await cards.createCard(values)).id;
       if (id) await cards.updateCard(id, values);
-      else await cards.createCard(values);
+      // Só lança ajuste quando o valor muda (no cadastro, quando há fatura em andamento).
+      if (invoiceCents !== (loadedInvoice?.cents ?? 0)) {
+        await cards.adjustCurrentInvoice(cardId, invoiceCents, today());
+      }
       router.back();
     } catch (e) {
       showToast(errorMessage(e));
@@ -139,6 +156,16 @@ export function CardFormScreen() {
                   error={fieldState.error?.message}
                 />
               )}
+            />
+            <MoneyField
+              label={strings.cards.form.currentInvoice}
+              hint={
+                loadedInvoice?.closes
+                  ? strings.cards.form.currentInvoiceEditHint(loadedInvoice.closes)
+                  : strings.cards.form.currentInvoiceHint
+              }
+              value={invoiceCents}
+              onChange={(cents) => setInvoiceCents(cents ?? 0)}
             />
             {(['closingDay', 'dueDay'] as const).map((name) => (
               <Controller

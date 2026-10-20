@@ -190,6 +190,12 @@ export interface CardsService {
   payInvoice(invoiceId: Id, accountId: Id, amountCents: Cents, date: ISODate): Promise<Transaction>;
   /** Regra 5: limite − faturas não pagas, incluindo parcelas futuras. */
   getAvailableLimit(cardId: Id): Promise<Cents>;
+  /**
+   * Como `adjustBalance` da conta: lança um `adjustment` ("Ajuste da fatura") na fatura em
+   * que cai uma compra na data, com a diferença até o valor a pagar informado. Para quem
+   * começa a usar o app com a fatura já em andamento. Devolve `null` se já bate.
+   */
+  adjustCurrentInvoice(cardId: Id, targetCents: Cents, date: ISODate): Promise<Transaction | null>;
 }
 
 // ─── Trilha D · Categorias ───────────────────────────────────────────────────

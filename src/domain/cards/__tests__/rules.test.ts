@@ -3,6 +3,7 @@ import type { Invoice, Transaction } from '@/domain/types';
 import {
   availableLimit,
   buildCardPurchase,
+  invoiceAdjustmentFor,
   invoiceStatus,
   invoiceTotals,
   refundReferenceMonth,
@@ -41,6 +42,46 @@ describe('invoiceTotals', () => {
       invoiceTotals('inv', [t({}), t({ kind: 'invoice_payment', amountCents: 5000 })])
         .remainingCents,
     ).toBe(0);
+  });
+});
+
+describe('invoiceAdjustmentFor (ajuste da fatura atual)', () => {
+  it('fatura abaixo do informado: débito com a diferença (aumenta a fatura)', () => {
+    expect(invoiceAdjustmentFor({ totalCents: 30000, paidCents: 0 }, 45000)).toEqual({
+      direction: 'out',
+      amountCents: 15000,
+    });
+  });
+
+  it('cartão novo, sem nada lançado: a fatura inteira vira o ajuste', () => {
+    expect(invoiceAdjustmentFor({ totalCents: 0, paidCents: 0 }, 123456)).toEqual({
+      direction: 'out',
+      amountCents: 123456,
+    });
+  });
+
+  it('fatura acima do informado: crédito com a diferença', () => {
+    expect(invoiceAdjustmentFor({ totalCents: 50000, paidCents: 0 }, 42000)).toEqual({
+      direction: 'in',
+      amountCents: 8000,
+    });
+  });
+
+  it('o informado é o que falta pagar: desconta o já pago', () => {
+    // Total 500, pago 200: faltam 300. Informar 350 lança +50.
+    expect(invoiceAdjustmentFor({ totalCents: 50000, paidCents: 20000 }, 35000)).toEqual({
+      direction: 'out',
+      amountCents: 5000,
+    });
+  });
+
+  it('já bate: nenhum ajuste', () => {
+    expect(invoiceAdjustmentFor({ totalCents: 45000, paidCents: 0 }, 45000)).toBeNull();
+  });
+
+  it('valor negativo ou quebrado é recusado', () => {
+    expect(() => invoiceAdjustmentFor({ totalCents: 0, paidCents: 0 }, -1)).toThrow();
+    expect(() => invoiceAdjustmentFor({ totalCents: 0, paidCents: 0 }, 10.5)).toThrow();
   });
 });
 

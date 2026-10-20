@@ -9,6 +9,7 @@ import { Screen } from '@/ui/components/Screen';
 import { SkeletonRows } from '@/ui/components/Skeleton';
 
 import { CreditCardVisual } from './CreditCardVisual';
+import { InvoicesTotalCard } from './InvoicesTotalCard';
 
 /** Aba Cartões: cada cartão com fatura atual, vencimento e limite. */
 export function CardsScreen() {
@@ -35,6 +36,7 @@ export function CardsScreen() {
               onPress={() => router.push(`/cartao/${card.id}`)}
             />
           ))}
+          <InvoicesTotalCard cards={query.data ?? []} />
           <Button
             label={strings.cards.newCard}
             icon={Plus}

@@ -20,6 +20,7 @@ import { newId } from '@/lib/id';
 import {
   availableLimit,
   buildCardPurchase,
+  invoiceAdjustmentFor,
   invoiceStatus,
   invoiceTotals,
   refundReferenceMonth,
@@ -109,6 +110,32 @@ export function createCardsService(db: AppDatabase): CardsService {
     async resolveInvoice(cardId, purchaseDate) {
       const card = await requireCard(cardId);
       return invoiceRepo.getOrCreateInvoice(db, cardId, cycleForPurchase(card, purchaseDate));
+    },
+
+    async adjustCurrentInvoice(cardId, targetCents, date) {
+      const card = await requireCard(cardId);
+      const invoice = await invoiceRepo.getOrCreateInvoice(
+        db,
+        cardId,
+        cycleForPurchase(card, date),
+      );
+      const adjustment = invoiceAdjustmentFor(
+        invoiceTotals(invoice.id, await cardRows(cardId)),
+        targetCents,
+      );
+      if (!adjustment) return null;
+      const [saved] = await txRepo.insertTransactions(db, [
+        {
+          ...emptyCardTx,
+          ...adjustment,
+          kind: 'adjustment',
+          date,
+          description: 'Ajuste da fatura',
+          cardId,
+          invoiceId: invoice.id,
+        },
+      ]);
+      return saved;
     },
 
     async createCardPurchase({

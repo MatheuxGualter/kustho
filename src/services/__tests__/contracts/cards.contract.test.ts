@@ -163,6 +163,55 @@ describe.each(environments)('CardsService ($name)', ({ create }) => {
     expect(await services.cards.getCard(card.id)).toBeDefined();
   });
 
+  it('ajustar a fatura atual lança a diferença como ajuste e mexe no limite', async () => {
+    const { services, seed } = await create();
+    const card = await services.cards.createCard({
+      name: 'Visa',
+      institution: 'Itaú',
+      color: '#4F46E5',
+      limitCents: 300000,
+      closingDay: 31,
+      dueDay: 8,
+      paymentAccountId: seed.accounts[0].id,
+    });
+    const current = async () =>
+      (await services.cards.listCardsWithSummary({ today: TODAY })).find((c) => c.id === card.id)!;
+
+    // Cartão novo, fatura já em andamento no banco: R$ 1.234,56.
+    const first = await services.cards.adjustCurrentInvoice(card.id, 123456, TODAY);
+    expect(first).toMatchObject({
+      kind: 'adjustment',
+      direction: 'out',
+      amountCents: 123456,
+      cardId: card.id,
+      accountId: null,
+      description: 'Ajuste da fatura',
+      date: TODAY,
+    });
+    expect((await current()).currentInvoice?.remainingCents).toBe(123456);
+    expect((await current()).availableLimitCents).toBe(300000 - 123456);
+
+    // Com uma compra lançada depois, corrigir para menos lança só a diferença (crédito).
+    await services.cards.createCardPurchase({
+      cardId: card.id,
+      amountCents: 10000,
+      installments: 1,
+      date: TODAY,
+      description: 'Mercado',
+      categoryId: null,
+    });
+    const second = await services.cards.adjustCurrentInvoice(card.id, 100000, TODAY);
+    expect(second).toMatchObject({ direction: 'in', amountCents: 33456 });
+    expect((await current()).currentInvoice?.remainingCents).toBe(100000);
+
+    // Já bate: nada a lançar. Ajuste não toca o saldo da conta que paga.
+    expect(await services.cards.adjustCurrentInvoice(card.id, 100000, TODAY)).toBeNull();
+    const error = await services.cards
+      .adjustCurrentInvoice(card.id, -1, TODAY)
+      .catch((e: unknown) => e);
+    expect(isDomainError(error) && error.code).toBe('invalid_amount');
+  });
+
   it('cartão com lançamentos não pode ser excluído', async () => {
     const { services, seed } = await create();
     const error = await services.cards.deleteCard(seed.creditCards[0].id).catch((e: unknown) => e);
