@@ -45,6 +45,9 @@ pnpm install                             # se o lockfile mudou
   o grupo testa a fase inteira no aparelho a partir dela e, com a validação feita, abre
   um PR `develop` → `main`. Correções da `main` entram na `develop` com
   `git merge origin/main`. Fase 3: PRs #32 a #37, nessa ordem.
+- **Nova versão:** antes do PR `develop` → `main`, suba `version` (`app.json` e
+  `package.json`) e `android.versionCode` (+1, inteiro). Depois do merge, crie a tag e a
+  release no GitHub com o mesmo número (ex.: `1.0.1`) e a lista do que entrou.
 - `CLAUDE.md` e `AGENTS.md` são cópias exatas (o CI confere): edite os dois juntos.
 
 ## 4. Passando o bastão (outro dev ou outra sessão do Claude)

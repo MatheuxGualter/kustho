@@ -2,7 +2,7 @@
   "expo": {
     "name": "Kustho",
     "slug": "kustho",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "kustho",
@@ -19,7 +19,8 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "app.kustho"
+      "package": "app.kustho",
+      "versionCode": 2
     },
     "web": {
       "favicon": "./assets/images/favicon.png"
