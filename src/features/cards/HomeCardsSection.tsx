@@ -9,7 +9,9 @@ import { Card } from '@/ui/components/Card';
 import { InstitutionAvatar } from '@/ui/components/InstitutionAvatar';
 import { MoneyText } from '@/ui/components/MoneyText';
 
-/** Seção da Início (trilha C): fatura atual de cada cartão, separada do saldo. */
+import { InvoicesTotalCard } from './InvoicesTotalCard';
+
+/** Seção da Início (trilha C): fatura atual de cada cartão, separada do saldo, e o total. */
 export function HomeCardsSection() {
   const { cards } = useServices();
   const query = useServiceQuery(() => cards.listCardsWithSummary(), []);
@@ -44,6 +46,7 @@ export function HomeCardsSection() {
           </View>
         </Card>
       ))}
+      <InvoicesTotalCard cards={query.data} layout="row" />
     </View>
   );
 }
