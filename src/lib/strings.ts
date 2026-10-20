@@ -39,7 +39,17 @@ export const strings = {
     withBadge: (label: string, badge: string | number) => `${label}, ${badge} novas`,
   },
   screens: {
-    home: { title: 'Início', placeholder: 'O resumo do mês aparece aqui.' },
+    home: {
+      title: 'Início',
+      placeholder: 'O resumo do mês aparece aqui.',
+      /** Fallback de quem concluiu as boas-vindas sem informar um nome. */
+      greetingName: 'Usuário',
+      greetings: {
+        morning: 'Bom dia',
+        afternoon: 'Boa tarde',
+        night: 'Boa noite',
+      },
+    },
     captureSetup: {
       title: 'Leitura de notificações',
       placeholder:
@@ -86,7 +96,7 @@ export const strings = {
     category: { title: 'Categoria', placeholder: 'Editar ou excluir, movendo os lançamentos.' },
     settings: {
       title: 'Configurações',
-      placeholder: 'Tema, ocultar valores e bloqueio por biometria ou PIN.',
+      placeholder: 'Nome, tema, ocultar valores e bloqueio por biometria ou PIN.',
     },
     export: { title: 'Exportar dados', placeholder: 'Exportar tudo em CSV ou JSON.' },
     onboarding: { title: 'Boas-vindas', placeholder: 'Primeira conta, primeiro cartão e pronto.' },
@@ -378,9 +388,9 @@ export const strings = {
     selectCategory: (name: string) => `Ver gastos de ${name}`,
     noExpensesPeriod: 'Nenhum gasto neste período.',
     monthSummary: 'Resumo do mês',
-    income: 'Entradas',
-    expense: 'Saídas',
-    net: 'Resultado',
+    income: 'ENTRADAS',
+    expense: 'SAÍDAS',
+    net: 'RESULTADO',
     projected: 'Previsto até o fim do mês',
     byCategory: 'Gastos por categoria',
     others: 'Outros',
@@ -388,6 +398,8 @@ export const strings = {
     share: (pct: number) => `${pct}%`,
   },
   settings: {
+    profile: 'Perfil',
+    name: 'Nome',
     appearance: 'Aparência',
     privacy: 'Privacidade e segurança',
     hideValues: 'Ocultar valores',
@@ -430,10 +442,17 @@ export const strings = {
         title: 'Cartões sem surpresa',
         text: 'Compras parceladas caem em cada fatura certa, e o limite disponível já desconta as parcelas.',
       },
+      {
+        title: 'Como podemos te chamar?',
+        text: 'Depois disso, é só usar!',
+      },
     ],
-    next: 'Continuar',
-    createAccount: 'Cadastrar minha primeira conta',
-    skip: 'Agora não',
+    back: 'Voltar',
+    next: 'Avançar',
+    start: 'Começar',
+    nameLabel: 'Nome',
+    namePlaceholder: 'Seu nome',
+    nameHint: 'Não abrevie seu nome',
     step: (n: number, total: number) => `Passo ${n} de ${total}`,
   },
   banks: {
@@ -514,6 +533,7 @@ export const strings = {
   accounts: {
     totalBalance: 'Saldo total',
     monthChange: (value: string) => `${value} desde o início do mês`,
+    yourAccounts: 'Suas contas',
     seeAll: 'Ver contas',
     newAccount: 'Nova conta',
     empty: 'Nenhuma conta ainda',
@@ -527,9 +547,9 @@ export const strings = {
       hint: 'Dinheiro em espécie, sem banco. Escolha a cor do ícone mais abaixo.',
     },
     types: {
-      checking: 'Conta corrente',
-      savings: 'Poupança',
-      digital_wallet: 'Carteira digital',
+      checking: 'Conta Corrente',
+      savings: 'Conta Poupança',
+      digital_wallet: 'Carteira Digital',
       cash: 'Dinheiro',
     },
     form: {

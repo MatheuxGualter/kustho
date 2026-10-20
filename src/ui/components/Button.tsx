@@ -23,6 +23,8 @@ export type ButtonProps = Omit<PressableProps, 'children'> & {
   label: string;
   variant?: ButtonVariant;
   icon?: LucideIcon;
+  /** Lado do ícone em relação ao texto. */
+  iconPosition?: 'left' | 'right';
   loading?: boolean;
   /** Ocupa a largura toda (padrão em formulários). */
   block?: boolean;
@@ -34,6 +36,7 @@ export function Button({
   label,
   variant = 'primary',
   icon: Icon,
+  iconPosition = 'left',
   loading = false,
   block = false,
   disabled,
@@ -43,6 +46,18 @@ export function Button({
   const { colors } = useTheme();
   const style = variants[variant];
   const inactive = disabled || loading;
+  const glyph = loading ? (
+    <ActivityIndicator color={colors[style.icon]} />
+  ) : Icon ? (
+    <View>
+      <Icon size={ICON_SIZE} color={colors[style.icon]} />
+    </View>
+  ) : null;
+  const labelNode = (
+    <AppText variant="label" tone={style.text}>
+      {label}
+    </AppText>
+  );
 
   return (
     <Pressable
@@ -57,16 +72,17 @@ export function Button({
       className={`min-h-touch flex-row items-center justify-center gap-2 rounded-input px-4 active:opacity-80 ${style.box} ${block ? 'self-stretch' : 'self-start'} ${inactive ? 'opacity-50' : ''}`}
       {...props}
     >
-      {loading ? (
-        <ActivityIndicator color={colors[style.icon]} />
-      ) : Icon ? (
-        <View>
-          <Icon size={ICON_SIZE} color={colors[style.icon]} />
-        </View>
-      ) : null}
-      <AppText variant="label" tone={style.text}>
-        {label}
-      </AppText>
+      {iconPosition === 'right' && Icon ? (
+        <>
+          {labelNode}
+          {glyph}
+        </>
+      ) : (
+        <>
+          {glyph}
+          {labelNode}
+        </>
+      )}
     </Pressable>
   );
 }

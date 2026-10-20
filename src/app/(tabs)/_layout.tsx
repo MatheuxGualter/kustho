@@ -17,7 +17,10 @@ export default function TabsLayout() {
   const pending = useServiceQuery(() => captures.countPending(), []).data ?? 0;
   const badge = pending > MAX_BADGE ? `${MAX_BADGE}+` : pending || undefined;
   return (
-    <Tabs tabBar={(props) => <TabBar {...props} />} screenOptions={{ headerShown: false }}>
+    <Tabs
+      tabBar={(props) => <TabBar {...props} />}
+      screenOptions={{ headerShown: false, animation: 'shift' }}
+    >
       <Tabs.Screen name="index" options={{ title: strings.tabs.home }} />
       <Tabs.Screen name="lancamentos" options={{ title: strings.tabs.transactions }} />
       <Tabs.Screen name="pendentes" options={{ title: strings.tabs.pending, tabBarBadge: badge }} />

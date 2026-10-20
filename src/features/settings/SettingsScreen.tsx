@@ -4,22 +4,27 @@ import { type ReactNode, useEffect, useState } from 'react';
 import { Switch, View } from 'react-native';
 
 import { authenticate, canUseLock } from '@/features/security/AppLockGate';
-import { usePreferences } from '@/lib/preferences';
+import { DISPLAY_NAME_MAX, usePreferences } from '@/lib/preferences';
 import { strings } from '@/lib/strings';
 import { AppText } from '@/ui/components/AppText';
 import { Button } from '@/ui/components/Button';
 import { Card } from '@/ui/components/Card';
 import { Screen } from '@/ui/components/Screen';
+import { TextField } from '@/ui/components/TextField';
 import { ThemeSelector } from '@/ui/components/ThemeSelector';
 import { useTheme } from '@/ui/theme';
 
-/** Configurações: tema, ocultar valores, bloqueio e exportação. */
+/** Configurações: nome, tema, ocultar valores, bloqueio e exportação. */
 export function SettingsScreen() {
+  const displayName = usePreferences((s) => s.displayName);
+  const setDisplayName = usePreferences((s) => s.setDisplayName);
   const hideValues = usePreferences((s) => s.hideValues);
   const toggleHideValues = usePreferences((s) => s.toggleHideValues);
   const lockEnabled = usePreferences((s) => s.lockEnabled);
   const setLockEnabled = usePreferences((s) => s.setLockEnabled);
+  const [draftName, setDraftName] = useState<string | null>(null);
   const [lockAvailable, setLockAvailable] = useState<boolean | null>(null);
+  const shownName = draftName ?? displayName ?? '';
 
   useEffect(() => {
     void canUseLock().then(setLockAvailable);
@@ -30,10 +35,32 @@ export function SettingsScreen() {
     if (await authenticate().catch(() => false)) setLockEnabled(next);
   };
 
+  const commitName = () => {
+    setDisplayName(shownName);
+    // Vazio não apaga: `setDisplayName` ignora e o campo volta ao nome salvo.
+    setDraftName(null);
+  };
+
   return (
     <>
       <Stack.Screen options={{ title: strings.screens.settings.title }} />
       <Screen edges={['bottom']}>
+        <Section title={strings.settings.profile}>
+          <TextField
+            label={strings.settings.name}
+            hint={strings.onboarding.nameHint}
+            placeholder={strings.onboarding.namePlaceholder}
+            value={shownName}
+            onChangeText={setDraftName}
+            maxLength={DISPLAY_NAME_MAX}
+            autoCapitalize="words"
+            autoComplete="name"
+            autoCorrect={false}
+            returnKeyType="done"
+            onEndEditing={commitName}
+            onSubmitEditing={commitName}
+          />
+        </Section>
         <Section title={strings.settings.appearance}>
           <ThemeSelector />
         </Section>
