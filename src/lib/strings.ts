@@ -228,6 +228,11 @@ export const strings = {
       'Depois de fazer um Pix, abra o comprovante no app do banco, toque em Compartilhar e escolha o Kustho. A saída aparece para você confirmar.',
     goPending: 'Ir para Pendentes',
     manual: 'Lançar à mão',
+    noText:
+      'Não encontrei texto nessa imagem. Tente compartilhar o comprovante como PDF ou abra-o maior antes de compartilhar.',
+    shareText: 'Enviar o texto lido',
+    shareTextHint:
+      'Para o leitor aprender esse formato, envie o texto que o app leu ao grupo. Ele tem seus dados: apague nomes e documentos antes, se preferir.',
     alreadyTitle: 'Já está no Kustho',
     already:
       'Este Pix já chegou por notificação ou por outro comprovante. Confira em Pendentes ou nos lançamentos.',

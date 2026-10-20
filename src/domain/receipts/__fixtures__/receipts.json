@@ -13,6 +13,48 @@
       }
     },
     {
+      "name": "Nubank real (out/2026): OCR linha a linha, com rodapé",
+      "text": "Comprovante de\ntransferência\n20 OUT 2026 - 11:14:31\nValor R$ 20,00\nTipo de transferência Pix\nID da transação E000000002026102\n01414s000e0f0ba0\nDestino\nNome Fulana Vieira Da Silva\nCPF •••.000.000-••\nInstituição BANCO PAN\nOrigem\nNome Ciclano Silva Souza\nInstituição NU PAGAMENTOS - IP\nCPF •••.000.000-••\nNu Pagamentos S.A. - Instituição de\nPagamento\nCNPJ 18.236.120/0001-58\nID da transação:\nE00000000202610201414s000e0f0ba0\nEstamos aqui para ajudar se você tiver alguma\ndúvida.\nMe ajuda\nOuvidoria: 0800 887 0463 ou demais canais em\nnubank.com.br/contatos#ouvidoria (Atendimento\ndas 8h às 18h em dias úteis).",
+      "expected": {
+        "amountCents": 2000,
+        "kind": "expense",
+        "counterpart": "Fulana Vieira Da Silva",
+        "date": "2026-10-20",
+        "institution": "NU PAGAMENTOS - IP"
+      }
+    },
+    {
+      "name": "Nubank real: OCR em colunas (rótulos e depois valores)",
+      "text": "nu\nComprovante de\ntransferência\n20 OUT 2026 - 11:14:31\nValor\nTipo de transferência\nID da transação\nR$ 20,00\nPix\nE000000002026102\n01414s000e0f0ba0\nDestino\nNome\nCPF\nInstituição\nFulana Vieira Da Silva\n•••.000.000-••\nBANCO PAN\nOrigem\nNome\nInstituição\nCPF\nCiclano Silva Souza\nNU PAGAMENTOS - IP\n•••.000.000-••\nNu Pagamentos S.A. - Instituição de\nPagamento\nCNPJ 18.236.120/0001-58\nID da transação:\nE00000000202610201414s000e0f0ba0\nEstamos aqui para ajudar se você tiver alguma\ndúvida.\nMe ajuda\nOuvidoria: 0800 887 0463 ou demais canais em\nnubank.com.br/contatos#ouvidoria (Atendimento\ndas 8h às 18h em dias úteis).",
+      "expected": {
+        "amountCents": 2000,
+        "kind": "expense",
+        "counterpart": "Fulana Vieira Da Silva",
+        "date": "2026-10-20",
+        "institution": "NU PAGAMENTOS - IP"
+      }
+    },
+    {
+      "name": "Nubank real: OCR leu R$ como RS e a vírgula como ponto",
+      "text": "Comprovante de\ntransferência\n20 OUT 2026 - 11:14:31\nValor RS 20.00\nTipo de transferência Pix\nID da transação E000000002026102\n01414s000e0f0ba0\nDestino\nNome Fulana Vieira Da Silva\nCPF •••.000.000-••\nInstituição BANCO PAN\nOrigem\nNome Ciclano Silva Souza\nInstituição NU PAGAMENTOS - IP\nCPF •••.000.000-••\nNu Pagamentos S.A. - Instituição de\nPagamento\nCNPJ 18.236.120/0001-58\nID da transação:\nE00000000202610201414s000e0f0ba0\nEstamos aqui para ajudar se você tiver alguma\ndúvida.\nMe ajuda\nOuvidoria: 0800 887 0463 ou demais canais em\nnubank.com.br/contatos#ouvidoria (Atendimento\ndas 8h às 18h em dias úteis).",
+      "expected": {
+        "amountCents": 2000,
+        "kind": "expense",
+        "counterpart": "Fulana Vieira Da Silva",
+        "date": "2026-10-20",
+        "institution": "NU PAGAMENTOS - IP"
+      }
+    },
+    {
+      "name": "valor com espaço depois da vírgula (OCR)",
+      "text": "Pix enviado\nValor\nR$ 1.250, 75\nPara\nFULANO",
+      "expected": {
+        "amountCents": 125075,
+        "kind": "expense",
+        "counterpart": "FULANO"
+      }
+    },
+    {
       "name": "Itaú: comprovante Pix com rótulos e dois-pontos na mesma linha",
       "text": "Comprovante de transferência Pix\nvalor: R$ 1.234,56\ndata da transferência: 17/10/2026\nhorário: 09:15\nnome do recebedor: LOJA EXEMPLO LTDA\ninstituição: CAIXA ECONOMICA FEDERAL\ndados do pagador\nnome: CICLANO DA SILVA\ninstituição: ITAÚ UNIBANCO S.A.\nautenticação: XXXXX",
       "expected": {

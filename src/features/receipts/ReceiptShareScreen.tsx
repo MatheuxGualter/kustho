@@ -1,8 +1,8 @@
 import { router, Stack } from 'expo-router';
 import { useIncomingShare } from 'expo-sharing';
-import { Bell, FileText, Plus } from 'lucide-react-native';
+import { Bell, FileText, Plus, Share2 } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, Share, View } from 'react-native';
 
 import { DomainError } from '@/domain/errors';
 import { errorMessage } from '@/features/shared/errorMessage';
@@ -31,6 +31,8 @@ export function ReceiptShareScreen() {
   const [failure, setFailure] = useState<string | null>(null);
   /** O Pix já tinha chegado (notificação ou outro comprovante) e foi confirmado (trilha C). */
   const [already, setAlready] = useState(false);
+  /** Texto que o OCR leu: na falha, dá para enviar e ajustar o leitor a esse banco. */
+  const [readText, setReadText] = useState<string | null>(null);
   const started = useRef(false);
 
   const payloads = resolvedSharedPayloads.length > 0 ? resolvedSharedPayloads : sharedPayloads;
@@ -42,6 +44,12 @@ export function ReceiptShareScreen() {
       const receipt = sharedReceiptFrom(payloads);
       if (!receipt) throw new DomainError('receipt_unrecognized');
       const text = await sharedReceiptText(receipt, reader);
+      setReadText(text);
+      if (!text.trim()) {
+        clearSharedPayloads();
+        setFailure(strings.receipts.noText);
+        return;
+      }
       const capture = await captures.ingestReceipt({ text, receivedAtMs: Date.now() });
       clearSharedPayloads();
       if (capture.status !== 'pending') {
@@ -76,6 +84,20 @@ export function ReceiptShareScreen() {
             }
             description={already ? strings.receipts.already : (failure ?? strings.receipts.howTo)}
           />
+          {failure && readText?.trim() ? (
+            <>
+              <AppText variant="caption" tone="muted">
+                {strings.receipts.shareTextHint}
+              </AppText>
+              <Button
+                label={strings.receipts.shareText}
+                icon={Share2}
+                variant="secondary"
+                block
+                onPress={() => void Share.share({ message: readText })}
+              />
+            </>
+          ) : null}
           <Button
             label={strings.receipts.goPending}
             icon={Bell}
