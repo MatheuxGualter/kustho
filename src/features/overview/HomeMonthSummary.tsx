@@ -1,6 +1,6 @@
 import * as Haptics from 'expo-haptics';
 import { type ReactNode, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { formatMonthTitle, monthOf, today } from '@/lib/dates';
 import { strings } from '@/lib/strings';
@@ -15,6 +15,7 @@ import { useTheme } from '@/ui/theme';
 import { Donut } from './Donut';
 import { donutSlices, type Slice } from './donut';
 import { type Period, periodRange, periods } from './period';
+import { CircleDollarSign, ReceiptText } from 'lucide-react-native';
 
 const periodOptions = periods.map((value) => ({ value, label: strings.overview.periods[value] }));
 
@@ -62,7 +63,10 @@ export function HomeMonthSummary() {
   return (
     <Card>
       <View className="flex-row flex-wrap items-baseline justify-between gap-x-2">
-        <AppText variant="title">{strings.overview.summary}</AppText>
+        <View className="flex-row items-center gap-2">
+          <ReceiptText size={20} color={colors['text']} />
+          <AppText variant="title">{strings.overview.summary}</AppText>
+        </View>
         <AppText variant="caption" tone="muted">
           {periodTitle(period, day)}
         </AppText>
@@ -79,21 +83,22 @@ export function HomeMonthSummary() {
         <SkeletonRows count={2} />
       ) : (
         <>
-          <View className="flex-row flex-wrap gap-x-4 gap-y-2">
+          <View className="my-6 flex-row flex-wrap gap-x-4 gap-y-2">
             <Figure label={strings.overview.income}>
-              <MoneyText cents={data.summary.incomeCents} tone="income" variant="label" />
+              <MoneyText cents={data.summary.incomeCents} tone="income" variant="title" />
             </Figure>
             <Figure label={strings.overview.expense}>
-              <MoneyText cents={-data.summary.expenseCents} tone="expense" variant="label" />
+              <MoneyText cents={-data.summary.expenseCents} tone="expense" variant="title" />
             </Figure>
             <Figure label={strings.overview.net}>
               <MoneyText
                 cents={data.summary.netCents}
                 tone={data.summary.netCents >= 0 ? 'income' : 'expense'}
-                variant="label"
+                variant="title"
               />
             </Figure>
           </View>
+          <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: colors.border }} />
           {data.summary.projectedNetCents !== data.summary.netCents ? (
             <View className="flex-row flex-wrap items-baseline gap-x-1">
               <AppText variant="caption" tone="muted">
@@ -103,9 +108,12 @@ export function HomeMonthSummary() {
             </View>
           ) : null}
 
-          <AppText variant="label" tone="muted">
-            {strings.overview.byCategory}
-          </AppText>
+          <View className="mb-3 flex-row items-center gap-2">
+            <CircleDollarSign size={17} color={colors['text-muted']} />
+            <AppText variant="label" tone="muted">
+              {strings.overview.byCategory}
+            </AppText>
+          </View>
           {slices.length === 0 ? (
             <AppText tone="muted">{strings.overview.noExpensesPeriod}</AppText>
           ) : (
@@ -117,7 +125,7 @@ export function HomeMonthSummary() {
                   </AppText>
                   <MoneyText
                     cents={current ? current.cents : data.summary.expenseCents}
-                    variant="label"
+                    variant="title"
                     className="text-base"
                     adjustsFontSizeToFit
                     numberOfLines={1}

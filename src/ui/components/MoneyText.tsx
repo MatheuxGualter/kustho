@@ -27,6 +27,7 @@ export function MoneyText({ cents, tone = 'neutral', hideable = true, ...props }
       numeric
       tone={toneMap[tone]}
       accessibilityLabel={hidden ? strings.money.hidden : text}
+      className="text-balance"
       {...props}
     >
       {text}

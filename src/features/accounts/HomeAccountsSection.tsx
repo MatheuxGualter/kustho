@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { Wallet } from 'lucide-react-native';
+import { ChevronRight, Wallet } from 'lucide-react-native';
 import { View } from 'react-native';
 
 import { addMonths, currentMonth, lastDayOfMonth, today } from '@/lib/dates';
@@ -43,11 +43,15 @@ export function HomeAccountsSection() {
           {data.list.map((account) => (
             <AccountCard key={account.id} account={account} />
           ))}
-          <Button
-            label={strings.accounts.seeAll}
-            variant="ghost"
-            onPress={() => router.push('/contas')}
-          />
+          <View className="flex-row items-center justify-end">
+            <Button
+              label={strings.accounts.seeAll}
+              variant="ghost"
+              icon={ChevronRight}
+              iconPosition="right"
+              onPress={() => router.push('/contas')}
+            />
+          </View>
         </View>
       )}
     </View>
