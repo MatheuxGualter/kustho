@@ -72,6 +72,7 @@ export function HomeMonthSummary() {
         </AppText>
       </View>
       <SegmentedControl
+        layout="wrap"
         options={periodOptions}
         value={period}
         onChange={(next) => {

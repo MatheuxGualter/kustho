@@ -547,9 +547,9 @@ export const strings = {
       hint: 'Dinheiro em espécie, sem banco. Escolha a cor do ícone mais abaixo.',
     },
     types: {
-      checking: 'Conta corrente',
-      savings: 'Poupança',
-      digital_wallet: 'Carteira digital',
+      checking: 'Conta Corrente',
+      savings: 'Conta Poupança',
+      digital_wallet: 'Carteira Digital',
       cash: 'Dinheiro',
     },
     form: {
