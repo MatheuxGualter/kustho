@@ -40,6 +40,7 @@
       ],
       "expo-sqlite",
       "expo-font",
+      "./plugins/withSingleMainActivity",
       [
         "expo-sharing",
         {
@@ -51,8 +52,7 @@
             "enabled": false
           }
         }
-      ],
-      "./plugins/withSingleMainActivity"
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
