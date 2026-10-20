@@ -1,5 +1,3 @@
-import { useFocusEffect } from 'expo-router';
-import { setStatusBarStyle } from 'expo-status-bar';
 import {
   createContext,
   type ReactNode,
@@ -12,8 +10,6 @@ import {
 import {
   type HostInstance,
   Keyboard,
-  type NativeScrollEvent,
-  type NativeSyntheticEvent,
   ScrollView,
   type ScrollViewInstance,
   View,
@@ -75,33 +71,6 @@ function TopBrandFade() {
   );
 }
 
-/** Ícones da status bar acompanham a faixa enquanto ela cobre o topo. */
-function TopFadeStatusBar({
-  overBrand,
-  onInset,
-}: {
-  overBrand: boolean;
-  onInset: (top: number) => void;
-}) {
-  const { scheme } = useTheme();
-  const insets = useSafeAreaInsets();
-
-  useEffect(() => {
-    onInset(insets.top);
-  }, [insets.top, onInset]);
-
-  useFocusEffect(
-    useCallback(() => {
-      const onBrand = scheme === 'dark' ? 'dark' : 'light';
-      const onBackground = scheme === 'dark' ? 'light' : 'dark';
-      setStatusBarStyle(overBrand && insets.top > 0 ? onBrand : onBackground, true);
-      return () => setStatusBarStyle(onBackground, true);
-    }, [scheme, overBrand, insets.top]),
-  );
-
-  return null;
-}
-
 /** Empurra o conteúdo para baixo da status bar; o degradê fica por baixo e rola junto. */
 function TopFadeFrame({ children }: { children: ReactNode }) {
   const insets = useSafeAreaInsets();
@@ -128,13 +97,8 @@ export function Screen({
   const scrollRef = useRef<ScrollViewInstance>(null);
   const contentRef = useRef<HostInstance>(null);
   const focused = useRef<Measurable | null>(null);
-  const insetTop = useRef(0);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
-  const [overBrand, setOverBrand] = useState(true);
   const safeEdges = topFade ? edges.filter((edge) => edge !== 'top') : edges;
-  const rememberInset = useCallback((top: number) => {
-    insetTop.current = top;
-  }, []);
 
   const reveal = useCallback(() => {
     const node = focused.current;
@@ -143,7 +107,7 @@ export function Screen({
     node.measureLayout(
       content,
       (_x, y) => scrollRef.current?.scrollTo({ y: Math.max(0, y - FOCUS_MARGIN), animated: true }),
-      () => { },
+      () => {},
     );
   }, []);
 
@@ -186,13 +150,8 @@ export function Screen({
       {topFade ? <TopFadeFrame>{body}</TopFadeFrame> : body}
     </View>
   );
-  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const next = event.nativeEvent.contentOffset.y < insetTop.current;
-    setOverBrand((prev) => (prev === next ? prev : next));
-  };
   return (
     <View className="flex-1 bg-bg">
-      {topFade ? <TopFadeStatusBar overBrand={overBrand} onInset={rememberInset} /> : null}
       <SafeAreaView edges={safeEdges} className="flex-1">
         {scroll ? (
           <ScrollIntoViewContext.Provider value={scrollIntoView}>
@@ -201,8 +160,6 @@ export function Screen({
               contentInsetAdjustmentBehavior={topFade ? 'never' : 'automatic'}
               keyboardShouldPersistTaps="handled"
               contentContainerStyle={{ paddingBottom: keyboardHeight }}
-              onScroll={topFade ? handleScroll : undefined}
-              scrollEventThrottle={topFade ? 16 : undefined}
             >
               {content}
             </ScrollView>
