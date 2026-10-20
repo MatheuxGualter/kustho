@@ -16,6 +16,7 @@ import type {
   InvoiceStatus,
   ISODate,
   Transaction,
+  TransactionDirection,
   YearMonth,
 } from '@/domain/types';
 import { addMonths, compareDates, dateInMonth, monthOf, parseISODate } from '@/lib/dates';
@@ -45,6 +46,23 @@ export function invoiceTotals(invoiceId: Id, rows: readonly InvoiceTx[]): Invoic
     else totalCents += chargeOf(tx);
   }
   return { totalCents, paidCents, remainingCents: Math.max(0, totalCents - paidCents) };
+}
+
+/**
+ * Ajuste da fatura atual, como o ajuste de saldo da conta (regra 8): leva o valor a pagar
+ * (`total − pago`) ao informado. No cartão, `out` soma à fatura e `in` é crédito. `null` se
+ * já bate. Serve para quem começa a usar o app com a fatura já em andamento.
+ */
+export function invoiceAdjustmentFor(
+  totals: Pick<InvoiceTotals, 'totalCents' | 'paidCents'>,
+  targetCents: Cents,
+): { direction: TransactionDirection; amountCents: Cents } | null {
+  if (!Number.isSafeInteger(targetCents) || targetCents < 0) {
+    throw new DomainError('invalid_amount');
+  }
+  const diff = targetCents - (totals.totalCents - totals.paidCents);
+  if (diff === 0) return null;
+  return { direction: diff > 0 ? 'out' : 'in', amountCents: Math.abs(diff) };
 }
 
 /**

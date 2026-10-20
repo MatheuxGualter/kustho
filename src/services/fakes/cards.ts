@@ -5,6 +5,7 @@
 import {
   availableLimit,
   buildCardPurchase,
+  invoiceAdjustmentFor,
   invoiceStatus,
   invoiceTotals,
   refundableCents,
@@ -105,6 +106,26 @@ export function createFakeCardsService(store: FakeStore): CardsService {
     },
     async resolveInvoice(cardId, purchaseDate) {
       return invoiceFor(cardId, cycleForPurchase(requireCard(cardId), purchaseDate));
+    },
+    async adjustCurrentInvoice(cardId, targetCents, date) {
+      const invoice = invoiceFor(cardId, cycleForPurchase(requireCard(cardId), date));
+      const adjustment = invoiceAdjustmentFor(
+        invoiceTotals(invoice.id, store.transactions),
+        targetCents,
+      );
+      if (!adjustment) return null;
+      const tx: Transaction = {
+        ...blankTransaction(),
+        ...adjustment,
+        kind: 'adjustment',
+        date,
+        description: 'Ajuste da fatura',
+        cardId,
+        invoiceId: invoice.id,
+      };
+      store.transactions.push(tx);
+      notifyDataChanged();
+      return tx;
     },
     async createCardPurchase({
       cardId,
