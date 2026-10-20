@@ -13,6 +13,27 @@
       }
     },
     {
+      "name": "Nubank real no aparelho (ML Kit): todos os rótulos, depois os valores misturados ao rodapé",
+      "text": "Comprovante de\ntransferência\n20 OUT 2026 -11:14:31\nValor\nTipo de transferência\nID da transação\nDestino\nNome\nCPF\nInstituição\nOrigem\nNome\nInstituição\nCPF\nID da transação:\nR$ 20,00\nE182361202026102\n01414s084e9f0ba9\nFulana Vieira Da Silva\nCNPJ 18.236.120/0001-58\nMe ajuda →\n..,000.000-.\nCiclano Silva Souza\nNu Pagamentos S.A, - Instituição de\nPagamento\nPix\nBANCO PAN\nNU PAGAMENTOS - IP\nso,000.000-.\nE00000000202610201414s000e0f0ba0\nEstamos aqui para ajudar se você tiver alguma\ndúvida.\nOuvidoria: 0800 887 0463 ou demais canais em\nnubank.com.br/contatos#ouvidoria (Atendimento\ndas 8h às 18h em dias úteis).",
+      "expected": {
+        "amountCents": 2000,
+        "kind": "expense",
+        "counterpart": "Fulana Vieira Da Silva",
+        "date": "2026-10-20",
+        "institution": "NU PAGAMENTOS - IP"
+      }
+    },
+    {
+      "name": "mesmo formato em colunas, Pix recebido: quem pagou e o banco de destino",
+      "text": "Pix recebido\nComprovante de\ntransferência\n20 OUT 2026 -11:14:31\nValor\nTipo de transferência\nID da transação\nDestino\nNome\nCPF\nInstituição\nOrigem\nNome\nInstituição\nCPF\nID da transação:\nR$ 20,00\nE182361202026102\n01414s084e9f0ba9\nFulana Vieira Da Silva\nCNPJ 18.236.120/0001-58\nMe ajuda →\n..,000.000-.\nCiclano Silva Souza\nNu Pagamentos S.A, - Instituição de\nPagamento\nPix\nBANCO PAN\nNU PAGAMENTOS - IP\nso,000.000-.\nE00000000202610201414s000e0f0ba0\nEstamos aqui para ajudar se você tiver alguma\ndúvida.\nOuvidoria: 0800 887 0463 ou demais canais em\nnubank.com.br/contatos#ouvidoria (Atendimento\ndas 8h às 18h em dias úteis).",
+      "expected": {
+        "amountCents": 2000,
+        "kind": "income",
+        "counterpart": "Ciclano Silva Souza",
+        "institution": "BANCO PAN"
+      }
+    },
+    {
       "name": "Nubank real (out/2026): OCR linha a linha, com rodapé",
       "text": "Comprovante de\ntransferência\n20 OUT 2026 - 11:14:31\nValor R$ 20,00\nTipo de transferência Pix\nID da transação E000000002026102\n01414s000e0f0ba0\nDestino\nNome Fulana Vieira Da Silva\nCPF •••.000.000-••\nInstituição BANCO PAN\nOrigem\nNome Ciclano Silva Souza\nInstituição NU PAGAMENTOS - IP\nCPF •••.000.000-••\nNu Pagamentos S.A. - Instituição de\nPagamento\nCNPJ 18.236.120/0001-58\nID da transação:\nE00000000202610201414s000e0f0ba0\nEstamos aqui para ajudar se você tiver alguma\ndúvida.\nMe ajuda\nOuvidoria: 0800 887 0463 ou demais canais em\nnubank.com.br/contatos#ouvidoria (Atendimento\ndas 8h às 18h em dias úteis).",
       "expected": {
