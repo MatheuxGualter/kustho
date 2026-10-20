@@ -465,6 +465,9 @@ export const strings = {
     empty: 'Nenhum cartão ainda',
     emptyText: 'Cadastre seus cartões para acompanhar faturas, parcelas e limite.',
     currentInvoice: 'Fatura atual',
+    invoicesTotal: 'Total das faturas atuais',
+    invoicesTotalHint: (count: number) =>
+      count === 1 ? 'Soma de 1 cartão' : `Soma de ${count} cartões`,
     noInvoice: 'Sem compras na fatura atual',
     available: 'Disponível',
     limitUsed: (used: string, limit: string) => `${used} usados de ${limit}`,
@@ -483,6 +486,11 @@ export const strings = {
       dayHint: 'De 1 a 31. Em meses mais curtos, vale o último dia.',
       invalidDay: 'Informe um dia de 1 a 31',
       paymentAccount: 'Conta que paga a fatura',
+      currentInvoice: 'Fatura atual',
+      currentInvoiceHint:
+        'Quanto já está na fatura aberta hoje, como no app do banco. Entra como "Ajuste da fatura", sem contar como gasto do mês.',
+      currentInvoiceEditHint: (closes: string) =>
+        `Fatura que fecha em ${closes}. Se mudar o valor, a diferença entra como "Ajuste da fatura".`,
       create: 'Criar cartão',
       editTitle: 'Editar cartão',
     },

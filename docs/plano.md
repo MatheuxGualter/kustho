@@ -192,6 +192,7 @@ O saldo de uma conta é sempre calculado a partir das transações, nunca guarda
 6. **Pagamento de fatura:** uma transação `invoice_payment` que debita a conta escolhida; pagamento parcial deixa a fatura como `partial` e o restante visível.
 7. **Transferência:** duas pernas ligadas por `transfer_peer_id`; não conta como receita nem despesa em relatórios.
 8. **Ajuste de saldo:** quando o usuário corrige o saldo de uma conta, o app cria uma transação `adjustment` com a diferença, preservando o histórico.
+   O mesmo vale para a **fatura atual do cartão** (ao criar ou editar o cartão): o valor a pagar informado (total − pago) vira um `adjustment` "Ajuste da fatura" na fatura em que cai uma compra de hoje (`out` soma, `in` abate). Entra no limite disponível, mas não conta como gasto do mês nem toca a conta que paga.
 
 **Regras complementares** (casos de borda que os testes precisam cobrir)
 

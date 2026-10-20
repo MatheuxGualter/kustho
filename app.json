@@ -44,11 +44,7 @@
         {
           "android": {
             "enabled": true,
-            "singleShareMimeTypes": [
-              "text/plain",
-              "image/*",
-              "application/pdf"
-            ]
+            "singleShareMimeTypes": ["text/plain", "image/*", "application/pdf"]
           },
           "ios": {
             "enabled": false
