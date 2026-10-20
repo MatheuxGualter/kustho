@@ -1,6 +1,6 @@
 import * as LocalAuthentication from 'expo-local-authentication';
 import * as ScreenCapture from 'expo-screen-capture';
-import { Lock } from 'lucide-react-native';
+import { Lock, LockOpen } from 'lucide-react-native';
 import { type ReactNode, useCallback, useEffect, useState } from 'react';
 import { AppState, View } from 'react-native';
 
@@ -65,7 +65,7 @@ export function AppLockGate({ children }: { children: ReactNode }) {
       ? ScreenCapture.preventScreenCaptureAsync(SECURE_KEY)
       : ScreenCapture.allowScreenCaptureAsync(SECURE_KEY);
     // Dev client sem o módulo nativo: segue sem a proteção extra.
-    toggle.catch(() => {});
+    toggle.catch(() => { });
   }, [lockEnabled]);
 
   // Pede a autenticação sozinho ao abrir e ao voltar para o app bloqueado.
@@ -106,12 +106,19 @@ function LockCover({
   const { colors } = useTheme();
   return (
     <View className="absolute inset-0 items-center justify-center gap-4 bg-bg p-6">
-      <Lock size={ICON_SIZE} color={colors.brand} />
+      <Lock size={ICON_SIZE} color={colors.brand} className="mb-8" />
       <AppText variant="title">{locked ? strings.lock.title : strings.appName}</AppText>
       {locked ? (
         <>
           {failed ? <AppText tone="muted">{strings.lock.failed}</AppText> : null}
-          <Button label={strings.lock.unlock} onPress={onUnlock} />
+          <View className="mt-4">
+            <Button
+              label={strings.lock.unlock}
+              onPress={onUnlock}
+              icon={LockOpen}
+              iconPosition="left"
+            />
+          </View>
         </>
       ) : null}
     </View>
