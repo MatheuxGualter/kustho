@@ -1,6 +1,7 @@
-import { screen, waitFor } from '@testing-library/react-native';
+import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { router } from 'expo-router';
 import type { SharePayload } from 'expo-sharing';
+import { Share } from 'react-native';
 
 import { ServicesProvider } from '@/services';
 import { createFakeServices, createFakeStore } from '@/services/fakes';
@@ -108,4 +109,23 @@ it('Pix que já chegou e foi confirmado avisa em vez de abrir outra confirmaçã
   });
   expect(await screen.findByText('Já está no Kustho')).toBeTruthy();
   expect(router.replace).not.toHaveBeenCalled();
+});
+
+it('OCR que não vira comprovante oferece enviar o texto lido', async () => {
+  const share = jest
+    .spyOn(Share, 'share')
+    .mockResolvedValue({ action: 'sharedAction', activityType: undefined });
+  mockShared = [{ value: 'content://banco/1', shareType: 'image', mimeType: 'image/png' }];
+  const reader = { recognizeText: jest.fn(async () => 'Banner de propaganda sem valor') };
+  await render(reader);
+  expect(await screen.findByText(/Não reconheci um comprovante/)).toBeTruthy();
+  await fireEvent.press(screen.getByRole('button', { name: 'Enviar o texto lido' }));
+  expect(share).toHaveBeenCalledWith({ message: 'Banner de propaganda sem valor' });
+});
+
+it('imagem sem texto nenhum explica em vez de dizer que não é comprovante', async () => {
+  mockShared = [{ value: 'content://banco/1', shareType: 'image', mimeType: 'image/png' }];
+  await render({ recognizeText: jest.fn(async () => '  ') });
+  expect(await screen.findByText(/Não encontrei texto nessa imagem/)).toBeTruthy();
+  expect(screen.queryByRole('button', { name: 'Enviar o texto lido' })).toBeNull();
 });

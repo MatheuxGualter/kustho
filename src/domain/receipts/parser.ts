@@ -25,7 +25,12 @@ export type ParsedReceipt = {
 
 const normalize = (text: string) => text.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 
-const AMOUNT = /R\$\s*(\d{1,3}(?:\.\d{3})+(?:,\d{2})?|\d+,\d{2}|\d+)(?![\d,.]\d)/i;
+/**
+ * Valor em reais. Tolera o que o OCR costuma errar: `RS` no lugar de `R$`, `R $`, ponto no
+ * lugar da vírgula dos centavos (`20.00`) e espaço depois dela (`20, 00`).
+ */
+const AMOUNT =
+  /(?<![A-Za-z])R\s?[$S]\s*(\d{1,3}(?:\.\d{3})+(?:,\s?\d{2})?|\d+[,.]\s?\d{2}(?!\d)|\d+)(?![\d,.]\d)/;
 const VALUE_LABEL = /^valor\b/;
 
 const INCOME =
@@ -67,56 +72,83 @@ function readDate(full: string, receivedAtMs: number): { date: string; found: bo
   return { date: toISODate(new Date(receivedAtMs)), found: false };
 }
 
+/** `20.00` (OCR) vira `20,00`; milhar com ponto (`1.234,56`) fica como está. */
+const amountText = (raw: string) => raw.replace(/\s/g, '').replace(/^(\d+)\.(\d{2})$/, '$1,$2');
+
 function readAmount(lines: string[]): number | null {
   // Preferir o valor junto do rótulo "Valor" (mesma linha ou a seguinte).
   for (let i = 0; i < lines.length; i++) {
     if (!VALUE_LABEL.test(normalize(lines[i]))) continue;
     const match = AMOUNT.exec(lines[i]) ?? AMOUNT.exec(lines[i + 1] ?? '');
-    if (match) return parseBRL(match[1]);
+    if (match) return parseBRL(amountText(match[1]));
   }
   for (const line of lines) {
     const match = AMOUNT.exec(line);
-    if (match) return parseBRL(match[1]);
+    if (match) return parseBRL(amountText(match[1]));
   }
   return null;
 }
 
-/** Valor de um rótulo: o resto da linha ou, se vazio, a linha seguinte. */
-function labelValue(lines: string[], i: number, label: RegExp): string | null {
-  const rest = label.exec(lines[i])?.[1]?.trim();
-  if (rest) return rest;
-  const next = lines[i + 1];
-  return next && !OTHER_LABEL.test(next) ? next : null;
+type Field = 'name' | 'institution' | 'other';
+
+/** Rótulo da linha e o valor na mesma linha (vazio se o valor vem depois). */
+function labelOf(line: string): { field: Field; rest: string } | null {
+  const name = NAME_LABEL.exec(line);
+  if (name) return { field: 'name', rest: name[1].trim() };
+  const institution = INSTITUTION_LABEL.exec(line);
+  if (institution) return { field: 'institution', rest: institution[1].trim() };
+  if (OTHER_LABEL.test(line)) {
+    const rest = line
+      .replace(OTHER_LABEL, '')
+      .replace(/^[^:]*:/, '')
+      .trim();
+    // "CPF •••.000.000-••": o resto é o próprio valor; "ID da transação" sozinho: vem depois.
+    return { field: 'other', rest: /[\d•*]/.test(rest) ? rest : '' };
+  }
+  return null;
 }
 
-/** Nome e banco de uma seção (linhas entre o cabeçalho e o próximo cabeçalho). */
+/** CPF/CNPJ (mascarado ou não), chave, ID: nunca é nome nem banco. */
+const looksLikeDocument = (line: string) =>
+  /[•*]{2,}|\d{3}\.\d{3}|\d{2}\.\d{3}\.\d{3}|^[A-Z]?\d[\dA-Za-z]{10,}$/.test(line);
+
+/**
+ * Nome e banco de uma seção (linhas entre o cabeçalho e o próximo cabeçalho).
+ *
+ * Os rótulos sem valor na linha entram numa fila e recebem as próximas linhas de valor, na
+ * ordem. Assim funciona tanto rótulo/valor alternados quanto o OCR que lê em colunas
+ * ("Nome", "CPF", "Instituição" e depois os três valores).
+ */
 function readSection(lines: string[], inlineName: string | null): Section {
   let name = inlineName;
   let institution: string | null = null;
+  const pending: Field[] = [];
   const loose: string[] = [];
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    if (NAME_LABEL.test(line)) {
-      name ??= labelValue(lines, i, NAME_LABEL);
-      if (!NAME_LABEL.exec(line)?.[1]) i++;
-    } else if (INSTITUTION_LABEL.test(line)) {
-      institution ??= labelValue(lines, i, INSTITUTION_LABEL);
-      if (!INSTITUTION_LABEL.exec(line)?.[1]) i++;
-    } else if (OTHER_LABEL.test(line)) {
-      // Rótulo sozinho na linha ("CPF"): o valor vem na seguinte e também não interessa.
-      const hasValue =
-        line
-          .replace(OTHER_LABEL, '')
-          .replace(/^[^:]*:/, '')
-          .trim() !== '';
-      if (!hasValue) i++;
-    } else {
-      loose.push(line);
+  const assign = (field: Field, value: string) => {
+    if (field === 'name') name ??= value;
+    else if (field === 'institution') institution ??= value;
+  };
+  for (const line of lines) {
+    const label = labelOf(line);
+    if (label) {
+      if (label.rest) assign(label.field, label.rest);
+      else pending.push(label.field);
+      continue;
     }
+    if (pending.length === 0) {
+      loose.push(line);
+      continue;
+    }
+    // Documento vai para o rótulo de documento da fila, mesmo fora de ordem.
+    const otherAt = pending.indexOf('other');
+    const field =
+      looksLikeDocument(line) && otherAt >= 0 ? pending.splice(otherAt, 1)[0] : pending.shift()!;
+    if (field === 'other' || !looksLikeDocument(line)) assign(field, line);
   }
   // Sem rótulos (ex.: Mercado Pago): primeira linha é o nome, a seguinte é o banco.
-  name ??= loose[0] ?? null;
-  institution ??= (inlineName ? loose[0] : loose[1]) ?? null;
+  const free = loose.filter((l) => !looksLikeDocument(l));
+  name ??= free[0] ?? null;
+  institution ??= (inlineName ? free[0] : free[1]) ?? null;
   return { name, institution };
 }
 
