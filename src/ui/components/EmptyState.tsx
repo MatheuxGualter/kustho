@@ -29,7 +29,11 @@ export function EmptyState({ icon: Icon, title, description, action }: EmptyStat
           {description}
         </AppText>
       ) : null}
-      {action ? <Button label={action.label} onPress={action.onPress} variant="secondary" /> : null}
+      {action ? (
+        <View className="mt-4">
+          <Button label={action.label} onPress={action.onPress} variant="secondary" />
+        </View>
+      ) : null}
     </View>
   );
 }

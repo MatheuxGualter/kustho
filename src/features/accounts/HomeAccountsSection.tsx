@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { Wallet } from 'lucide-react-native';
+import { ChevronRight, Wallet } from 'lucide-react-native';
 import { View } from 'react-native';
 
 import { addMonths, currentMonth, lastDayOfMonth, today } from '@/lib/dates';
@@ -11,6 +11,7 @@ import { SkeletonRows } from '@/ui/components/Skeleton';
 
 import { AccountCard } from './AccountCard';
 import { BalanceHeader } from './BalanceHeader';
+import { AppText } from '@/ui/components/AppText';
 
 /** Seção da Início (trilha A): saldo total e cards das contas. */
 export function HomeAccountsSection() {
@@ -39,15 +40,22 @@ export function HomeAccountsSection() {
           action={{ label: strings.accounts.newAccount, onPress: () => router.push('/conta/nova') }}
         />
       ) : (
-        <View className="gap-2">
+        <View className="mt-3 gap-2">
+          <View className="flex-row items-center justify-between">
+            <AppText variant="label" tone="muted">
+              {strings.accounts.yourAccounts}
+            </AppText>
+            <Button
+              label={strings.accounts.seeAll}
+              variant="ghost"
+              icon={ChevronRight}
+              iconPosition="right"
+              onPress={() => router.push('/contas')}
+            />
+          </View>
           {data.list.map((account) => (
             <AccountCard key={account.id} account={account} />
           ))}
-          <Button
-            label={strings.accounts.seeAll}
-            variant="ghost"
-            onPress={() => router.push('/contas')}
-          />
         </View>
       )}
     </View>

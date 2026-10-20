@@ -98,6 +98,7 @@ export function AccountFormScreen() {
               name="type"
               render={({ field }) => (
                 <SegmentedControl
+                  layout="rows"
                   accessibilityLabel={strings.accounts.form.type}
                   options={typeOptions}
                   value={field.value}

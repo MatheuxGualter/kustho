@@ -49,5 +49,8 @@ jest.mock('react-native-reanimated', () => {
     withRepeat: passthrough,
     FadeInDown: {},
     FadeOutDown: {},
+    // Os presets de entrada das boas-vindas encadeiam `.duration()`.
+    SlideInRight: { duration: () => ({}) },
+    SlideInLeft: { duration: () => ({}) },
   };
 });

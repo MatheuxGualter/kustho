@@ -63,6 +63,19 @@ export function today(): ISODate {
   return toISODate(new Date());
 }
 
+export type DayPeriod = 'morning' | 'afternoon' | 'night';
+
+/**
+ * Período do dia pela hora local (0–23): manhã das 5h às 11h, tarde das 12h às 17h,
+ * noite das 18h às 4h.
+ */
+export function dayPeriod(hour: number): DayPeriod {
+  if (!Number.isInteger(hour) || hour < 0 || hour > 23) throw new Error(`Hora inválida: ${hour}`);
+  if (hour < 5 || hour >= 18) return 'night';
+  if (hour < 12) return 'morning';
+  return 'afternoon';
+}
+
 export function monthOf(date: ISODate): YearMonth {
   return date.slice(0, 7);
 }
