@@ -65,7 +65,7 @@ export function AppLockGate({ children }: { children: ReactNode }) {
       ? ScreenCapture.preventScreenCaptureAsync(SECURE_KEY)
       : ScreenCapture.allowScreenCaptureAsync(SECURE_KEY);
     // Dev client sem o módulo nativo: segue sem a proteção extra.
-    toggle.catch(() => { });
+    toggle.catch(() => {});
   }, [lockEnabled]);
 
   // Pede a autenticação sozinho ao abrir e ao voltar para o app bloqueado.

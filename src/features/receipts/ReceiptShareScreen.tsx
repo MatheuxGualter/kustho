@@ -4,7 +4,7 @@ import { Bell, FileText, Plus, Share2 } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Share, View } from 'react-native';
 
-import { DomainError } from '@/domain/errors';
+import { DomainError, isDomainError } from '@/domain/errors';
 import { errorMessage } from '@/features/shared/errorMessage';
 import { strings } from '@/lib/strings';
 import { useServices } from '@/services';
@@ -33,6 +33,8 @@ export function ReceiptShareScreen() {
   const [already, setAlready] = useState(false);
   /** Texto que o OCR leu: na falha, dá para enviar e ajustar o leitor a esse banco. */
   const [readText, setReadText] = useState<string | null>(null);
+  /** Erro técnico (OCR, arquivo): no APK final ele some atrás de "Algo deu errado". */
+  const [detail, setDetail] = useState<string | null>(null);
   const started = useRef(false);
 
   const payloads = resolvedSharedPayloads.length > 0 ? resolvedSharedPayloads : sharedPayloads;
@@ -61,6 +63,7 @@ export function ReceiptShareScreen() {
     read().catch((e: unknown) => {
       clearSharedPayloads();
       setFailure(errorMessage(e));
+      if (!isDomainError(e)) setDetail(e instanceof Error ? `${e.name}: ${e.message}` : String(e));
     });
   }, [captures, clearSharedPayloads, isResolving, payloads, reader]);
 
@@ -84,6 +87,11 @@ export function ReceiptShareScreen() {
             }
             description={already ? strings.receipts.already : (failure ?? strings.receipts.howTo)}
           />
+          {failure && detail ? (
+            <AppText variant="caption" tone="muted" selectable>
+              {strings.receipts.technical(detail)}
+            </AppText>
+          ) : null}
           {failure && readText?.trim() ? (
             <>
               <AppText variant="caption" tone="muted">
