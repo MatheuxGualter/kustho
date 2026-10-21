@@ -45,9 +45,12 @@ pnpm install                             # se o lockfile mudou
   o grupo testa a fase inteira no aparelho a partir dela e, com a validação feita, abre
   um PR `develop` → `main`. Correções da `main` entram na `develop` com
   `git merge origin/main`. Fase 3: PRs #32 a #37, nessa ordem.
-- **Nova versão:** antes do PR `develop` → `main`, suba `version` (`app.json` e
-  `package.json`) e `android.versionCode` (+1, inteiro). Depois do merge, crie a tag e a
-  release no GitHub com o mesmo número (ex.: `1.0.1`) e a lista do que entrou.
+- **Nova versão:** antes do PR `develop` → `main`, suba `version` nos **dois**
+  (`app.json`, que é o que o APK usa, e `package.json`) e `android.versionCode` (+1,
+  inteiro). Depois do merge, gere o APK **a partir da `main`** (prebuild `--clean` e
+  `assembleRelease`), teste o APK release no aparelho e só então crie a tag e a release no
+  GitHub com o mesmo número, anexando o APK. Release publicada não muda: se o APK saiu
+  errado, lance a próxima versão em vez de trocar o arquivo.
 - `CLAUDE.md` e `AGENTS.md` são cópias exatas (o CI confere): edite os dois juntos.
 
 ## 4. Passando o bastão (outro dev ou outra sessão do Claude)
@@ -92,6 +95,7 @@ Coisas que custaram tempo e que o Claude (e você) deve saber de cara:
 | Fake com `await` dentro do laço de leitura                      | Duas leituras ao mesmo tempo duplicam. Use a mesma trava do real (`running ??= …`) e teste com `Promise.all`.                                                                                                                                                                                                                           |
 | "Multiple navigation containers" ao receber um compartilhamento | O Android abriu uma 2ª MainActivity. O compartilhar entra pela `ShareReceiverActivity` (módulo receipt-reader), que repassa à MainActivity existente; o plugin `plugins/withSingleMainActivity.js` move os filtros e precisa vir **antes** do `expo-sharing` no `app.json` (mods de manifesto rodam na ordem inversa). Prebuild depois. |
 | `GO_BACK was not handled` numa tela aberta direto               | Use `goBackOr(destino)` (`src/features/shared/goBack.ts`), não `router.back()`.                                                                                                                                                                                                                                                         |
+| Funciona no `pnpm android`, falha só no APK final               | O release passa pelo R8 (`enableMinifyInReleaseBuilds`). Biblioteca com código nativo (ex.: ML Kit) precisa de regras `-keep`: ponha em `proguard-rules.pro` do módulo com `consumerProguardFiles`. Teste o release antes de lançar.                                                                                                    |
 | Abrir PR depois de muito tempo na branch                        | `git fetch && git merge origin/main` antes; alguém pode ter mudado os mesmos arquivos na `main`.                                                                                                                                                                                                                                        |
 
 ## 6. O que o Claude pode e não pode fazer sozinho

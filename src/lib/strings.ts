@@ -231,6 +231,7 @@ export const strings = {
     noText:
       'Não encontrei texto nessa imagem. Tente compartilhar o comprovante como PDF ou abra-o maior antes de compartilhar.',
     shareText: 'Enviar o texto lido',
+    technical: (detail: string) => `Detalhe técnico: ${detail}`,
     shareTextHint:
       'Para o leitor aprender esse formato, envie o texto que o app leu ao grupo. Ele tem seus dados: apague nomes e documentos antes, se preferir.',
     alreadyTitle: 'Já está no Kustho',

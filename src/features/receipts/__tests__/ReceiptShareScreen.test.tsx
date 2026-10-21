@@ -129,3 +129,15 @@ it('imagem sem texto nenhum explica em vez de dizer que não é comprovante', as
   expect(await screen.findByText(/Não encontrei texto nessa imagem/)).toBeTruthy();
   expect(screen.queryByRole('button', { name: 'Enviar o texto lido' })).toBeNull();
 });
+
+it('erro do OCR (não de regra) mostra o detalhe técnico', async () => {
+  mockShared = [{ value: 'content://banco/1', shareType: 'image', mimeType: 'image/png' }];
+  const reader = {
+    recognizeText: jest.fn(async () => {
+      throw new Error('MlKitException: Failed to init');
+    }),
+  };
+  await render(reader);
+  expect(await screen.findByText('Algo deu errado. Tente de novo.')).toBeTruthy();
+  expect(screen.getByText('Detalhe técnico: Error: MlKitException: Failed to init')).toBeTruthy();
+});

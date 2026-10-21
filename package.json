@@ -1,6 +1,6 @@
 {
   "name": "kustho",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "main": "expo-router/entry",
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",
