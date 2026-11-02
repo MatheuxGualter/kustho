@@ -1,6 +1,7 @@
 import { fireEvent, screen } from '@testing-library/react-native';
 import { router } from 'expo-router';
 
+import { today } from '@/lib/dates';
 import { ServicesProvider } from '@/services';
 import { createFakeServices, createFakeStore } from '@/services/fakes';
 import { renderWithTheme } from '@/test/render';
@@ -28,8 +29,18 @@ const withWidth = (width: number) => {
 
 const setup = async () => {
   const store = createFakeStore();
+  const services = createFakeServices(store);
+  // Lançamento de hoje: os dados de exemplo só têm salário a partir do dia 5 do mês.
+  await services.transactions.createTransaction({
+    kind: 'income',
+    amountCents: 650000,
+    date: today(),
+    description: 'Salário',
+    categoryId: null,
+    accountId: store.accounts[0].id,
+  });
   await renderWithTheme(
-    <ServicesProvider services={createFakeServices(store)}>
+    <ServicesProvider services={services}>
       <TransactionsScreen />
     </ServicesProvider>,
   );
